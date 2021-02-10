@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MyCableComponent.h"
 #include "MyCharacter.generated.h"
+
 
 UCLASS()
 class GRAPPLEDEMO_API AMyCharacter : public ACharacter
@@ -15,15 +17,23 @@ public:
 	// Sets default values for this character's properties
 	AMyCharacter();
 
+	UPROPERTY(EditAnywhere, Category = "HeaderText")
+	UMyCableComponent* grapple;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
+
+	void Reel(float value);
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	
 };

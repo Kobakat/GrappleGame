@@ -13,9 +13,17 @@ UCLASS()
 class GRAPPLEDEMO_API UMyCableComponent : public UCableComponent
 {
 	GENERATED_BODY()
+
+	UMyCableComponent();
 	
 public:
 
+	UPROPERTY(EditAnywhere)
+	float reelMultiplier;
+	UPROPERTY(EditAnywhere)
+	float maxGrappleLength;
+
 	void Reel(float value);
 
+	// Method to de connect if called
 };
