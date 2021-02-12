@@ -15,5 +15,16 @@ void UMyCableComponent::Reel(float value)
 	{
 		CableLength += value * reelMultiplier;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("%f"), CableLength);
+	
+}
+
+void UMyCableComponent::Attach(FVector vector)
+{
+	bAttachStart = true;
+	EndLocation = vector;
+}
+
+void UMyCableComponent::Detach()
+{
+	bAttachStart = false;
 }

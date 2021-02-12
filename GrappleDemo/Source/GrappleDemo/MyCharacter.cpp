@@ -32,6 +32,16 @@ void AMyCharacter::Reel(float value)
 	grapple->Reel(value);
 }
 
+void AMyCharacter::Attach()
+{
+	grapple->Attach(FVector (0,0,0));
+}
+
+void AMyCharacter::Detach()
+{
+	grapple->Detach();
+}
+
 // Called to bind functionality to input
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -39,5 +49,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	//takes the player input and binds them to an axis // Then name of axis map // this character // and the name of the function
 	PlayerInputComponent->BindAxis("Reel", this, &AMyCharacter::Reel);
+	PlayerInputComponent->BindAction("Attach", IE_Pressed, this, &AMyCharacter::Attach);
+	PlayerInputComponent->BindAction("Detach", IE_Pressed, this, &AMyCharacter::Detach);
 }
 

@@ -15,6 +15,9 @@ class GRAPPLEDEMO_API UMyCableComponent : public UCableComponent
 	GENERATED_BODY()
 
 	UMyCableComponent();
+
+private:
+
 	
 public:
 
@@ -25,5 +28,9 @@ public:
 
 	void Reel(float value);
 
-	// Method to de connect if called
+	// function that takes in vector and attaches endpoint of grapple to that
+	void Attach(FVector vector);
+
+	void Detach();
+	
 };

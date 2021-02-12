@@ -28,6 +28,9 @@ public:
 
 	void Reel(float value);
 
+	void Attach();
+	void Detach();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
