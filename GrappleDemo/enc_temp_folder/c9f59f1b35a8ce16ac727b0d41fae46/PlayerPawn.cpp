@@ -146,22 +146,14 @@ void APlayerPawn::CheckIfGrounded()
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel1, param);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_Visibility, param);
 
-
-	if(bHit)
-	{
+	if (bHit)
 		groundState = Grounded;
-		UE_LOG(LogTemp, Warning, TEXT("true"));
-	}
-		
-	else 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("false"));
+	else
 		groundState = Airborne;
-	}
-	
 }
+
 
 #pragma endregion
 
