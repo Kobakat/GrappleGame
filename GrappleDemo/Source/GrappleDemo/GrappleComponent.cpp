@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyCableComponent.h"
+#include "GrappleComponent.h"
 
-UMyCableComponent::UMyCableComponent()
+UGrappleComponent::UGrappleComponent()
 {
 	reelMultiplier = 10;
 	maxGrappleLength = 500;
 }
 
-void UMyCableComponent::Reel(float value)
+void UGrappleComponent::Reel(float value)
 {
 	if (currentCableLength + value * reelMultiplier >= 0 && currentCableLength + value < maxGrappleLength)
 	{
@@ -19,7 +19,7 @@ void UMyCableComponent::Reel(float value)
 	
 }
 
-void UMyCableComponent::Attach(FVector vector)
+void UGrappleComponent::Attach(FVector vector)
 {
 	bAttachStart = true;
 	EndLocation = vector;
@@ -28,7 +28,7 @@ void UMyCableComponent::Attach(FVector vector)
 	currentCableLength = FVector::Distance(vector, RelativeLocation);
 }
 
-void UMyCableComponent::Detach()
+void UGrappleComponent::Detach()
 {
 	bAttachStart = false;
 }

@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "CableComponent.h"
-#include "MyCableComponent.generated.h"
+#include "GrappleComponent.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GRAPPLEDEMO_API UMyCableComponent : public UCableComponent
+class GRAPPLEDEMO_API UGrappleComponent : public UCableComponent
 {
 	GENERATED_BODY()
 
-	UMyCableComponent();
+	UGrappleComponent();
 
 
 private:
