@@ -16,8 +16,9 @@ class GRAPPLEDEMO_API UMyCableComponent : public UCableComponent
 
 	UMyCableComponent();
 
-private:
 
+private:
+	float currentCableLength;
 	
 public:
 

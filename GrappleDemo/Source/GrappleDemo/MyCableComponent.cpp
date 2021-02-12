@@ -11,8 +11,9 @@ UMyCableComponent::UMyCableComponent()
 
 void UMyCableComponent::Reel(float value)
 {
-	if (CableLength + value * reelMultiplier >= 0 && CableLength + value < maxGrappleLength)
+	if (currentCableLength + value * reelMultiplier >= 0 && currentCableLength + value < maxGrappleLength)
 	{
+		currentCableLength += value * reelMultiplier;
 		CableLength += value * reelMultiplier;
 	}
 	
@@ -22,6 +23,9 @@ void UMyCableComponent::Attach(FVector vector)
 {
 	bAttachStart = true;
 	EndLocation = vector;
+
+	// gets the distance between the attach point and the start of the cable
+	currentCableLength = FVector::Distance(vector, RelativeLocation);
 }
 
 void UMyCableComponent::Detach()
