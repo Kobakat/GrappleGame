@@ -16,9 +16,9 @@ APlayerPawn::APlayerPawn()
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	playerCamera->AttachTo(RootComponent);
 
-	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	//grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 	//grappleComponent->AttachTo(playerCamera);
-	grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	//grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	//AttachTo is deprecated
 }
 
