@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "../GrappleComponent.h"
 #include "PlayerPawn.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(MyLog, Log, All);
@@ -51,6 +52,9 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, Category = "Grapple")
+	UGrappleComponent* grappleComponent;
 
 private:
 

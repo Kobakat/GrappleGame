@@ -14,13 +14,13 @@ class GRAPPLEDEMO_API UGrappleComponent : public UCableComponent
 {
 	GENERATED_BODY()
 
-	UGrappleComponent();
-
 
 private:
 	float currentCableLength;
 	
 public:
+
+	UGrappleComponent();
 
 	UPROPERTY(EditAnywhere)
 	float reelMultiplier;

@@ -12,18 +12,21 @@ APlayerPawn::APlayerPawn()
 
 	playerCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
 	playerCollider->AttachTo(RootComponent);
-	playerCollider->SetRelativeLocation(FVector::ZeroVector);
 
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	playerCamera->AttachTo(RootComponent);
-	playerCamera->SetRelativeLocation(FVector::ZeroVector);
 
+	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	//grappleComponent->AttachTo(playerCamera);
+	grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	//AttachTo is deprecated
 }
 
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	playerCollider->SetRelativeLocation(FVector::ZeroVector);
+	playerCamera->SetRelativeLocation(FVector::ZeroVector);
 }
 
 void APlayerPawn::Tick(float DeltaTime)
