@@ -37,13 +37,18 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 	{
 		FHitResult hit = FHitResult();
 		
-		FVector rayOrigin = player->playerCollider->GetRelativeLocation() + (FVector(0, 0, player->crouchSlidePlayerHeight) * 0.5f);
-		FVector rayDest = player->playerCollider->GetRelativeLocation() + (FVector(0, 0, player->standingPlayerHeight) * 0.5f);
+		//Cast a ray FROM the top of the crouched capsule height TO the top of the standing capsule height
+		FVector currentPos = player->playerCollider->GetRelativeLocation();
+		FVector rayOrigin = currentPos + (FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight()));
+		FVector rayDest = currentPos - FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+		rayDest = rayDest + (FVector(0, 0, player->standingPlayerHeight * 2));
+
 		FCollisionQueryParams param;
 		param.AddIgnoredActor(player);
 
-		bool bHitCeiling = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_Visibility, param);
+		bool bHitCeiling = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel1, param);
 
+		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 
 		{
 			player->stateMachine->SetState(player->stateMachine->walkState);

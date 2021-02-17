@@ -28,5 +28,6 @@ protected:
 	//virtual FVector ConvertPlayerInputRelativeToCamera();
 private:
 	void CheckForVelocityChange();
+	void CheckIfPlayerIsTryingToCrouch();
 	
 };

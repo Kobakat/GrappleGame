@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "MovementState.h"
 #include "../Player/PlayerPawn.h"
 
@@ -26,8 +23,7 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		player->playerCollider->AddForce(relativeInputVector * accel * player->GetWorld()->GetDeltaSeconds() * 100.f, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
-	//TODO handle crouch state currently player will slide
-	else if (!player->moveVector.IsZero() && player->bIsGrounded) 
+	else if (player->moveVector.IsZero() && player->bIsGrounded && player->stateMachine->state != player->stateMachine->crouchState) 
 	{
 		if (player->stateMachine->state != player->stateMachine->idleState) 
 		{
@@ -58,11 +54,11 @@ void UMovementState::CheckIfGrounded()
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	bool bHitGround = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_WorldStatic, param);
+	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel1, param);
 
 	if (!bHitGround) 
 	{
-		bool bHitSlide = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel2, param);
+		bool bHitSlide = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel2, param);
 		
 		if (bHitSlide && player->stateMachine->state != player->stateMachine->slideState) 
 		{

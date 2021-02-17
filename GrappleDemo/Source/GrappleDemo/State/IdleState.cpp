@@ -19,6 +19,7 @@ void UIdleState::OnStateEnter()
 void UIdleState::StateTick()
 {
 	CheckForVelocityChange();
+	CheckIfPlayerIsTryingToCrouch();
 	CheckIfGrounded();
 	HandleJump(player->walkJumpForce);
 	PlayerLook();
@@ -32,18 +33,25 @@ void UIdleState::OnStateExit()
 #pragma endregion
 
 #pragma region Game Logic
-//void UIdleState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
+
 void UIdleState::PlayerLook() { UMovementState::PlayerLook(); }
 void UIdleState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-//void UIdleState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
 void UIdleState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-//FVector UIdleState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
+
 
 void UIdleState::CheckForVelocityChange() 
 {
-	if (!player->playerCollider->GetPhysicsLinearVelocity().IsZero() || player->moveVector.SizeSquared() > 0) 
+	if (player->moveVector.SizeSquared() > 0.01) 
 	{
 		player->stateMachine->SetState(player->stateMachine->walkState);
+	}
+}
+
+void UIdleState::CheckIfPlayerIsTryingToCrouch() 
+{
+	if (player->tryingToCrouch)
+	{
+		player->stateMachine->SetState(player->stateMachine->crouchState);
 	}
 }
 

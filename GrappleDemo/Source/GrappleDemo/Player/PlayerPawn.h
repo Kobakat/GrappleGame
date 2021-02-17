@@ -118,10 +118,10 @@ public:
 		FString state;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		bool bIsGrounded;
-
+	UPROPERTY() //garbage collector gets angry if this isn't a uprop?
+		UStateMachine* stateMachine;
 #pragma endregion
 	
-	UStateMachine* stateMachine;
 	FVector2D moveVector;
 	FVector2D lookVector;
 

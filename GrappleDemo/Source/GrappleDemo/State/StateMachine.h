@@ -24,13 +24,20 @@ public:
 	void Tick();
 	void Initialize(APlayerPawn* pawn);
 	
-	UState* state;
-	UIdleState* idleState;
-	UWalkState* walkState;
-	URunState* runState;
-	UCrouchState* crouchState;
-	URunSlideState* runSlideState;
-	USlideState* slideState;
+	UPROPERTY()
+		UState* state;
+	UPROPERTY()
+		UIdleState* idleState;
+	UPROPERTY()
+		UWalkState* walkState;
+	UPROPERTY()
+		URunState* runState;
+	UPROPERTY()
+		UCrouchState* crouchState;
+	UPROPERTY()
+		URunSlideState* runSlideState;
+	UPROPERTY()
+		USlideState* slideState;
 
 private:
 	APlayerPawn* player;
