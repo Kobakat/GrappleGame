@@ -6,7 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "../GrappleComponent.h"
+#include "../GrappleRaycastComponent.h"
 #include "PlayerPawn.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(MyLog, Log, All);
@@ -54,7 +54,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Grapple")
-	UGrappleComponent* grappleComponent;
+	UGrappleRaycastComponent* grappleComponent;
 
 private:
 
@@ -107,6 +107,8 @@ private:
 	FVector ConvertInputRelativeToCamera(FVector2D vectorToConvert);
 	void ClampPlayerMoveSpeed();
 	void CheckIfGrounded();
+
+	void CastRaycast();
 
 #pragma endregion
 };

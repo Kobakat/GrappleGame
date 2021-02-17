@@ -1,4 +1,5 @@
 #include "PlayerPawn.h"
+#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY(MyLog);
 
@@ -94,6 +95,7 @@ void APlayerPawn::PlayerLook(FVector2D inputVector, float deltaTime)
 
 void APlayerPawn::PlayerJump()
 {
+	APlayerPawn::CastRaycast();
 	if (groundState == Grounded) 
 	{
 		//multiplying by 100 so the designer values aren't so massive
@@ -152,6 +154,21 @@ void APlayerPawn::CheckIfGrounded()
 		groundState = Airborne;
 }
 
+void APlayerPawn::CastRaycast()
+{
+	FHitResult outHit;
+	FVector Start = playerCamera->GetForwardVector();
+	// TODO change number to cable length
+	FVector End = playerCamera->GetForwardVector() * 99999 + Start;
+	FCollisionQueryParams CollisionParams;
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 5);
+
+	if (ActorLineTraceSingle(outHit, Start, End, ECC_WorldStatic, CollisionParams))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *outHit.GetComponent()->GetName()));
+	}
+}
 
 #pragma endregion
 
