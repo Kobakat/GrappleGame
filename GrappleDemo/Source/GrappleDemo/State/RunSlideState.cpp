@@ -58,7 +58,7 @@ void URunSlideState::AdjustCameraAndColliderPosition(float capsuleHeight, float 
 
 	//Set the position of the player 
 	//TODO lerp these values for smoother transition
-	player->playerCollider->SetRelativeLocation(FVector(currentPos.X, currentPos.Y, capsuleHeight));
+	player->playerCollider->SetRelativeLocation(FVector(currentPos.X, currentPos.Y, currentPos.Z + capsuleHeight));
 	player->playerCollider->SetCapsuleHalfHeight(capsuleHeight);
 
 	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
