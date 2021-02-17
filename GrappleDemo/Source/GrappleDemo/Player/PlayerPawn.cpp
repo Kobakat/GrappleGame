@@ -10,12 +10,13 @@ APlayerPawn::APlayerPawn()
 
 	playerCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
 	playerCollider->AttachTo(RootComponent);
-	playerCollider->SetRelativeLocation(FVector::ZeroVector);
 
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	playerCamera->AttachTo(RootComponent);
-	playerCamera->SetRelativeLocation(FVector::ZeroVector);
 
+	//grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	//grappleComponent->AttachTo(playerCamera);
+	//grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	//AttachTo is deprecated
 }
 
@@ -26,6 +27,7 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
+
 }
 
 void APlayerPawn::Tick(float DeltaTime)
@@ -74,6 +76,5 @@ void APlayerPawn::RunPress() { tryingToSprint = true; }
 void APlayerPawn::RunRelease() { tryingToSprint = false; }
 void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
+
 #pragma endregion
-
-
