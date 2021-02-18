@@ -1,7 +1,4 @@
 #include "PlayerPawn.h"
-#include "DrawDebugHelpers.h"
-
-DEFINE_LOG_CATEGORY(MyLog);
 
 #pragma region Unreal Event Functions
 APlayerPawn::APlayerPawn()
@@ -16,30 +13,38 @@ APlayerPawn::APlayerPawn()
 
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	playerCamera->AttachTo(RootComponent);
-
-	//grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
-	//grappleComponent->AttachTo(playerCamera);
-	//grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	//AttachTo is deprecated
+	
+	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 }
 
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	playerCollider->SetRelativeLocation(FVector::ZeroVector);
-	playerCamera->SetRelativeLocation(FVector::ZeroVector);
+	this->stateMachine = NewObject<UStateMachine>();
+	this->stateMachine->Initialize(this);
+	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
+	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
+
+	// This is done in begin play because otherwise it
+	// shows up in the editor and acts kinda janky.
+	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 }
 
 void APlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CheckIfGrounded();
+	if (this->stateMachine != nullptr) 
+	{
+		stateMachine->Tick();
+	}
 
-	PlayerLook(lookVector, DeltaTime);
-	PlayerMove(moveVector, DeltaTime);
-
-	ClampPlayerMoveSpeed();
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
+	}
+	
 }
 
 #pragma endregion
@@ -49,126 +54,56 @@ void APlayerPawn::Tick(float DeltaTime)
 void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	// Basic movement bindings.
 	InputComponent->BindAxis("MoveX", this, &APlayerPawn::MoveInputX);
 	InputComponent->BindAxis("MoveY", this, &APlayerPawn::MoveInputY);
 	InputComponent->BindAxis("LookX", this, &APlayerPawn::LookInputX);
 	InputComponent->BindAxis("LookY", this, &APlayerPawn::LookInputY);
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerPawn::JumpPress);
-	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerPawn::JumpRelease);
+	InputComponent->BindAction("Jump", IE_Released, this, &APlayerPawn::JumpRelease);
+	InputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerPawn::RunPress);
+	InputComponent->BindAction("Sprint", IE_Released, this, &APlayerPawn::RunRelease);
+	InputComponent->BindAction("CrouchSlide", IE_Pressed, this, &APlayerPawn::CrouchSlidePress);
+	InputComponent->BindAction("CrouchSlide", IE_Released, this, &APlayerPawn::CrouchSlideRelease);
+	// Grapple movement bindings.
+	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
+	InputComponent->BindAction("ShootRelease", IE_Pressed, this, &APlayerPawn::ShootReleasePress);
+	InputComponent->BindAction("InstantReel", IE_Pressed, this, &APlayerPawn::InstantReelPress);
 }
 
 void APlayerPawn::MoveInputX(float value) { moveVector.X = value; }
 void APlayerPawn::MoveInputY(float value) { moveVector.Y = value; }
 void APlayerPawn::LookInputX(float value) { lookVector.X = value; }
 void APlayerPawn::LookInputY(float value) { lookVector.Y = value; }
-void APlayerPawn::JumpPress() { PlayerJump(); } //hacky
-void APlayerPawn::JumpRelease() { /*Do nothing for now*/; }
+void APlayerPawn::JumpPress() { tryingToJump = true; }
+void APlayerPawn::JumpRelease() { tryingToJump = false; }
+void APlayerPawn::RunPress() { tryingToSprint = true; }
+void APlayerPawn::RunRelease() { tryingToSprint = false; }
+void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
+void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 
-#pragma endregion
-
-#pragma region Game Logic
-
-void APlayerPawn::PlayerMove(FVector2D rawInputVector, float deltaTime)
+void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
+void APlayerPawn::ShootReleasePress() { grappleInputBuffered = true; }
+void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
+bool APlayerPawn::IsTryingToGrapple()
 {
-	if (!rawInputVector.IsZero())
+	if (grappleInputBuffered)
 	{
-		FVector relativeInputVector = ConvertInputRelativeToCamera(rawInputVector);
-		
-		//multiplying by 100 so the designer values aren't so massive
-		playerCollider->AddForce(relativeInputVector * acceleration * deltaTime * 100, NAME_None, true); //Set to false if you want player mass to matter
+		grappleInputBuffered = false;
+		return true;
 	}
-}
-
-void APlayerPawn::PlayerLook(FVector2D inputVector, float deltaTime)
-{
-	if (!inputVector.IsZero())
-	{
-		FRotator camRotation = playerCamera->GetRelativeRotation();
-
-		camRotation.Yaw += (inputVector.X * lookSpeed * deltaTime);
-		camRotation.Pitch = FMath::Clamp(camRotation.Pitch + (inputVector.Y * lookSpeed * deltaTime), viewLookBounds.X, viewLookBounds.Y);
-
-		playerCamera->SetRelativeRotation(camRotation);
-	}
-}
-
-void APlayerPawn::PlayerJump()
-{
-	APlayerPawn::CastRaycast();
-	if (groundState == Grounded) 
-	{
-		//multiplying by 100 so the designer values aren't so massive
-		playerCollider->AddForce(FVector::UpVector * jumpForce * 100, NAME_None, true); 
-	}
-}
-
-FVector APlayerPawn::ConvertInputRelativeToCamera(FVector2D vectorToConvert)
-{
-	//Kill Z component and normalize vectors
-	FVector camForwardVector = playerCamera->GetForwardVector();
-	FVector camRightVector = playerCamera->GetRightVector();
-	camForwardVector.Z = 0;
-	camRightVector.Z = 0;
-	camForwardVector.Normalize(0.0001);
-	camRightVector.Normalize(0.0001);
-
-	//Multiply input axis values by the cameras look vectors
-	FVector relativeVector = (camForwardVector * vectorToConvert.Y) + (camRightVector * vectorToConvert.X);
-	relativeVector.Normalize(0.0001);
-
-	return relativeVector;
-}
-
-void APlayerPawn::ClampPlayerMoveSpeed()
-{
-	FVector movementVelocity = playerCollider->GetPhysicsLinearVelocity();
-	movementVelocity.Z = 0;
-	movementVelocity = movementVelocity.GetClampedToMaxSize(maxMoveSpeed);
-
-	FVector fallVelocity = playerCollider->GetPhysicsLinearVelocity();
-	fallVelocity.X = 0;
-	fallVelocity.Y = 0;
-	fallVelocity = fallVelocity.GetClampedToMaxSize(maxFallSpeed);
-
-	FVector playerVelocity = movementVelocity + fallVelocity;
-
-	playerCollider->SetPhysicsLinearVelocity(playerVelocity);
-}
-
-void APlayerPawn::CheckIfGrounded()
-{
-	FHitResult hit;
-
-	FVector rayOrigin = playerCollider->GetRelativeLocation() - playerCollider->GetScaledCapsuleHalfHeight();
-	FVector rayDest = rayOrigin + (FVector::DownVector * minDistanceToBeGrounded);
-
-	FCollisionQueryParams param;
-	param.AddIgnoredActor(this);
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_Visibility, param);
-
-	if (bHit)
-		groundState = Grounded;
 	else
-		groundState = Airborne;
+		return false;
 }
-
-void APlayerPawn::CastRaycast()
+bool APlayerPawn::IsTryingToInstantReel()
 {
-	FHitResult outHit;
-	FVector Start = playerCamera->GetForwardVector();
-	// TODO change number to cable length
-	FVector End = playerCamera->GetForwardVector() * 99999 + Start;
-	FCollisionQueryParams CollisionParams;
-
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 5);
-
-	if (ActorLineTraceSingle(outHit, Start, End, ECC_WorldStatic, CollisionParams))
+	if (instantReelInputBuffered)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *outHit.GetComponent()->GetName()));
+		instantReelInputBuffered = false;
+		return true;
 	}
+	else
+		return false;
 }
 
 #pragma endregion
-

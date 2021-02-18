@@ -6,38 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "../GrappleRaycastComponent.h"
+#include "../State/StateMachine.h"
 #include "PlayerPawn.generated.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(MyLog, Log, All);
-
-#pragma region State Enums
-UENUM()
-enum EMoveState
-{
-	/*No input is being recieved*/
-	Idle UMETA(DisplayName = "Idle"),
-
-	/*Player is moving normally*/
-	Walking UMETA(DisplayName = "Walking"),
-
-	/*Player is moving while holding run key*/
-	Running UMETA(DisplayName = "Running"),
-
-	/*Player is currently sliding forward*/
-	Sliding UMETA(DisplayName = "Sliding")
-};
-
-UENUM()
-enum EGroundState
-{
-	/*Player is standing on solid ground*/
-	Grounded UMETA(DisplayName = "Grounded"),
-
-	/*Player is under the effects of gravity*/
-	Airborne UMETA(DisplayName = "Airborne")
-};
-#pragma endregion
 
 UCLASS()
 class GRAPPLEDEMO_API APlayerPawn : public APawn
@@ -50,66 +20,146 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-protected:
-	virtual void BeginPlay() override;
+	UGrappleComponent* grappleComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Grapple")
-	UGrappleRaycastComponent* grappleComponent;
+	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
+		USceneComponent* grappleStart;
 
-private:
-
-#pragma region UPROPs
+#pragma region Designer Props
+	//=================Camera=================//
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 		UCameraComponent* playerCamera;
-	
-	UPROPERTY(EditAnywhere, Category = "Player Collider")
-		UCapsuleComponent* playerCollider;
 
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
-		float acceleration;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
-		float maxMoveSpeed;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
-		float jumpForce;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
+	//================Collider================//
+
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UCapsuleComponent* playerCollider;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* moveMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* stopMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* runSlideMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* frictionlessMat;
+
+	//================General=================//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float airborneMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float lookSpeed;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
-		float minDistanceToBeGrounded;
-	UPROPERTY(EditAnywhere, Category = "PlayerStats")
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float standingPlayerHeight;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float crouchSlidePlayerHeight;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float standingCameraHeight;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float crouchSlideCameraHeight;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		FVector2D viewLookBounds;
 
-	UPROPERTY(VisibleAnywhere, Category = "PlayerStats")
-		TEnumAsByte<EMoveState> moveState;
-	UPROPERTY(VisibleAnywhere, Category = "PlayerStats")
-		TEnumAsByte<EGroundState> groundState;
+	//=================Walking================//
 
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
+		float walkAcceleration;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
+		float walkMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
+		float walkJumpForce;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
+		float walkAirControlPercentage;
+
+	//=================Running================//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running")
+		float runAcceleration;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running")
+		float runMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running")
+		float runJumpForce;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running")
+		float runAirControlPercentage;
+
+	//=================Crouching================//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchAcceleration;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchJumpForce;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchAirControlPercentage;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		bool bCanPlayerCrouchJump;
+
+	//===============Running=Slide==============//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideJumpForce;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideImpulse;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideExitVelocity;
+
+
+	//===================Slide=================//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
+		float slideMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
+		float slideJumpForce;
+
+	//===================State=================//
+
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
+		FString state;
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
+		bool bIsGrounded;
+	UPROPERTY() //garbage collector gets angry if this isn't a uprop?
+		UStateMachine* stateMachine;
 #pragma endregion
-
-#pragma region Functions
-
+	
+#pragma region Input State
 	FVector2D moveVector;
 	FVector2D lookVector;
+	float reelingAxis;
+	bool tryingToSprint;
+	bool tryingToJump;
+	bool tryingToCrouch;
+	// These inputs are consumed when observed.
+	bool IsTryingToGrapple();
+	bool IsTryingToInstantReel();
+#pragma endregion
 
+private:
+	bool grappleInputBuffered;
+	bool instantReelInputBuffered;
+
+protected:
+	virtual void BeginPlay() override;
+
+#pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
 	void LookInputX(float value);
 	void LookInputY(float value);
 	void JumpPress();
 	void JumpRelease();
-
-	void PlayerMove(FVector2D rawInputVector, float deltaTime);
-	void PlayerLook(FVector2D lookVector, float deltaTime);
-	void PlayerJump();
-
-	FVector ConvertInputRelativeToCamera(FVector2D vectorToConvert);
-	void ClampPlayerMoveSpeed();
-	void CheckIfGrounded();
-
-	void CastRaycast();
-
+	void RunPress();
+	void RunRelease();
+	void CrouchSlidePress();
+	void CrouchSlideRelease();
+	void ReelInputAxis(float value);
+	void ShootReleasePress();
+	void InstantReelPress();
 #pragma endregion
 };
 

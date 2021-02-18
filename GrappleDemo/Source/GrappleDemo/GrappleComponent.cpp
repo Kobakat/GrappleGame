@@ -3,29 +3,56 @@
 
 #include "GrappleComponent.h"
 
+void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	EndLocation = attachedLocation - GetComponentLocation();
+	UCableComponent::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
 UGrappleComponent::UGrappleComponent()
 {
-	reelMultiplier = 10;
-	maxGrappleLength = 500;
+	// TODO these should not be hardcoded.
+	reelMultiplier = 10.F;
+	maxGrappleLength = 500.F;
+
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
+FVector UGrappleComponent::GetAttachedLocation()
+{
+	return attachedLocation;
+}
+
+float UGrappleComponent::GetCableLength()
+{
+	return currentCableLength;
+}
+
+void UGrappleComponent::ApplyForce(FVector force)
+{
+	// TODO add code that apply's force to current
+	// grapple reactor if available.
 }
 
 void UGrappleComponent::Reel(float value)
 {
-	if (currentCableLength + value * reelMultiplier >= 0 && currentCableLength + value < maxGrappleLength)
+
+	if (currentCableLength + value * reelMultiplier >= 0.F && currentCableLength + value < maxGrappleLength)
 	{
 		currentCableLength += value * reelMultiplier;
-		CableLength += value * reelMultiplier;
+		CableLength = currentCableLength;
 	}
 	
 }
 
 void UGrappleComponent::Attach(FVector vector)
 {
+	attachedLocation = vector;
+
 	bAttachStart = true;
-	EndLocation = vector;
 
 	// gets the distance between the attach point and the start of the cable
-	currentCableLength = FVector::Distance(vector, RelativeLocation);
+	currentCableLength = FMath::Min(FVector::Distance(vector, RelativeLocation), maxGrappleLength);
 }
 
 void UGrappleComponent::Detach()
