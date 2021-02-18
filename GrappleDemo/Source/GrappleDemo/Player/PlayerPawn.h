@@ -16,6 +16,7 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
+	void CastRaycast();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

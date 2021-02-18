@@ -83,7 +83,7 @@ void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 
 void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
-void APlayerPawn::ShootReleasePress() { grappleInputBuffered = true; }
+void APlayerPawn::ShootReleasePress() { CastRaycast(); grappleInputBuffered = true; }
 void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
 bool APlayerPawn::IsTryingToGrapple()
 {
@@ -107,3 +107,23 @@ bool APlayerPawn::IsTryingToInstantReel()
 }
 
 #pragma endregion
+
+void APlayerPawn::CastRaycast()
+{
+	FHitResult* outHit = new FHitResult();
+	FVector Start = playerCamera->GetForwardVector();
+	// TODO change number to cable length
+	FVector End = playerCamera->GetForwardVector() * 99999 + Start;
+	FCollisionQueryParams CollisionParams;
+	// ignore collision with player
+	CollisionParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_WorldStatic, CollisionParams))
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
+		if (outHit->GetActor() != NULL)
+		{
+			UE_LOG(LogClass, Log, TEXT("Component: %s"), *outHit->GetComponent()->GetName());
+			grappleComponent->Attach(outHit->Location);
+		}
+	}
+}
