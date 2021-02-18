@@ -16,6 +16,7 @@ APlayerPawn::APlayerPawn()
 	//AttachTo is deprecated
 	
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	grappleComponent->SetHiddenInGame(true);
 }
 
 void APlayerPawn::BeginPlay()
@@ -37,7 +38,7 @@ void APlayerPawn::Tick(float DeltaTime)
 
 	if (this->stateMachine != nullptr) 
 	{
-		stateMachine->Tick();
+		stateMachine->Tick(DeltaTime);
 	}
 
 	else 

@@ -15,7 +15,7 @@ void URunState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void URunState::StateTick()
+void URunState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	CheckifPlayerWantsToSlide();

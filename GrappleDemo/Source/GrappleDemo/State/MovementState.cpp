@@ -4,7 +4,7 @@
 UMovementState::~UMovementState() { }
 void UMovementState::Initialize(APlayerPawn* pawn) { UState::Initialize(pawn); }
 void UMovementState::OnStateEnter() { }
-void UMovementState::StateTick() { }
+void UMovementState::StateTick(float DeltaTime) { }
 void UMovementState::OnStateExit() { }
 
 #pragma region Game Logic

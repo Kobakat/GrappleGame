@@ -16,7 +16,7 @@ void UIdleState::OnStateEnter()
 	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 }
 
-void UIdleState::StateTick()
+void UIdleState::StateTick(float DeltaTime)
 {
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();

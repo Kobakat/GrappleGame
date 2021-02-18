@@ -16,7 +16,7 @@ void UWalkState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void UWalkState::StateTick()
+void UWalkState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToRun();

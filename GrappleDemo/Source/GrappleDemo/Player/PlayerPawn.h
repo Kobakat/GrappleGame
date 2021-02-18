@@ -117,6 +117,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideJumpForce;
 
+	//==============Instant=Reel===============//
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
+		float instantGrappleSpeed;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
+		float reelCompleteDistance;
+
 	//===================State=================//
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")

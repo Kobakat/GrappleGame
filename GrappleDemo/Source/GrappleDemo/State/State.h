@@ -16,7 +16,7 @@ public:
 	~UState();
 
 	virtual void OnStateEnter();
-	virtual void StateTick();
+	virtual void StateTick(float DeltaTime);
 	virtual void OnStateExit();
 
 	virtual void Initialize(APlayerPawn* pawn);

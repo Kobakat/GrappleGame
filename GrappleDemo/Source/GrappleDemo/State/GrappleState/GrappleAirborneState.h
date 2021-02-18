@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MovementState.h"
-#include "../GrappleComponent.h"
+#include "GrappleState.h"
+#include "../../GrappleComponent.h"
 #include "GrappleAirborneState.generated.h"
 
 UCLASS()
-class GRAPPLEDEMO_API UGrappleAirborneState : public UMovementState
+class GRAPPLEDEMO_API UGrappleAirborneState : public UGrappleState
 {
 	GENERATED_BODY()
 	
@@ -16,15 +16,11 @@ private:
 	// Utility Functions.
 	void CheckStateChange();
 	void HandleGrappleInput();
-	void UpdateGrappleRope();
-	// Grapple References.
-	UGrappleComponent* grappleComponent;
-	USceneComponent* grappleGunStart;
 
 public:
 	// UMovementState Implementation.
 	virtual void Initialize(APlayerPawn* pawn) override;
 	virtual void OnStateEnter() override;
-	virtual void StateTick() override;
+	virtual void StateTick(float DeltaTime) override;
 	virtual void OnStateExit() override;
 };
