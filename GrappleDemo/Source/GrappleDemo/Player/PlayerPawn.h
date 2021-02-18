@@ -25,6 +25,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
 		USceneComponent* grappleStart;
+	UPROPERTY()
+		float raycastDistance;
 
 #pragma region Designer Props
 	//=================Camera=================//

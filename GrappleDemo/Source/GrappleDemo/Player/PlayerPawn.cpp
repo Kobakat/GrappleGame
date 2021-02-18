@@ -16,6 +16,7 @@ APlayerPawn::APlayerPawn()
 	//AttachTo is deprecated
 	
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	raycastDistance = 5000;
 }
 
 void APlayerPawn::BeginPlay()
@@ -110,17 +111,19 @@ bool APlayerPawn::IsTryingToInstantReel()
 
 void APlayerPawn::CastRaycast()
 {
+	// variable holding information of raycast hit
 	FHitResult* outHit = new FHitResult();
+
 	FVector Start = playerCamera->GetForwardVector();
-	// TODO change number to cable length
-	FVector End = playerCamera->GetForwardVector() * 99999 + Start;
+	FVector End = playerCamera->GetForwardVector() * raycastDistance + Start;
 	FCollisionQueryParams CollisionParams;
 	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
+	// called if they raycast hits something
 	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_WorldStatic, CollisionParams))
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
-		if (outHit->GetActor() != NULL)
+		if (outHit->GetActor() != NULL && outHit->GetActor()->ActorHasTag());
 		{
 			UE_LOG(LogClass, Log, TEXT("Component: %s"), *outHit->GetComponent()->GetName());
 			grappleComponent->Attach(outHit->Location);
