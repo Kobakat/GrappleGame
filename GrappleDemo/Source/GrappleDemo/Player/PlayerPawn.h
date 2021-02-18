@@ -20,6 +20,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UGrappleComponent* grappleComponent;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
+		USceneComponent* grappleStart;
+
 #pragma region Designer Props
 	//=================Camera=================//
 
@@ -122,12 +127,21 @@ public:
 		UStateMachine* stateMachine;
 #pragma endregion
 	
+#pragma region Input State
 	FVector2D moveVector;
 	FVector2D lookVector;
-
+	float reelingAxis;
 	bool tryingToSprint;
 	bool tryingToJump;
 	bool tryingToCrouch;
+	// These inputs are consumed when observed.
+	bool IsTryingToGrapple();
+	bool IsTryingToInstantReel();
+#pragma endregion
+
+private:
+	bool grappleInputBuffered;
+	bool instantReelInputBuffered;
 
 protected:
 	virtual void BeginPlay() override;
@@ -143,6 +157,9 @@ protected:
 	void RunRelease();
 	void CrouchSlidePress();
 	void CrouchSlideRelease();
+	void ReelInputAxis(float value);
+	void ShootReleasePress();
+	void InstantReelPress();
 #pragma endregion
 };
 
