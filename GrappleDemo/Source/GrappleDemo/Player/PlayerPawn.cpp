@@ -13,11 +13,9 @@ APlayerPawn::APlayerPawn()
 
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	playerCamera->AttachTo(RootComponent);
-
-	//grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
-	//grappleComponent->AttachTo(playerCamera);
-	//grappleComponent->AttachToComponent(playerCamera, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	//AttachTo is deprecated
+	
+	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 }
 
 void APlayerPawn::BeginPlay()
@@ -28,6 +26,9 @@ void APlayerPawn::BeginPlay()
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
 
+	// This is done in begin play because otherwise it
+	// shows up in the editor and acts kinda janky.
+	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 }
 
 void APlayerPawn::Tick(float DeltaTime)
@@ -53,7 +54,7 @@ void APlayerPawn::Tick(float DeltaTime)
 void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	// Basic movement bindings.
 	InputComponent->BindAxis("MoveX", this, &APlayerPawn::MoveInputX);
 	InputComponent->BindAxis("MoveY", this, &APlayerPawn::MoveInputY);
 	InputComponent->BindAxis("LookX", this, &APlayerPawn::LookInputX);
@@ -64,6 +65,10 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	InputComponent->BindAction("Sprint", IE_Released, this, &APlayerPawn::RunRelease);
 	InputComponent->BindAction("CrouchSlide", IE_Pressed, this, &APlayerPawn::CrouchSlidePress);
 	InputComponent->BindAction("CrouchSlide", IE_Released, this, &APlayerPawn::CrouchSlideRelease);
+	// Grapple movement bindings.
+	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
+	InputComponent->BindAction("ShootRelease", IE_Pressed, this, &APlayerPawn::ShootReleasePress);
+	InputComponent->BindAction("InstantReel", IE_Pressed, this, &APlayerPawn::InstantReelPress);
 }
 
 void APlayerPawn::MoveInputX(float value) { moveVector.X = value; }
@@ -76,5 +81,29 @@ void APlayerPawn::RunPress() { tryingToSprint = true; }
 void APlayerPawn::RunRelease() { tryingToSprint = false; }
 void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
+
+void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
+void APlayerPawn::ShootReleasePress() { grappleInputBuffered = true; }
+void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
+bool APlayerPawn::IsTryingToGrapple()
+{
+	if (grappleInputBuffered)
+	{
+		grappleInputBuffered = false;
+		return true;
+	}
+	else
+		return false;
+}
+bool APlayerPawn::IsTryingToInstantReel()
+{
+	if (instantReelInputBuffered)
+	{
+		instantReelInputBuffered = false;
+		return true;
+	}
+	else
+		return false;
+}
 
 #pragma endregion

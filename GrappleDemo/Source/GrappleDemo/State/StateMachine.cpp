@@ -17,7 +17,8 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	runState = NewObject<URunState>();
 	crouchState = NewObject<UCrouchState>();
 	slideState = NewObject<USlideState>();
-	runSlideState = NewObject <URunSlideState>();
+	runSlideState = NewObject<URunSlideState>();
+	grappleAirborneState = NewObject<UGrappleAirborneState>();
 
 	//Initialize any new states here
 	idleState->Initialize(this->player);
@@ -26,6 +27,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	crouchState->Initialize(this->player);
 	slideState->Initialize(this->player);
 	runSlideState->Initialize(this->player);
+	grappleAirborneState->Initialize(this->player);
 	
 	//Set the default starting state here
 	this->state = idleState;
