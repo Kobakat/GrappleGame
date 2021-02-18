@@ -8,6 +8,7 @@
 #include "CrouchState.h"
 #include "RunSlideState.h"
 #include "SlideState.h"
+#include "GrappleAirborneState.h"
 #include "StateMachine.generated.h"
 
 UCLASS()
@@ -38,6 +39,8 @@ public:
 		URunSlideState* runSlideState;
 	UPROPERTY()
 		USlideState* slideState;
+	UPROPERTY()
+		UGrappleAirborneState* grappleAirborneState;
 
 private:
 	APlayerPawn* player;
