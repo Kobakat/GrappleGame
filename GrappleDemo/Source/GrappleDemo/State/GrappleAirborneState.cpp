@@ -10,7 +10,7 @@ void UGrappleAirborneState::Initialize(APlayerPawn* pawn)
 	// Retrieve the grapple components.
 	grappleComponent = pawn->grappleComponent;
 	grappleGunStart = pawn->grappleStart;
-	grappleComponent->SetHiddenInGame(true);
+	//grappleComponent->SetHiddenInGame(true); // TODO
 }
 
 void UGrappleAirborneState::OnStateEnter()
