@@ -13,7 +13,6 @@ void UIdleState::Initialize(APlayerPawn* pawn)
 void UIdleState::OnStateEnter()
 {
 	player->state = this->stateName;
-	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 }
 
 void UIdleState::StateTick(float DeltaTime)
@@ -24,6 +23,7 @@ void UIdleState::StateTick(float DeltaTime)
 	HandleJump(player->walkJumpForce);
 	PlayerLook();
 
+	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 	UMovementState::CheckStateChangeGrapple();
 }
 

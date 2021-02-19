@@ -14,8 +14,9 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 	{
 		FVector relativeInputVector = ConvertPlayerInputRelativeToCamera();
 
-		if (!player->bIsGrounded) {
-			relativeInputVector * (airControlFactor / 100.f);
+		if (!player->bIsGrounded) 
+		{
+			relativeInputVector = relativeInputVector * (airControlFactor / 100.f);
 		}
 
 		//multiplying by 100 so the designer values aren't so massive
@@ -109,8 +110,7 @@ void UMovementState::HandleJump(float jumpForce)
 	{
 		player->tryingToJump = false;
 		//multiply by 100 so designer values aren't so high
-		player->playerCollider->SetPhysicsLinearVelocity(FVector::UpVector * jumpForce);
-		//player->playerCollider->AddForce(FVector::UpVector * jumpForce * 100.f);
+		player->playerCollider->SetPhysicsLinearVelocity(player->playerCollider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
 	}
 }
 
