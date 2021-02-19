@@ -34,6 +34,10 @@ void APlayerPawn::BeginPlay()
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
 	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	grappleComponent->SetHiddenInGame(true);
+	grappleComponent->NumSegments = 10;
+	grappleComponent->NumSides = 8;
+	grappleComponent->SolverIterations = 4;
 }
 
 void APlayerPawn::Tick(float DeltaTime)
@@ -147,16 +151,14 @@ bool APlayerPawn::CastGrappleRaycast()
 	CollisionParams.AddIgnoredActor(this);
 	// called if they raycast hits something
 	DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
-	UE_LOG(LogTemp, Warning, TEXT("pp"));
 	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
 		
 		
 		
-		grappleComponent->Attach(outHit->GetActor()->GetActorLocation());
+		grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
 		
 		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *outHit->GetActor()->GetFName().ToString());
 
 		if (IsValid(playerGrappleReactor))
 		{

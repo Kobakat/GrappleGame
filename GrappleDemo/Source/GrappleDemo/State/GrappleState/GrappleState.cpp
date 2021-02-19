@@ -30,22 +30,32 @@ void UGrappleState::UpdateGrappleRestraint()
 		FVector ropeDirection = ropeVector.GetSafeNormal();
 		// Get a vector for the tensile offset.
 		FVector tensileDelta = ropeDirection * lengthDifference;
-		// Pull the player back in, and offset that force
-		// by invoking the grapple to apply the opposite
-		// force on a GrappleReactor (if available).
-		player->AddActorWorldOffset(tensileDelta);
-		grappleComponent->ApplyForce(-tensileDelta);
+		grappleComponent->ApplyForce(-tensileDelta * 2.F);
 
-		// Get the current velocity and the point on the sphere surface.
-		FVector velocity = player->playerCollider->GetPhysicsLinearVelocity();
-		FVector tangentPoint = player->GetActorLocation();
-		// Project the player velocity such that it is tangent to the
-		// sphere of the rope radius.
-		player->playerCollider->SetPhysicsLinearVelocity(
-			FVector::PointPlaneProject(
-				tangentPoint + velocity,
-				tangentPoint,
-				-ropeDirection)
-			- tangentPoint);
+		ropeVector =
+			grappleComponent->GetAttachedLocation()
+			- grappleGunStart->GetComponentLocation();
+		lengthDifference = ropeVector.Size()
+			- grappleComponent->GetCableLength();
+
+		if (lengthDifference > 0.0F)
+		{
+			// Pull the player back in, and offset that force
+			// by invoking the grapple to apply the opposite
+			// force on a GrappleReactor (if available).
+			player->AddActorWorldOffset(tensileDelta);
+
+			// Get the current velocity and the point on the sphere surface.
+			FVector velocity = player->playerCollider->GetPhysicsLinearVelocity();
+			FVector tangentPoint = player->GetActorLocation();
+			// Project the player velocity such that it is tangent to the
+			// sphere of the rope radius.
+			player->playerCollider->SetPhysicsLinearVelocity(
+				FVector::PointPlaneProject(
+					tangentPoint + velocity,
+					tangentPoint,
+					-ropeDirection)
+				- tangentPoint);
+		}
 	}
 }
