@@ -23,7 +23,7 @@ public:
 	~UStateMachine();
 
 	void SetState(UState* newState);
-	void Tick(float DeltaTime);
+	void Tick(float deltaTime);
 	void Initialize(APlayerPawn* pawn);
 	
 	UPROPERTY()

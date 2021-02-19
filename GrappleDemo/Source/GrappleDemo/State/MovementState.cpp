@@ -4,6 +4,7 @@
 UMovementState::~UMovementState() { }
 void UMovementState::Initialize(APlayerPawn* pawn) { UState::Initialize(pawn); }
 void UMovementState::OnStateEnter() { }
+void UMovementState::StateTick(float DeltaTime) { }
 void UMovementState::OnStateExit() { }
 
 #pragma region Game Logic
@@ -20,7 +21,7 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		}
 
 		//multiplying by 100 so the designer values aren't so massive
-		player->playerCollider->AddForce(relativeInputVector * accel * player->GetWorld()->GetDeltaSeconds() * 100.f, NAME_None, true); //Set to false if you want player mass to matter
+		player->playerCollider->AddForce(relativeInputVector * accel, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
 	else if (player->moveVector.IsZero() && player->bIsGrounded
@@ -35,14 +36,14 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 
 }
 
-void UMovementState::PlayerLook()
+void UMovementState::PlayerLook(float deltaTime)
 {
 	if (!player->lookVector.IsZero())
 	{
 		FRotator camRotation = player->playerCamera->GetRelativeRotation();
 
 		camRotation.Yaw += (player->lookVector.X * player->lookSpeed * player->GetWorld()->GetDeltaSeconds());
-		camRotation.Pitch = FMath::Clamp(camRotation.Pitch + (player->lookVector.Y * player->lookSpeed * player->GetWorld()->GetDeltaSeconds()), player->viewLookBounds.X, player->viewLookBounds.Y);
+		camRotation.Pitch = FMath::Clamp(camRotation.Pitch + (player->lookVector.Y * player->lookSpeed * deltaTime), player->viewLookBounds.X, player->viewLookBounds.Y);
 
 		player->playerCamera->SetRelativeRotation(camRotation);
 	}
@@ -139,8 +140,4 @@ void UMovementState::CheckStateChangeGrapple()
 	}
 }
 
-void UMovementState::StateTick(float DeltaTime)
-{
-	
-}
 #pragma endregion

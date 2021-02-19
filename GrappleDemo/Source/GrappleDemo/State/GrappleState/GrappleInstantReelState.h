@@ -15,12 +15,12 @@ class GRAPPLEDEMO_API UGrappleInstantReelState : public UGrappleState
 private:
 	// Utility Functions.
 	void CheckStateChange();
-	void UpdateGrappleRope(float DeltaTime);
+	void UpdateGrappleRope(float deltaTime);
 
 public:
 	// UMovementState Implementation.
 	virtual void Initialize(APlayerPawn* pawn) override;
 	virtual void OnStateEnter() override;
-	virtual void StateTick(float DeltaTime) override;
+	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
 };

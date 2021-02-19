@@ -19,11 +19,11 @@ void UGrappleInstantReelState::OnStateExit()
 	grappleComponent->SetHiddenInGame(true);
 }
 
-void UGrappleInstantReelState::StateTick(float DeltaTime)
+void UGrappleInstantReelState::StateTick(float deltaTime)
 {
 	CheckStateChange();
-	PlayerLook();
-	UpdateGrappleRope(DeltaTime);
+	PlayerLook(deltaTime);
+	UpdateGrappleRope(deltaTime);
 	UpdateGrappleRestraint();
 
 	UMovementState::CheckStateChangeGrapple();
@@ -35,9 +35,9 @@ void UGrappleInstantReelState::CheckStateChange()
 	if (player->tryingToInstantReel || player->tryingToJump)
 		player->stateMachine->SetState(player->stateMachine->walkState);
 }
-void UGrappleInstantReelState::UpdateGrappleRope(float DeltaTime)
+void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {
-	grappleComponent->Reel(-player->instantGrappleSpeed * DeltaTime);
+	grappleComponent->Reel(-player->instantGrappleSpeed * deltaTime);
 	if (grappleComponent->GetCableLength() < player->reelCompleteDistance)
 		player->stateMachine->SetState(player->stateMachine->grappleAirborneState);
 }

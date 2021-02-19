@@ -40,13 +40,13 @@ void APlayerPawn::BeginPlay()
 	grappleComponent->SolverIterations = 4;
 }
 
-void APlayerPawn::Tick(float DeltaTime)
+void APlayerPawn::Tick(float deltaTime)
 {
-	Super::Tick(DeltaTime);
+	Super::Tick(deltaTime);
 
 	if (this->stateMachine != nullptr) 
 	{
-		stateMachine->Tick(DeltaTime);
+		stateMachine->Tick(deltaTime);
 	}
 
 	else 
