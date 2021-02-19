@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CableComponent.h"
+#include "GrappleInteractions/GrappleReactor.h"
 #include "GrappleComponent.generated.h"
 
 UCLASS()
@@ -14,6 +15,7 @@ class GRAPPLEDEMO_API UGrappleComponent : public UCableComponent
 private:
 	float currentCableLength;
 	FVector attachedLocation;
+	AActor* attachedActor;
 	
 public:
 	UGrappleComponent();
@@ -33,6 +35,8 @@ public:
 	void ApplyForce(FVector force);
 	void Reel(float value);
 	// function that takes in vector and attaches endpoint of grapple to that
-	void Attach(FVector vector);
+	void Attach(FVector vector, AActor* actor);
 	void Detach();
+
+	AGrappleReactor* grappleReactor;
 };

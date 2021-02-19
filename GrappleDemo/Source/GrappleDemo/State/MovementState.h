@@ -19,7 +19,7 @@ public:
 	~UMovementState();
 
 	virtual void OnStateEnter() override;
-	virtual void StateTick() override;
+	virtual void StateTick(float DeltaTime) override;
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
@@ -31,5 +31,6 @@ protected:
 	virtual void HandleJump(float jumpForce);
 	virtual void ClampPlayerVelocity(float max);
 	virtual FVector ConvertPlayerInputRelativeToCamera();
-
+	
+	virtual void CheckStateChangeGrapple();
 };

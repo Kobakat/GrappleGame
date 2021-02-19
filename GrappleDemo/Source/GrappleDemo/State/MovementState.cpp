@@ -4,7 +4,6 @@
 UMovementState::~UMovementState() { }
 void UMovementState::Initialize(APlayerPawn* pawn) { UState::Initialize(pawn); }
 void UMovementState::OnStateEnter() { }
-void UMovementState::StateTick() { }
 void UMovementState::OnStateExit() { }
 
 #pragma region Game Logic
@@ -23,13 +22,16 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		player->playerCollider->AddForce(relativeInputVector * accel * player->GetWorld()->GetDeltaSeconds() * 100.f, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
-	else if (player->moveVector.IsZero() && player->bIsGrounded && player->stateMachine->state != player->stateMachine->crouchState) 
+	else if (player->moveVector.IsZero() && player->bIsGrounded
+		&& player->stateMachine->state != player->stateMachine->crouchState 
+		&& player->stateMachine->state != player->stateMachine->grappleAirborneState)
 	{
 		if (player->stateMachine->state != player->stateMachine->idleState) 
 		{
 			player->stateMachine->SetState(player->stateMachine->idleState);
 		}
 	}
+
 }
 
 void UMovementState::PlayerLook()
@@ -50,7 +52,7 @@ void UMovementState::CheckIfGrounded()
 	FHitResult hit;
 	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
 	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector * 5);
+	FVector rayDest = rayOrigin + (FVector::DownVector);
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
@@ -105,8 +107,10 @@ void UMovementState::HandleJump(float jumpForce)
 {
 	if (player->tryingToJump && player->bIsGrounded) 
 	{
+		player->tryingToJump = false;
 		//multiply by 100 so designer values aren't so high
-		player->playerCollider->AddForce(FVector::UpVector * jumpForce * 100.f);
+		player->playerCollider->SetPhysicsLinearVelocity(FVector::UpVector * jumpForce);
+		//player->playerCollider->AddForce(FVector::UpVector * jumpForce * 100.f);
 	}
 }
 
@@ -127,4 +131,16 @@ FVector UMovementState::ConvertPlayerInputRelativeToCamera()
 	return relativeVector;
 }
 
+void UMovementState::CheckStateChangeGrapple()
+{
+	if (player->tryingToGrapple)
+	{
+		player->stateMachine->SetState(player->stateMachine->grappleAirborneState);
+	}
+}
+
+void UMovementState::StateTick(float DeltaTime)
+{
+	
+}
 #pragma endregion

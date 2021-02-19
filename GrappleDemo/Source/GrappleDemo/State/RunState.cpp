@@ -15,7 +15,7 @@ void URunState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void URunState::StateTick()
+void URunState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	CheckifPlayerWantsToSlide();
@@ -24,6 +24,8 @@ void URunState::StateTick()
 	PlayerMove(player->runAcceleration, player->runAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->runMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void URunState::OnStateExit() { }

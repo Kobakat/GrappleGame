@@ -1,4 +1,6 @@
 #include "PlayerPawn.h"
+#include "Engine/StaticMesh.h"
+#include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
 APlayerPawn::APlayerPawn()
@@ -16,6 +18,8 @@ APlayerPawn::APlayerPawn()
 	//AttachTo is deprecated
 	
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
+	
+	grappleComponent->SetHiddenInGame(true);
 }
 
 void APlayerPawn::BeginPlay()
@@ -25,10 +29,15 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
+	raycastDistance = grappleComponent->maxGrappleLength;
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
 	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	grappleComponent->SetHiddenInGame(true);
+	grappleComponent->NumSegments = 10;
+	grappleComponent->NumSides = 8;
+	grappleComponent->SolverIterations = 4;
 }
 
 void APlayerPawn::Tick(float DeltaTime)
@@ -37,7 +46,7 @@ void APlayerPawn::Tick(float DeltaTime)
 
 	if (this->stateMachine != nullptr) 
 	{
-		stateMachine->Tick();
+		stateMachine->Tick(DeltaTime);
 	}
 
 	else 
@@ -68,6 +77,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Grapple movement bindings.
 	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
 	InputComponent->BindAction("ShootRelease", IE_Pressed, this, &APlayerPawn::ShootReleasePress);
+	InputComponent->BindAction("ShootRelease", IE_Released, this, &APlayerPawn::ShootReleaseRelease);
 	InputComponent->BindAction("InstantReel", IE_Pressed, this, &APlayerPawn::InstantReelPress);
 }
 
@@ -83,18 +93,39 @@ void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 
 void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
-void APlayerPawn::ShootReleasePress() { grappleInputBuffered = true; }
-void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
-bool APlayerPawn::IsTryingToGrapple()
+void APlayerPawn::ShootReleasePress() 
 {
-	if (grappleInputBuffered)
+	if (CastGrappleRaycast())
 	{
-		grappleInputBuffered = false;
-		return true;
+		stateMachine->SetState(stateMachine->grappleAirborneState);
 	}
-	else
-		return false;
 }
+void APlayerPawn::InstantReelPress()
+{
+	if (CastGrappleRaycast())
+	{
+		stateMachine->SetState(stateMachine->grappleInstantReelState);
+	}
+}
+
+void APlayerPawn::ShootReleaseRelease()
+{
+	tryingToGrapple = false;
+}
+//void APlayerPawn::InstantReelPress() { tryingToInstantReel = true; }
+//bool APlayerPawn::IsTryingToGrapple()
+//{
+//	if (grappleInputBuffered)
+//	{
+//		grappleInputBuffered = false;
+//		return true;
+//	}
+//	else
+//		return false;
+//}
+
+
+
 bool APlayerPawn::IsTryingToInstantReel()
 {
 	if (instantReelInputBuffered)
@@ -107,3 +138,41 @@ bool APlayerPawn::IsTryingToInstantReel()
 }
 
 #pragma endregion
+
+bool APlayerPawn::CastGrappleRaycast()
+{
+	// variable holding information of raycast hit
+	FHitResult* outHit = new FHitResult();
+
+	FVector Start = playerCamera->GetComponentLocation();
+	FVector End = playerCamera->GetForwardVector() * raycastDistance + Start;
+	FCollisionQueryParams CollisionParams;
+	// ignore collision with player
+	CollisionParams.AddIgnoredActor(this);
+	// called if they raycast hits something
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
+	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
+	{
+		
+		
+		
+		grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
+		
+		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
+
+		if (IsValid(playerGrappleReactor))
+		{
+			grappleComponent->grappleReactor = playerGrappleReactor;
+			
+			return true;
+		}
+		else
+		{
+			grappleComponent->grappleReactor = nullptr;
+		}
+
+		return true;
+	}
+
+	return false;
+}

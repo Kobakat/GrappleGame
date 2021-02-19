@@ -1,4 +1,6 @@
 #include "StateMachine.h"
+#include "Engine.h"
+
 UStateMachine::UStateMachine()
 {
 }
@@ -19,6 +21,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	slideState = NewObject<USlideState>();
 	runSlideState = NewObject<URunSlideState>();
 	grappleAirborneState = NewObject<UGrappleAirborneState>();
+	grappleInstantReelState = NewObject<UGrappleInstantReelState>();
 
 	//Initialize any new states here
 	idleState->Initialize(this->player);
@@ -28,6 +31,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	slideState->Initialize(this->player);
 	runSlideState->Initialize(this->player);
 	grappleAirborneState->Initialize(this->player);
+	grappleInstantReelState->Initialize(this->player);
 	
 	//Set the default starting state here
 	this->state = idleState;
@@ -43,10 +47,10 @@ void UStateMachine::SetState(UState* newState)
 	}
 }
 
-void UStateMachine::Tick()
+void UStateMachine::Tick(float DeltaTime)
 {
 	if (state != nullptr)
 	{
-		this->state->StateTick();
+		this->state->StateTick(DeltaTime);
 	}
 }
