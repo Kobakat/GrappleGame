@@ -17,6 +17,7 @@ APlayerPawn::APlayerPawn()
 	
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 	raycastDistance = 5000;
+	grappleComponent->SetHiddenInGame(true);
 }
 
 void APlayerPawn::BeginPlay()
@@ -38,7 +39,7 @@ void APlayerPawn::Tick(float DeltaTime)
 
 	if (this->stateMachine != nullptr) 
 	{
-		stateMachine->Tick();
+		stateMachine->Tick(DeltaTime);
 	}
 
 	else 

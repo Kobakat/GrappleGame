@@ -18,7 +18,7 @@ void URunSlideState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void URunSlideState::StateTick()
+void URunSlideState::StateTick(float DeltaTime)
 {
 	CheckIfSlideComplete();
 	CheckIfGrounded();
