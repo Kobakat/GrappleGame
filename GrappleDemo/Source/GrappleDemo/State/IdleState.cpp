@@ -15,13 +15,13 @@ void UIdleState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void UIdleState::StateTick(float DeltaTime)
+void UIdleState::StateTick(float deltaTime)
 {
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();
 	CheckIfGrounded();
 	HandleJump(player->walkJumpForce);
-	PlayerLook();
+	PlayerLook(deltaTime);
 
 	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 	UMovementState::CheckStateChangeGrapple();
@@ -35,11 +35,6 @@ void UIdleState::OnStateExit()
 #pragma endregion
 
 #pragma region Game Logic
-
-void UIdleState::PlayerLook() { UMovementState::PlayerLook(); }
-void UIdleState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void UIdleState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-
 
 void UIdleState::CheckForVelocityChange() 
 {

@@ -15,14 +15,14 @@ void URunState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void URunState::StateTick(float DeltaTime)
+void URunState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	CheckifPlayerWantsToSlide();
 	CheckIfPlayerStopsRunning();
 	HandleJump(player->runJumpForce);
 	PlayerMove(player->runAcceleration, player->runAirControlPercentage);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
@@ -33,12 +33,6 @@ void URunState::OnStateExit() { }
 #pragma endregion
 
 #pragma region Game Logic
-void URunState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void URunState::PlayerLook() { UMovementState::PlayerLook(); }
-void URunState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void URunState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
-void URunState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-FVector URunState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 void URunState::CheckIfPlayerStopsRunning()
 {

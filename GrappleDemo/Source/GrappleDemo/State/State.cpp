@@ -5,7 +5,7 @@ UState::UState() { }
 UState::~UState() { }
 
 void UState::OnStateEnter() { }
-void UState::StateTick(float DeltaTime) 
+void UState::StateTick(float deltaTime) 
 { 
 
 }

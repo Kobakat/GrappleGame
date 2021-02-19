@@ -47,10 +47,10 @@ void UStateMachine::SetState(UState* newState)
 	}
 }
 
-void UStateMachine::Tick(float DeltaTime)
+void UStateMachine::Tick(float deltaTime)
 {
 	if (state != nullptr)
 	{
-		this->state->StateTick(DeltaTime);
+		this->state->StateTick(deltaTime);
 	}
 }

@@ -21,18 +21,16 @@ void UGrappleAirborneState::OnStateExit()
 	grappleComponent->SetHiddenInGame(true);
 }
 
-void UGrappleAirborneState::StateTick(float DeltaTime)
+void UGrappleAirborneState::StateTick(float deltaTime)
 {
-	// TODO: should these have different behaviours
-	// while grapple airborne?
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
-	PlayerLook();
-	// Locally defined behaviour:
+	PlayerLook(deltaTime);
 	CheckStateChange();
-	UMovementState::HandleJump(player->walkJumpForce); //TODO
+	HandleJump(player->walkJumpForce);
 	HandleGrappleInput();
 	UpdateGrappleRestraint();
-	UMovementState::CheckIfGrounded();
+	CheckIfGrounded();
+	ClampPlayerVelocity(player->airborneMaxSpeed);
 }
 void UGrappleAirborneState::CheckStateChange()
 {
