@@ -84,7 +84,13 @@ void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 
 void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
-void APlayerPawn::ShootReleasePress() { CastRaycast(); grappleInputBuffered = true; }
+void APlayerPawn::ShootReleasePress() 
+{
+	if (CastGrappleRaycast())
+	{
+		grappleInputBuffered = true;
+	}
+}
 void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
 bool APlayerPawn::IsTryingToGrapple()
 {
@@ -109,24 +115,30 @@ bool APlayerPawn::IsTryingToInstantReel()
 
 #pragma endregion
 
-void APlayerPawn::CastRaycast()
+bool APlayerPawn::CastGrappleRaycast()
 {
 	// variable holding information of raycast hit
 	FHitResult* outHit = new FHitResult();
 
-	FVector Start = playerCamera->GetForwardVector();
+	FVector Start = playerCamera->GetComponentLocation();
 	FVector End = playerCamera->GetForwardVector() * raycastDistance + Start;
 	FCollisionQueryParams CollisionParams;
 	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 	// called if they raycast hits something
-	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_WorldStatic, CollisionParams))
+	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
-		if (outHit->GetActor() != NULL && outHit->GetActor()->ActorHasTag());
+		
+		grappleComponent->Attach(outHit->Location);
+		/*if (outHit->GetActor() == grappleReactor)
 		{
-			UE_LOG(LogClass, Log, TEXT("Component: %s"), *outHit->GetComponent()->GetName());
-			grappleComponent->Attach(outHit->Location);
-		}
+			grappleReactor = Cast<outHit->GetActor(AGrappleReactor)>(outhit->GetActor());
+			return true
+		}*/
+
+		return true;
 	}
+
+	return false;
 }

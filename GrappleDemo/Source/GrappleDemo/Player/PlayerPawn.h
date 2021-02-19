@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "../State/StateMachine.h"
+#include "../GrappleInteractions/GrappleReactor.h"
 #include "PlayerPawn.generated.h"
 
 UCLASS()
@@ -16,12 +17,13 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
-	void CastRaycast();
+	bool CastGrappleRaycast();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UGrappleComponent* grappleComponent;
+	AGrappleReactor* grappleReactor;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
 		USceneComponent* grappleStart;
