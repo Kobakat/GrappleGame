@@ -18,13 +18,15 @@ void URunSlideState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void URunSlideState::StateTick()
+void URunSlideState::StateTick(float DeltaTime)
 {
 	CheckIfSlideComplete();
 	CheckIfGrounded();
 	HandleJump(player->runSlideJumpForce);
 	PlayerLook();
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void URunSlideState::OnStateExit()

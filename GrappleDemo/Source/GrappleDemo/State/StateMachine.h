@@ -8,7 +8,8 @@
 #include "CrouchState.h"
 #include "RunSlideState.h"
 #include "SlideState.h"
-#include "GrappleAirborneState.h"
+#include "./GrappleState/GrappleAirborneState.h"
+#include "GrappleState/GrappleInstantReelState.h"
 #include "StateMachine.generated.h"
 
 UCLASS()
@@ -22,7 +23,7 @@ public:
 	~UStateMachine();
 
 	void SetState(UState* newState);
-	void Tick();
+	void Tick(float DeltaTime);
 	void Initialize(APlayerPawn* pawn);
 	
 	UPROPERTY()
@@ -41,6 +42,8 @@ public:
 		USlideState* slideState;
 	UPROPERTY()
 		UGrappleAirborneState* grappleAirborneState;
+	UPROPERTY()
+		UGrappleInstantReelState* grappleInstantReelState;
 
 private:
 	APlayerPawn* player;

@@ -16,7 +16,7 @@ void UWalkState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void UWalkState::StateTick()
+void UWalkState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToRun();
@@ -25,6 +25,7 @@ void UWalkState::StateTick()
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->walkMaxSpeed);
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void UWalkState::OnStateExit() { }

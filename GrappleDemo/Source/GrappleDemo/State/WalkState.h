@@ -17,7 +17,7 @@ public:
 	~UWalkState();
 
 	virtual void OnStateEnter() override;
-	virtual void StateTick() override;
+	virtual void StateTick(float DeltaTime) override;
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;

@@ -18,12 +18,14 @@ void USlideState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void USlideState::StateTick()
+void USlideState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	HandleJump(player->runSlideJumpForce);
 	PlayerLook();
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void USlideState::OnStateExit()

@@ -16,7 +16,7 @@ void UCrouchState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void UCrouchState::StateTick()
+void UCrouchState::StateTick(float DeltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToStand();
@@ -24,6 +24,8 @@ void UCrouchState::StateTick()
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->crouchMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void UCrouchState::OnStateExit()
