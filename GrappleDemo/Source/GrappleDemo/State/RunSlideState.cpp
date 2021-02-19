@@ -18,12 +18,12 @@ void URunSlideState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void URunSlideState::StateTick(float DeltaTime)
+void URunSlideState::StateTick(float deltaTime)
 {
 	CheckIfSlideComplete();
 	CheckIfGrounded();
 	HandleJump(player->runSlideJumpForce);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
@@ -34,13 +34,6 @@ void URunSlideState::OnStateExit()
 	player->playerCollider->SetPhysMaterialOverride(player->moveMat);
 	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
 }
-
-//void URunSlideState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void URunSlideState::PlayerLook() { UMovementState::PlayerLook(); }
-void URunSlideState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void URunSlideState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
-void URunSlideState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-FVector URunSlideState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 
 void URunSlideState::CheckIfSlideComplete() 

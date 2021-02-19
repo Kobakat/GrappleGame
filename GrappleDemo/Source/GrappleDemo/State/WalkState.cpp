@@ -16,14 +16,14 @@ void UWalkState::OnStateEnter()
 	player->state = this->stateName;
 }
 
-void UWalkState::StateTick(float DeltaTime)
+void UWalkState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToRun();
 	CheckIfPlayerIsTryingToCrouch();
 	HandleJump(player->walkJumpForce);
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->walkMaxSpeed);
 	UMovementState::CheckStateChangeGrapple();
 }
@@ -33,12 +33,6 @@ void UWalkState::OnStateExit() { }
 #pragma endregion
 
 #pragma region Game Logic
-void UWalkState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void UWalkState::PlayerLook() { UMovementState::PlayerLook(); }
-void UWalkState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void UWalkState::ClampPlayerVelocity(float accel) { UMovementState::ClampPlayerVelocity(accel); }
-void UWalkState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-FVector UWalkState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 void UWalkState::CheckIfPlayerIsTryingToRun()
 {

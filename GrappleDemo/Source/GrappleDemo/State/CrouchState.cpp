@@ -16,13 +16,13 @@ void UCrouchState::OnStateEnter()
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void UCrouchState::StateTick(float DeltaTime)
+void UCrouchState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToStand();
 	HandleJump(player->crouchJumpForce);
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->crouchMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
@@ -57,12 +57,6 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 		}
 	}
 }
-
-void UCrouchState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void UCrouchState::PlayerLook() { UMovementState::PlayerLook(); }
-void UCrouchState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void UCrouchState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
-FVector UCrouchState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 void UCrouchState::HandleJump(float jumpForce)
 {
