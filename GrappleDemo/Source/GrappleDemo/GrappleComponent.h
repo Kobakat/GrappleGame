@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CableComponent.h"
+#include "GrappleInteractions/GrappleReactor.h"
 #include "GrappleComponent.generated.h"
 
 UCLASS()
@@ -35,4 +36,6 @@ public:
 	// function that takes in vector and attaches endpoint of grapple to that
 	void Attach(FVector vector);
 	void Detach();
+
+	AGrappleReactor* grappleReactor;
 };

@@ -1,4 +1,6 @@
 #include "PlayerPawn.h"
+#include "Engine/StaticMesh.h"
+#include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
 APlayerPawn::APlayerPawn()
@@ -16,7 +18,7 @@ APlayerPawn::APlayerPawn()
 	//AttachTo is deprecated
 	
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
-	raycastDistance = 5000;
+	
 	grappleComponent->SetHiddenInGame(true);
 }
 
@@ -27,6 +29,7 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
+	raycastDistance = grappleComponent->maxGrappleLength;
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
@@ -70,6 +73,7 @@ void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Grapple movement bindings.
 	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
 	InputComponent->BindAction("ShootRelease", IE_Pressed, this, &APlayerPawn::ShootReleasePress);
+	InputComponent->BindAction("ShootRelease", IE_Released, this, &APlayerPawn::ShootReleaseRelease);
 	InputComponent->BindAction("InstantReel", IE_Pressed, this, &APlayerPawn::InstantReelPress);
 }
 
@@ -89,20 +93,35 @@ void APlayerPawn::ShootReleasePress()
 {
 	if (CastGrappleRaycast())
 	{
-		grappleInputBuffered = true;
+		stateMachine->SetState(stateMachine->grappleAirborneState);
 	}
 }
-void APlayerPawn::InstantReelPress() { instantReelInputBuffered = true; }
-bool APlayerPawn::IsTryingToGrapple()
+void APlayerPawn::InstantReelPress()
 {
-	if (grappleInputBuffered)
+	if (CastGrappleRaycast())
 	{
-		grappleInputBuffered = false;
-		return true;
+		stateMachine->SetState(stateMachine->grappleInstantReelState);
 	}
-	else
-		return false;
 }
+
+void APlayerPawn::ShootReleaseRelease()
+{
+	tryingToGrapple = false;
+}
+//void APlayerPawn::InstantReelPress() { tryingToInstantReel = true; }
+//bool APlayerPawn::IsTryingToGrapple()
+//{
+//	if (grappleInputBuffered)
+//	{
+//		grappleInputBuffered = false;
+//		return true;
+//	}
+//	else
+//		return false;
+//}
+
+
+
 bool APlayerPawn::IsTryingToInstantReel()
 {
 	if (instantReelInputBuffered)
@@ -127,16 +146,28 @@ bool APlayerPawn::CastGrappleRaycast()
 	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 	// called if they raycast hits something
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
+	UE_LOG(LogTemp, Warning, TEXT("pp"));
 	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
 		
-		grappleComponent->Attach(outHit->Location);
-		/*if (outHit->GetActor() == grappleReactor)
+		
+		
+		grappleComponent->Attach(outHit->GetActor()->GetActorLocation());
+		
+		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *outHit->GetActor()->GetFName().ToString());
+
+		if (IsValid(playerGrappleReactor))
 		{
-			grappleReactor = Cast<outHit->GetActor(AGrappleReactor)>(outhit->GetActor());
-			return true
-		}*/
+			grappleComponent->grappleReactor = playerGrappleReactor;
+			
+			return true;
+		}
+		else
+		{
+			grappleComponent->grappleReactor = nullptr;
+		}
 
 		return true;
 	}

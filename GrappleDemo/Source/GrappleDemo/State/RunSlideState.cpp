@@ -25,6 +25,8 @@ void URunSlideState::StateTick(float DeltaTime)
 	HandleJump(player->runSlideJumpForce);
 	PlayerLook();
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void URunSlideState::OnStateExit()

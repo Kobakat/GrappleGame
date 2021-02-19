@@ -23,6 +23,8 @@ void UIdleState::StateTick(float DeltaTime)
 	CheckIfGrounded();
 	HandleJump(player->walkJumpForce);
 	PlayerLook();
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void UIdleState::OnStateExit() 

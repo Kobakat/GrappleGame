@@ -13,6 +13,7 @@ void UGrappleAirborneState::OnStateEnter()
 {
 	player->state = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
+	player->tryingToGrapple = false;
 }
 void UGrappleAirborneState::OnStateExit()
 {
@@ -28,14 +29,17 @@ void UGrappleAirborneState::StateTick(float DeltaTime)
 	PlayerLook();
 	// Locally defined behaviour:
 	CheckStateChange();
+	UMovementState::HandleJump(player->walkJumpForce); //TODO
 	HandleGrappleInput();
 	UpdateGrappleRestraint();
+	UMovementState::CheckIfGrounded();
 }
 void UGrappleAirborneState::CheckStateChange()
 {
 	// If the grapple or jump button is pressed then release
 	// the grapple and return to walk state.
-	if (player->IsTryingToGrapple() || player->tryingToJump)
+	if (player->tryingToGrapple || 
+		(player->tryingToJump && !player->bIsGrounded))
 		player->stateMachine->SetState(player->stateMachine->walkState);
 }
 void UGrappleAirborneState::HandleGrappleInput()

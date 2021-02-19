@@ -25,13 +25,15 @@ void UGrappleInstantReelState::StateTick(float DeltaTime)
 	PlayerLook();
 	UpdateGrappleRope(DeltaTime);
 	UpdateGrappleRestraint();
+
+	UMovementState::CheckStateChangeGrapple();
 }
 void UGrappleInstantReelState::CheckStateChange()
 {
 	// If the grapple or jump button is pressed then release
 	// the grapple and return to walk state.
-	if (player->IsTryingToGrapple() || player->tryingToJump)
-		player->stateMachine->SetState(player->stateMachine->walkState);
+	//if (player->IsTryingToGrapple || player->tryingToJump)
+		//player->stateMachine->SetState(player->stateMachine->walkState);
 }
 void UGrappleInstantReelState::UpdateGrappleRope(float DeltaTime)
 {

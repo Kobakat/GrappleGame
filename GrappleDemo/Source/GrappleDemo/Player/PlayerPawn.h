@@ -18,6 +18,7 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 public:
 	APlayerPawn();
 	bool CastGrappleRaycast();
+	bool tryingToInstantReel;
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -146,8 +147,9 @@ public:
 	bool tryingToSprint;
 	bool tryingToJump;
 	bool tryingToCrouch;
+	bool tryingToGrapple;
 	// These inputs are consumed when observed.
-	bool IsTryingToGrapple();
+	//bool IsTryingToGrapple();
 	bool IsTryingToInstantReel();
 #pragma endregion
 
@@ -171,6 +173,7 @@ protected:
 	void CrouchSlideRelease();
 	void ReelInputAxis(float value);
 	void ShootReleasePress();
+	void ShootReleaseRelease();
 	void InstantReelPress();
 #pragma endregion
 };

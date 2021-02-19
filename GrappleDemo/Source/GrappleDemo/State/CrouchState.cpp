@@ -24,6 +24,8 @@ void UCrouchState::StateTick(float DeltaTime)
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->crouchMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void UCrouchState::OnStateExit()

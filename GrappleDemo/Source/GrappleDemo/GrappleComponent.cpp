@@ -14,6 +14,7 @@ UGrappleComponent::UGrappleComponent()
 	// TODO these should not be hardcoded.
 	reelMultiplier = 10.F;
 	maxGrappleLength = 500.F;
+	currentCableLength = 300;
 
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -32,6 +33,10 @@ void UGrappleComponent::ApplyForce(FVector force)
 {
 	// TODO add code that apply's force to current
 	// grapple reactor if available.
+	if (IsValid(grappleReactor))
+	{
+		grappleReactor->ApplyPullForce(force);
+	}
 }
 
 void UGrappleComponent::Reel(float value)

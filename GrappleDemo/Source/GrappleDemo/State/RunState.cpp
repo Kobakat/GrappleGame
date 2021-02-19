@@ -24,6 +24,8 @@ void URunState::StateTick(float DeltaTime)
 	PlayerMove(player->runAcceleration, player->runAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->runMaxSpeed);
+
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void URunState::OnStateExit() { }

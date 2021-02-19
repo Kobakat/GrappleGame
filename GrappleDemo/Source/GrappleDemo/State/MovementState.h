@@ -31,5 +31,6 @@ protected:
 	virtual void HandleJump(float jumpForce);
 	virtual void ClampPlayerVelocity(float max);
 	virtual FVector ConvertPlayerInputRelativeToCamera();
-
+	
+	virtual void CheckStateChangeGrapple();
 };

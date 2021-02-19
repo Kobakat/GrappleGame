@@ -1,4 +1,6 @@
 #include "StateMachine.h"
+#include "Engine.h"
+
 UStateMachine::UStateMachine()
 {
 }
@@ -32,7 +34,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	grappleInstantReelState->Initialize(this->player);
 	
 	//Set the default starting state here
-	this->state = grappleInstantReelState;
+	this->state = idleState;
 }
 
 void UStateMachine::SetState(UState* newState)

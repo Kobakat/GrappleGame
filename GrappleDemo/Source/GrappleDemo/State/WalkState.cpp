@@ -25,6 +25,7 @@ void UWalkState::StateTick(float DeltaTime)
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook();
 	ClampPlayerVelocity(player->walkMaxSpeed);
+	UMovementState::CheckStateChangeGrapple();
 }
 
 void UWalkState::OnStateExit() { }
