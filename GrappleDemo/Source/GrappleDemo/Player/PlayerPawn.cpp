@@ -3,6 +3,7 @@
 #include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
+
 APlayerPawn::APlayerPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -11,15 +12,12 @@ APlayerPawn::APlayerPawn()
 	bUseControllerRotationYaw = false;
 
 	playerCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
-	playerCollider->AttachTo(RootComponent);
+	playerCollider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	playerCamera->AttachTo(RootComponent);
-	//AttachTo is deprecated
-	
+	playerCamera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
-	
-	grappleComponent->SetHiddenInGame(true);
 }
 
 void APlayerPawn::BeginPlay()
@@ -29,12 +27,11 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
-	raycastDistance = grappleComponent->maxGrappleLength;
+
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
 	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
-	grappleComponent->SetHiddenInGame(true);
 	grappleComponent->NumSegments = 10;
 	grappleComponent->NumSides = 8;
 	grappleComponent->SolverIterations = 4;
@@ -53,7 +50,6 @@ void APlayerPawn::Tick(float deltaTime)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
 	}
-	
 }
 
 #pragma endregion
@@ -63,19 +59,17 @@ void APlayerPawn::Tick(float deltaTime)
 void APlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	// Basic movement bindings.
 	InputComponent->BindAxis("MoveX", this, &APlayerPawn::MoveInputX);
 	InputComponent->BindAxis("MoveY", this, &APlayerPawn::MoveInputY);
 	InputComponent->BindAxis("LookX", this, &APlayerPawn::LookInputX);
 	InputComponent->BindAxis("LookY", this, &APlayerPawn::LookInputY);
+	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
 	InputComponent->BindAction("Jump", IE_Pressed, this, &APlayerPawn::JumpPress);
 	InputComponent->BindAction("Jump", IE_Released, this, &APlayerPawn::JumpRelease);
 	InputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerPawn::RunPress);
 	InputComponent->BindAction("Sprint", IE_Released, this, &APlayerPawn::RunRelease);
 	InputComponent->BindAction("CrouchSlide", IE_Pressed, this, &APlayerPawn::CrouchSlidePress);
 	InputComponent->BindAction("CrouchSlide", IE_Released, this, &APlayerPawn::CrouchSlideRelease);
-	// Grapple movement bindings.
-	InputComponent->BindAxis("IncrementalReelUnreel", this, &APlayerPawn::ReelInputAxis);
 	InputComponent->BindAction("ShootRelease", IE_Pressed, this, &APlayerPawn::ShootReleasePress);
 	InputComponent->BindAction("ShootRelease", IE_Released, this, &APlayerPawn::ShootReleaseRelease);
 	InputComponent->BindAction("InstantReel", IE_Pressed, this, &APlayerPawn::InstantReelPress);
@@ -85,6 +79,7 @@ void APlayerPawn::MoveInputX(float value) { moveVector.X = value; }
 void APlayerPawn::MoveInputY(float value) { moveVector.Y = value; }
 void APlayerPawn::LookInputX(float value) { lookVector.X = value; }
 void APlayerPawn::LookInputY(float value) { lookVector.Y = value; }
+void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
 void APlayerPawn::JumpPress() { tryingToJump = true; }
 void APlayerPawn::JumpRelease() { tryingToJump = false; }
 void APlayerPawn::RunPress() { tryingToSprint = true; }
@@ -92,72 +87,44 @@ void APlayerPawn::RunRelease() { tryingToSprint = false; }
 void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 
-void APlayerPawn::ReelInputAxis(float value) { reelingAxis = value; }
 void APlayerPawn::ShootReleasePress() 
 {
 	if (CastGrappleRaycast())
 	{
-		stateMachine->SetState(stateMachine->grappleAirborneState);
+		SetState(UGrappleAirborneState::GetInstance());
 	}
 }
+void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
+
 void APlayerPawn::InstantReelPress()
 {
 	if (CastGrappleRaycast())
 	{
-		stateMachine->SetState(stateMachine->grappleInstantReelState);
+		SetState(UGrappleInstantReelState::GetInstance());
 	}
-}
-
-void APlayerPawn::ShootReleaseRelease()
-{
-	tryingToGrapple = false;
-}
-//void APlayerPawn::InstantReelPress() { tryingToInstantReel = true; }
-//bool APlayerPawn::IsTryingToGrapple()
-//{
-//	if (grappleInputBuffered)
-//	{
-//		grappleInputBuffered = false;
-//		return true;
-//	}
-//	else
-//		return false;
-//}
-
-
-
-bool APlayerPawn::IsTryingToInstantReel()
-{
-	if (instantReelInputBuffered)
-	{
-		instantReelInputBuffered = false;
-		return true;
-	}
-	else
-		return false;
 }
 
 #pragma endregion
 
+#pragma region Logic
+
+void APlayerPawn::SetState(UState* newState) 
+{
+	stateMachine->SetState(newState);
+}
+
 bool APlayerPawn::CastGrappleRaycast()
 {
-	// variable holding information of raycast hit
 	FHitResult* outHit = new FHitResult();
 
 	FVector Start = playerCamera->GetComponentLocation();
-	FVector End = playerCamera->GetForwardVector() * raycastDistance + Start;
+	FVector End = playerCamera->GetForwardVector() * grappleComponent->grappleFireRange + Start;
 	FCollisionQueryParams CollisionParams;
-	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
-	// called if they raycast hits something
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
+
 	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		
-		
-		
 		grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
-		
 		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
 
 		if (IsValid(playerGrappleReactor))
@@ -176,3 +143,5 @@ bool APlayerPawn::CastGrappleRaycast()
 
 	return false;
 }
+
+#pragma endregion

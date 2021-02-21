@@ -7,9 +7,6 @@
 #include "State.h"
 #include "MovementState.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class GRAPPLEDEMO_API UMovementState : public UState
 {

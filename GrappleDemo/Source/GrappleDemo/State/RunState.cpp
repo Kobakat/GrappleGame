@@ -3,16 +3,27 @@
 
 URunState::URunState() { }
 URunState::~URunState() { }
+URunState* URunState::instance;
+URunState* URunState::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<URunState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void URunState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Running";
+	UState::Initialize(pawn);
 }
 
 void URunState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 }
 
 void URunState::StateTick(float deltaTime)
@@ -38,7 +49,7 @@ void URunState::CheckIfPlayerStopsRunning()
 {
 	if (!player->tryingToSprint)
 	{
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 	}
 }
 
@@ -46,7 +57,7 @@ void URunState::CheckifPlayerWantsToSlide()
 {
 	if (player->tryingToCrouch && player->bIsGrounded) 
 	{
-		player->stateMachine->SetState(player->stateMachine->runSlideState);
+		player->SetState(URunSlideState::GetInstance());
 	}
 }
 

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -19,12 +17,17 @@ private:
 	
 public:
 	UGrappleComponent();
-	// TODO since this component must be added at runtime
-	// these values need to be passed in from player pawn inspector.
-	UPROPERTY(EditAnywhere)
-		float reelMultiplier;
-	UPROPERTY(EditAnywhere)
-		float maxGrappleLength;
+	~UGrappleComponent();
+
+	UPROPERTY(EditAnywhere, Category = "Grapple Options")
+		float grappleFireRange;
+	UPROPERTY(EditAnywhere, Category = "Grapple Options")
+		float grappleMaxDistance;
+	UPROPERTY(EditAnywhere, Category = "Grapple Options")
+		float grappleReelSpeed;
+	//Use this to make the rope seem more tight than it actually is (0.7 - 0.9 are ideal)
+	UPROPERTY(EditAnywhere, Category = "Grapple Options")
+		float grappleVisualMultiplier;
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

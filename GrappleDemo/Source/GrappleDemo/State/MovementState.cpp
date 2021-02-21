@@ -24,16 +24,15 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		player->playerCollider->AddForce(relativeInputVector * accel, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
-	else if (player->moveVector.IsZero() && player->bIsGrounded
-		&& player->stateMachine->state != player->stateMachine->crouchState 
-		&& player->stateMachine->state != player->stateMachine->grappleAirborneState)
-	{
-		if (player->stateMachine->state != player->stateMachine->idleState) 
-		{
-			player->stateMachine->SetState(player->stateMachine->idleState);
-		}
+	else if (
+		player->moveVector.IsZero() 
+		&& player->bIsGrounded
+		&& player->state != UCrouchState::GetInstance()
+		&& player->state != UGrappleAirborneState::GetInstance()
+		&& player->state != UIdleState::GetInstance())
+	{	
+		player->SetState(UIdleState::GetInstance());	
 	}
-
 }
 
 void UMovementState::PlayerLook(float deltaTime)
@@ -64,9 +63,9 @@ void UMovementState::CheckIfGrounded()
 	{
 		bool bHitSlide = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel2, param);
 		
-		if (bHitSlide && player->stateMachine->state != player->stateMachine->slideState) 
+		if (bHitSlide && player->state != USlideState::GetInstance()) 
 		{
-			player->stateMachine->SetState(player->stateMachine->slideState);
+			player->SetState(USlideState::GetInstance());
 			player->bIsGrounded = true;
 		}
 
@@ -136,7 +135,7 @@ void UMovementState::CheckStateChangeGrapple()
 {
 	if (player->tryingToGrapple)
 	{
-		player->stateMachine->SetState(player->stateMachine->grappleAirborneState);
+		player->SetState(UGrappleAirborneState::GetInstance());
 	}
 }
 

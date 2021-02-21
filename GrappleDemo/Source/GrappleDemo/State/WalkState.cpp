@@ -1,19 +1,29 @@
 #include "WalkState.h"
 #include "../Player/PlayerPawn.h"
 
-#pragma region State Events
 UWalkState::UWalkState() { }
 UWalkState::~UWalkState() { }
+UWalkState* UWalkState::instance;
+UWalkState* UWalkState::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<UWalkState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void UWalkState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Walking";
+	UState::Initialize(pawn);
 }
 
 void UWalkState::OnStateEnter() 
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 }
 
 void UWalkState::StateTick(float deltaTime)
@@ -38,14 +48,14 @@ void UWalkState::CheckIfPlayerIsTryingToRun()
 {
 	if (player->tryingToSprint)
 	{
-		player->stateMachine->SetState(player->stateMachine->runState);
+		player->SetState(URunState::GetInstance());
 	}
 }
 
 void UWalkState::CheckIfPlayerIsTryingToCrouch() {
 	if (player->tryingToCrouch) 
 	{
-		player->stateMachine->SetState(player->stateMachine->crouchState);
+		player->SetState(UCrouchState::GetInstance());
 	}
 }
 #pragma endregion

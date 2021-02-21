@@ -3,16 +3,27 @@
 
 UIdleState::UIdleState() { }
 UIdleState::~UIdleState() { }
+UIdleState* UIdleState::instance;
+UIdleState* UIdleState::GetInstance() 
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<UIdleState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void UIdleState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Idle";
+	UState::Initialize(pawn);
 }
 
 void UIdleState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 }
 
 void UIdleState::StateTick(float deltaTime)
@@ -40,7 +51,7 @@ void UIdleState::CheckForVelocityChange()
 {
 	if (player->moveVector.SizeSquared() > 0.01) 
 	{
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 	}
 }
 
@@ -48,7 +59,7 @@ void UIdleState::CheckIfPlayerIsTryingToCrouch()
 {
 	if (player->tryingToCrouch)
 	{
-		player->stateMachine->SetState(player->stateMachine->crouchState);
+		player->SetState(UCrouchState::GetInstance());
 	}
 }
 

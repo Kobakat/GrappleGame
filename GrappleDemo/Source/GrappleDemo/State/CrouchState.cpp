@@ -3,16 +3,27 @@
 
 UCrouchState::UCrouchState() { }
 UCrouchState::~UCrouchState() { }
+UCrouchState* UCrouchState::instance;
+UCrouchState* UCrouchState::GetInstance() 
+{ 
+	if (instance == nullptr) 
+	{
+		instance = NewObject<UCrouchState>();
+	}
+	return instance; 
+}
+
+#pragma region State Events
 
 void UCrouchState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Crouching";
+	UState::Initialize(pawn);	
 }
 
 void UCrouchState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
@@ -33,6 +44,9 @@ void UCrouchState::OnStateExit()
 	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
 }
 
+#pragma endregion
+
+#pragma region Game Logic
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
 	if (!player->tryingToCrouch) 
@@ -53,7 +67,7 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 
 		{
-			player->stateMachine->SetState(player->stateMachine->walkState);
+			player->SetState(UWalkState::GetInstance());
 		}
 	}
 }
@@ -79,4 +93,6 @@ void UCrouchState::AdjustCameraAndColliderPosition(float capsuleHeight, float ca
 
 	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
 }
+
+#pragma endregion
 

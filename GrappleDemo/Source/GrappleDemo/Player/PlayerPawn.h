@@ -17,21 +17,18 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
-	bool CastGrappleRaycast();
-	bool tryingToInstantReel;
-
+	
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UGrappleComponent* grappleComponent;
 	AGrappleReactor* grappleReactor;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
-		USceneComponent* grappleStart;
-	UPROPERTY()
-		float raycastDistance;
+	UStateMachine* stateMachine;
+	UState* state;
+	bool CastGrappleRaycast();
+	void SetState(UState* state);
 
 #pragma region Designer Props
+
 	//=================Camera=================//
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
@@ -69,6 +66,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		FVector2D viewLookBounds;
 
+	//=================Grapple================//
+	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
+		USceneComponent* grappleStart;
+	UPROPERTY(EditAnywhere, Category = "Grapple")
+		UGrappleComponent* grappleComponent;
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
@@ -133,14 +135,14 @@ public:
 	//===================State=================//
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
-		FString state;
+		FString stateName;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		bool bIsGrounded;
-	UPROPERTY() //garbage collector gets angry if this isn't a uprop?
-		UStateMachine* stateMachine;
+		
 #pragma endregion
 	
 #pragma region Input State
+
 	FVector2D moveVector;
 	FVector2D lookVector;
 	float reelingAxis;
@@ -148,30 +150,26 @@ public:
 	bool tryingToJump;
 	bool tryingToCrouch;
 	bool tryingToGrapple;
-	// These inputs are consumed when observed.
-	//bool IsTryingToGrapple();
-	bool IsTryingToInstantReel();
-#pragma endregion
+	bool tryingToInstantReel;
 
-private:
-	bool grappleInputBuffered;
-	bool instantReelInputBuffered;
+#pragma endregion
 
 protected:
 	virtual void BeginPlay() override;
 
+private:
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
 	void LookInputX(float value);
 	void LookInputY(float value);
+	void ReelInputAxis(float value);
 	void JumpPress();
 	void JumpRelease();
 	void RunPress();
 	void RunRelease();
 	void CrouchSlidePress();
 	void CrouchSlideRelease();
-	void ReelInputAxis(float value);
 	void ShootReleasePress();
 	void ShootReleaseRelease();
 	void InstantReelPress();
