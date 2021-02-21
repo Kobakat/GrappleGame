@@ -13,6 +13,8 @@ public:
 	URunSlideState();
 	~URunSlideState();
 
+	static URunSlideState* GetInstance();
+
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
@@ -20,7 +22,9 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 private:
+	static URunSlideState* instance;
 	void CheckIfSlideComplete();
 	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
 
 };
+
