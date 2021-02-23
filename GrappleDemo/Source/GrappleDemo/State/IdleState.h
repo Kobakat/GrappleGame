@@ -12,21 +12,16 @@ class GRAPPLEDEMO_API UIdleState : public UMovementState
 public:
 	UIdleState();
 	~UIdleState();
+	static UIdleState* GetInstance();
 
 	virtual void OnStateEnter() override;
-	virtual void StateTick(float DeltaTime) override;
+	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 
-protected:
-	//virtual void PlayerMove(float accel, float airControlFactor);
-	virtual void PlayerLook();
-	virtual void CheckIfGrounded();
-	virtual void HandleJump(float jumpForce);
-	//virtual void ClampPlayerVelocity(float max);
-	//virtual FVector ConvertPlayerInputRelativeToCamera();
 private:
+	static UIdleState* instance;
 	void CheckForVelocityChange();
 	void CheckIfPlayerIsTryingToCrouch();
 	

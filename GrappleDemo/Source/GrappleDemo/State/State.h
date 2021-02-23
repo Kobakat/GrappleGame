@@ -16,14 +16,12 @@ public:
 	~UState();
 
 	virtual void OnStateEnter();
-	virtual void StateTick(float DeltaTime);
+	virtual void StateTick(float deltaTime);
 	virtual void OnStateExit();
 
 	virtual void Initialize(APlayerPawn* pawn);
 	FString stateName; /*For inspector display; have each state set this in initialize*/
 
 protected:
-	APlayerPawn* player;
-
-	
+	APlayerPawn* player;	
 };

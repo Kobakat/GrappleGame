@@ -3,26 +3,37 @@
 
 URunState::URunState() { }
 URunState::~URunState() { }
+URunState* URunState::instance;
+URunState* URunState::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<URunState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void URunState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Running";
+	UState::Initialize(pawn);
 }
 
 void URunState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 }
 
-void URunState::StateTick(float DeltaTime)
+void URunState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	CheckifPlayerWantsToSlide();
 	CheckIfPlayerStopsRunning();
 	HandleJump(player->runJumpForce);
 	PlayerMove(player->runAcceleration, player->runAirControlPercentage);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
@@ -33,18 +44,12 @@ void URunState::OnStateExit() { }
 #pragma endregion
 
 #pragma region Game Logic
-void URunState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void URunState::PlayerLook() { UMovementState::PlayerLook(); }
-void URunState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void URunState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
-void URunState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-FVector URunState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 void URunState::CheckIfPlayerStopsRunning()
 {
 	if (!player->tryingToSprint)
 	{
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 	}
 }
 
@@ -52,7 +57,7 @@ void URunState::CheckifPlayerWantsToSlide()
 {
 	if (player->tryingToCrouch && player->bIsGrounded) 
 	{
-		player->stateMachine->SetState(player->stateMachine->runSlideState);
+		player->SetState(URunSlideState::GetInstance());
 	}
 }
 

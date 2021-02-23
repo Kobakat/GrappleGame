@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,22 +13,17 @@ class GRAPPLEDEMO_API UWalkState : public UMovementState
 public:
 	UWalkState();
 	~UWalkState();
+	static UWalkState* GetInstance();
 
 	virtual void OnStateEnter() override;
-	virtual void StateTick(float DeltaTime) override;
+	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 
-protected:
-	virtual void PlayerMove(float accel, float airControlFactor) override;
-	virtual void PlayerLook() override;
-	virtual void CheckIfGrounded() override;
-	virtual void ClampPlayerVelocity(float max) override;
-	virtual void HandleJump(float jumpForce) override;
-	virtual FVector ConvertPlayerInputRelativeToCamera() override;
-
-	virtual void CheckIfPlayerIsTryingToCrouch();
 private:
+	static UWalkState* instance;
 	void CheckIfPlayerIsTryingToRun();
+	void CheckIfPlayerIsTryingToCrouch();
 };
+

@@ -3,26 +3,37 @@
 
 UCrouchState::UCrouchState() { }
 UCrouchState::~UCrouchState() { }
+UCrouchState* UCrouchState::instance;
+UCrouchState* UCrouchState::GetInstance() 
+{ 
+	if (instance == nullptr) 
+	{
+		instance = NewObject<UCrouchState>();
+	}
+	return instance; 
+}
+
+#pragma region State Events
 
 void UCrouchState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Crouching";
+	UState::Initialize(pawn);	
 }
 
 void UCrouchState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
 }
 
-void UCrouchState::StateTick(float DeltaTime)
+void UCrouchState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToStand();
 	HandleJump(player->crouchJumpForce);
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
-	PlayerLook();
+	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->crouchMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
@@ -33,6 +44,9 @@ void UCrouchState::OnStateExit()
 	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
 }
 
+#pragma endregion
+
+#pragma region Game Logic
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
 	if (!player->tryingToCrouch) 
@@ -53,16 +67,10 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 
 		{
-			player->stateMachine->SetState(player->stateMachine->walkState);
+			player->SetState(UWalkState::GetInstance());
 		}
 	}
 }
-
-void UCrouchState::PlayerMove(float accel, float airControlFactor) { UMovementState::PlayerMove(accel, airControlFactor); }
-void UCrouchState::PlayerLook() { UMovementState::PlayerLook(); }
-void UCrouchState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void UCrouchState::ClampPlayerVelocity(float max) { UMovementState::ClampPlayerVelocity(max); }
-FVector UCrouchState::ConvertPlayerInputRelativeToCamera() { return UMovementState::ConvertPlayerInputRelativeToCamera(); }
 
 void UCrouchState::HandleJump(float jumpForce)
 {
@@ -85,4 +93,6 @@ void UCrouchState::AdjustCameraAndColliderPosition(float capsuleHeight, float ca
 
 	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
 }
+
+#pragma endregion
 

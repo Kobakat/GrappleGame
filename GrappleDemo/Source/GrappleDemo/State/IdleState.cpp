@@ -3,27 +3,38 @@
 
 UIdleState::UIdleState() { }
 UIdleState::~UIdleState() { }
+UIdleState* UIdleState::instance;
+UIdleState* UIdleState::GetInstance() 
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<UIdleState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void UIdleState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Idle";
+	UState::Initialize(pawn);
 }
 
 void UIdleState::OnStateEnter()
 {
-	player->state = this->stateName;
-	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
+	player->stateName = this->stateName;
 }
 
-void UIdleState::StateTick(float DeltaTime)
+void UIdleState::StateTick(float deltaTime)
 {
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();
 	CheckIfGrounded();
 	HandleJump(player->walkJumpForce);
-	PlayerLook();
+	PlayerLook(deltaTime);
 
+	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 	UMovementState::CheckStateChangeGrapple();
 }
 
@@ -36,16 +47,11 @@ void UIdleState::OnStateExit()
 
 #pragma region Game Logic
 
-void UIdleState::PlayerLook() { UMovementState::PlayerLook(); }
-void UIdleState::CheckIfGrounded() { UMovementState::CheckIfGrounded(); }
-void UIdleState::HandleJump(float jumpForce) { UMovementState::HandleJump(jumpForce); }
-
-
 void UIdleState::CheckForVelocityChange() 
 {
 	if (player->moveVector.SizeSquared() > 0.01) 
 	{
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 	}
 }
 
@@ -53,7 +59,7 @@ void UIdleState::CheckIfPlayerIsTryingToCrouch()
 {
 	if (player->tryingToCrouch)
 	{
-		player->stateMachine->SetState(player->stateMachine->crouchState);
+		player->SetState(UCrouchState::GetInstance());
 	}
 }
 
