@@ -26,6 +26,7 @@ public:
 	UState* state;
 	bool CastGrappleRaycast();
 	void SetState(UState* state);
+	bool bNeedsToStand;
 
 #pragma region Designer Props
 
@@ -104,7 +105,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		float crouchAirControlPercentage;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchTransitionTime;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
+
 
 	//===============Running=Slide==============//
 
@@ -158,6 +162,8 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	void HandleStandUp(float deltaTime);
+	float standUpTimer;
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
