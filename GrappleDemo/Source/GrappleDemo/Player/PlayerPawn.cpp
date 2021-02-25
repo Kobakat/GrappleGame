@@ -53,7 +53,12 @@ void APlayerPawn::Tick(float deltaTime)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
 	}
-	
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, .01f, FColor::Yellow, FString::SanitizeFloat(this->GetVelocity().Size()));
+	}
+	UpdateCameraFOV();
 }
 
 #pragma endregion
@@ -150,12 +155,8 @@ bool APlayerPawn::CastGrappleRaycast()
 	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 	// called if they raycast hits something
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, true);
 	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		
-		
-		
 		grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
 		
 		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
@@ -175,4 +176,21 @@ bool APlayerPawn::CastGrappleRaycast()
 	}
 
 	return false;
+}
+
+void APlayerPawn::UpdateCameraFOV()
+{
+	if (this->GetVelocity().Size() >= 1000)
+	{
+		cameraTargetFOV = 110;
+	}
+	else
+	{
+		cameraTargetFOV = 90;
+	}
+	
+	// TODO replace hard coded value with cameraTargetFOV
+	
+	playerCamera->FieldOfView = FMath::Lerp(playerCamera->FieldOfView, cameraTargetFOV, 0.03);
+
 }

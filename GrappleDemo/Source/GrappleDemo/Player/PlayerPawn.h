@@ -37,6 +37,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera")
 		UCameraComponent* playerCamera;
 
+	float cameraTargetFOV;
+	float averageVelocity;
+
+	void UpdateCameraFOV();
+
 	//================Collider================//
 
 	UPROPERTY(EditAnywhere, Category = "Collider")
