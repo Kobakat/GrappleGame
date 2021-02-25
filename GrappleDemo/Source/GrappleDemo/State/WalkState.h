@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,6 +13,7 @@ class GRAPPLEDEMO_API UWalkState : public UMovementState
 public:
 	UWalkState();
 	~UWalkState();
+	static UWalkState* GetInstance();
 
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
@@ -23,6 +22,8 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 private:
+	static UWalkState* instance;
 	void CheckIfPlayerIsTryingToRun();
 	void CheckIfPlayerIsTryingToCrouch();
 };
+

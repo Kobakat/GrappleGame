@@ -29,21 +29,21 @@ public:
 	UPROPERTY()
 		UState* state;
 	UPROPERTY()
-		UIdleState* idleState;
+		UGrappleAirborneState* test1;
 	UPROPERTY()
-		UWalkState* walkState;
+		UGrappleInstantReelState* test2;
 	UPROPERTY()
-		URunState* runState;
+		UCrouchState* test3;
 	UPROPERTY()
-		UCrouchState* crouchState;
+		UIdleState* test4;
 	UPROPERTY()
-		URunSlideState* runSlideState;
+		URunSlideState* test5;
 	UPROPERTY()
-		USlideState* slideState;
+		URunState* test6;
 	UPROPERTY()
-		UGrappleAirborneState* grappleAirborneState;
+		USlideState* test7;
 	UPROPERTY()
-		UGrappleInstantReelState* grappleInstantReelState;
+		UWalkState* test8;
 
 private:
 	APlayerPawn* player;

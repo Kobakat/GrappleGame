@@ -23,7 +23,5 @@ public:
 	FString stateName; /*For inspector display; have each state set this in initialize*/
 
 protected:
-	APlayerPawn* player;
-
-	
+	APlayerPawn* player;	
 };

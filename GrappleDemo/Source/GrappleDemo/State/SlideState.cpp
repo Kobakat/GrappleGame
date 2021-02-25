@@ -3,16 +3,27 @@
 
 USlideState::USlideState() { }
 USlideState::~USlideState() { }
+USlideState* USlideState::instance;
+USlideState* USlideState::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<USlideState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void USlideState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Sliding";
+	UState::Initialize(pawn);
 }
 
 void USlideState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 	player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
 	player->playerCollider->AddForce(player->playerCollider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 10000); //multiply by 10k to keep designer values small
 	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
@@ -34,11 +45,15 @@ void USlideState::OnStateExit()
 	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
 }
 
+#pragma endregion
+
+#pragma region Game Logic
+
 void USlideState::CheckIfStillOnSlide() 
 {
 	if (!player->bIsGrounded) 
 	{
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 	}
 }
 
@@ -55,3 +70,5 @@ void USlideState::AdjustCameraAndColliderPosition(float capsuleHeight, float cam
 
 	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
 }
+
+#pragma endregion

@@ -1,17 +1,26 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "GrappleInstantReelState.h"
 #include "../../Player/PlayerPawn.h"
+UGrappleInstantReelState* UGrappleInstantReelState::instance;
+UGrappleInstantReelState* UGrappleInstantReelState::GetInstance() 
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<UGrappleInstantReelState>();
+	}
+	return instance;
+}
+
+#pragma region State Events
 
 void UGrappleInstantReelState::Initialize(APlayerPawn* pawn)
 {
+	this->stateName = "Instant Reel";
 	UGrappleState::Initialize(pawn);
-	this->stateName = "Grapple Instant Reel";
 }
 
 void UGrappleInstantReelState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
 }
 void UGrappleInstantReelState::OnStateExit()
@@ -28,16 +37,23 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 
 	UMovementState::CheckStateChangeGrapple();
 }
+
+#pragma endregion
+
+#pragma region Game Logic
+
 void UGrappleInstantReelState::CheckStateChange()
 {
 	// If the grapple or jump button is pressed then release
 	// the grapple and return to walk state.
 	if (player->tryingToInstantReel || player->tryingToJump)
-		player->stateMachine->SetState(player->stateMachine->walkState);
+		player->SetState(UWalkState::GetInstance());
 }
 void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {
 	grappleComponent->Reel(-player->instantGrappleSpeed * deltaTime);
 	if (grappleComponent->GetCableLength() < player->reelCompleteDistance)
-		player->stateMachine->SetState(player->stateMachine->grappleAirborneState);
+		player->SetState(UGrappleAirborneState::GetInstance());
 }
+
+#pragma endregion

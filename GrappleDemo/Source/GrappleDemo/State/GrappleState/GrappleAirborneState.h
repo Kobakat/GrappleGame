@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -13,12 +11,12 @@ class GRAPPLEDEMO_API UGrappleAirborneState : public UGrappleState
 	GENERATED_BODY()
 	
 private:
-	// Utility Functions.
+	static UGrappleAirborneState* instance;
 	void CheckStateChange();
 	void HandleGrappleInput();
 
 public:
-	// UMovementState Implementation.
+	static UGrappleAirborneState* GetInstance();
 	virtual void Initialize(APlayerPawn* pawn) override;
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float DeltaTime) override;
