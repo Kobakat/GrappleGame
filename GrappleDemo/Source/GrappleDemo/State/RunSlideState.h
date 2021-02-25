@@ -23,8 +23,10 @@ public:
 
 private:
 	static URunSlideState* instance;
+	float crouchTimer;
+	bool bIsCrouching;
 	void CheckIfSlideComplete();
-	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
+	void HandleCrouchDown(float deltaTime);
 
 };
 
