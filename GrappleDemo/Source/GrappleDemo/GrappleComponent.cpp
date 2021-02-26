@@ -12,7 +12,7 @@ void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 FVector UGrappleComponent::GetAttachedLocation()
 {
 	if (attachedActor != nullptr)
-		return attachedLocation; //+ attachedActor->GetActorLocation();
+		return attachedLocation + attachedActor->GetActorLocation();
 	else
 		return FVector::ZeroVector;
 }
@@ -45,7 +45,7 @@ void UGrappleComponent::Reel(float value)
 
 void UGrappleComponent::Attach(FVector vector, AActor* actor)
 {
-	attachedLocation = actor->GetActorLocation();
+	attachedLocation = vector - actor->GetActorLocation();
 	attachedActor = actor;
 
 	bAttachStart = true;

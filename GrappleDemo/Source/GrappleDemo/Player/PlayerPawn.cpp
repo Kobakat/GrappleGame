@@ -178,26 +178,8 @@ bool APlayerPawn::ShootGrapple()
 	if (grappleCanAttach)
 	{
 		// Attaches the cable component to the grappable object
-		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, GrappleHitPoint.GetActor());
-
-		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(GrappleHitPoint.GetActor());
-	  CollisionParams.AddIgnoredActor(this);
-
-	  if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
-	  {
-		  grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
-		  AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
-
-		  if (IsValid(playerGrappleReactor))
-		  {
-		  	grappleComponent->grappleReactor = playerGrappleReactor;
-		  }
-		  else
-		  {
-			  grappleComponent->grappleReactor = nullptr;
-		  }
-		  return true;
-    }
+		grappleComponent->Attach(GrappleHitPoint.GetActor()->GetActorLocation(), GrappleHitPoint.GetActor());
+		return true;
 	}
 	return false;
 }
@@ -216,6 +198,5 @@ void APlayerPawn::UpdateCameraFOV()
 	// TODO replace hard coded value with cameraTargetFOV
 	
 	playerCamera->FieldOfView = FMath::Lerp(playerCamera->FieldOfView, cameraTargetFOV, 0.03);
-  }
-}
+ }
 #pragma endregion

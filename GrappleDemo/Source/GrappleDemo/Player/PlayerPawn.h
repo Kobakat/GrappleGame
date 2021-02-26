@@ -24,13 +24,11 @@ public:
 	AGrappleReactor* grappleReactor;
 	UStateMachine* stateMachine;
 	UState* state;
-	bool CastGrappleRaycast();
 	void SetState(UState* state);
 	bool bNeedsToStand;
 
 	FHitResult GrappleHitPoint;
 	bool grappleCanAttach;
-	bool tryingToInstantReel;
 
 #pragma region Designer Props
 
