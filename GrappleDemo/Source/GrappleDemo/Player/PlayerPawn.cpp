@@ -178,7 +178,7 @@ bool APlayerPawn::ShootGrapple()
 	if (grappleCanAttach)
 	{
 		// Attaches the cable component to the grappable object
-		grappleComponent->Attach(GrappleHitPoint.GetActor()->GetActorLocation(), GrappleHitPoint.GetActor());
+		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, GrappleHitPoint.GetActor());
 		return true;
 	}
 	return false;
