@@ -18,6 +18,7 @@ public:
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
+	virtual void CheckIfGrounded() override;
 
 protected:
 	virtual void HandleJump(float jumpForce) override;
@@ -25,6 +26,8 @@ protected:
 private:
 	static UCrouchState* instance;
 	void CheckIfPlayerIsTryingToStand();
-	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
+	void HandleCrouchDown(float deltaTime);
+	float crouchTimer;
+	bool bIsCrouching;
 };
 

@@ -30,13 +30,7 @@ void UGrappleState::UpdateGrappleRestraint()
 		FVector ropeDirection = ropeVector.GetSafeNormal();
 		// Get a vector for the tensile offset.
 		FVector tensileDelta = ropeDirection * lengthDifference;
-		grappleComponent->ApplyForce(-tensileDelta * 2.F);
-
-		ropeVector =
-			grappleComponent->GetAttachedLocation()
-			- grappleGunStart->GetComponentLocation();
-		lengthDifference = ropeVector.Size()
-			- grappleComponent->GetCableLength();
+		grappleComponent->ApplyForce(-tensileDelta);
 
 		if (lengthDifference > 0.0F)
 		{

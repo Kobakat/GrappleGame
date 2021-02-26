@@ -24,8 +24,13 @@ public:
 	AGrappleReactor* grappleReactor;
 	UStateMachine* stateMachine;
 	UState* state;
-	bool CastGrappleRaycast();
 	void SetState(UState* state);
+	
+
+	FHitResult GrappleHitPoint;
+	FHitResult GroundHitPoint;
+	bool bNeedsToStand;
+	bool grappleCanAttach;
 
 #pragma region Designer Props
 
@@ -33,6 +38,19 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 		UCameraComponent* playerCamera;
+
+	//How many seconds does it take to pan the camera when the player steps on a slide
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		float camSlideTransitionTime;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		float normalCameraFOV;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+		float maxCameraFOV;
+
+	float cameraTargetFOV;
+	float averageVelocity;
+
+	void UpdateCameraFOV();
 
 	//================Collider================//
 
@@ -53,6 +71,8 @@ public:
 		float airborneMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | General")
+		float groundCheckDistance = 5;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float lookSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
@@ -104,7 +124,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		float crouchAirControlPercentage;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchTransitionTime;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
+
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Crouching")
+		float crouchGroundCheckOverride = 10;
+
 
 	//===============Running=Slide==============//
 
@@ -117,13 +144,22 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
 		float runSlideExitVelocity;
 
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideGroundCheckOverride = 100;
+
 
 	//===================Slide=================//
-
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
+		float slideAcceleration;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideJumpForce;
+
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Sliding")
+		float slideGroundCheckOverride = 100;
 
 	//==============Instant=Reel===============//
 
@@ -158,6 +194,9 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	void HandleStandUp(float deltaTime);
+	float standUpTimer;
+
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
@@ -173,6 +212,11 @@ private:
 	void ShootReleasePress();
 	void ShootReleaseRelease();
 	void InstantReelPress();
+#pragma endregion
+
+#pragma region Grapple Functions
+	bool CastGrappleRaycast();
+	bool ShootGrapple();
 #pragma endregion
 };
 

@@ -18,6 +18,8 @@ USlideState* USlideState::GetInstance()
 void USlideState::Initialize(APlayerPawn* pawn)
 {
 	this->stateName = "Sliding";
+	this->crouchTimer = 0;
+	this->camTimer = 0;
 	UState::Initialize(pawn);
 }
 
@@ -25,16 +27,25 @@ void USlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
 	player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
-	player->playerCollider->AddForce(player->playerCollider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 10000); //multiply by 10k to keep designer values small
-	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
+	crouchTimer = 0;
+	camTimer = 0;
+	bIsTransitioning = true;
 }
 
 void USlideState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
-	HandleJump(player->runSlideJumpForce);
-	PlayerLook(deltaTime);
-	ClampPlayerVelocity(player->runSlideMaxSpeed);
+	HandleCrouchDown(deltaTime);
+	HandleCameraTransition(deltaTime);
+	HandleJump(player->slideJumpForce);
+
+	if (!bIsTransitioning)
+	{
+		PlayerMove(player->slideAcceleration, 0);
+		PlayerLook(deltaTime);
+	}
+
+	ClampPlayerVelocity(player->slideMaxSpeed);
 
 	UMovementState::CheckStateChangeGrapple();
 }
@@ -42,33 +53,95 @@ void USlideState::StateTick(float deltaTime)
 void USlideState::OnStateExit()
 {
 	player->playerCollider->SetPhysMaterialOverride(player->moveMat);
-	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
+	crouchTimer = 0;
+	camTimer = 0;
+	player->bNeedsToStand = true;
 }
 
 #pragma endregion
 
 #pragma region Game Logic
-
-void USlideState::CheckIfStillOnSlide() 
+void USlideState::PlayerMove(float accel, float airControlFactor)
 {
-	if (!player->bIsGrounded) 
+	if (!player->moveVector.IsZero())
 	{
-		player->SetState(UWalkState::GetInstance());
+		FVector rightSlideVector = slideNormal.RotateAngleAxis(90, FVector::UpVector);
+		FVector relativeVector = rightSlideVector * player->moveVector.X;
+		relativeVector.Normalize(0.001);
+
+		player->playerCollider->AddForce(relativeVector * accel, NAME_None, true); //Set to false if you want player mass to matter
 	}
 }
 
-void USlideState::AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight)
+void USlideState::CheckIfGrounded() 
 {
-	//Get the very bottom of the collider position
-	FVector currentPos = player->playerCollider->GetRelativeLocation();
-	currentPos = currentPos - FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
+	FVector rayDest = rayOrigin + (FVector::DownVector * player->slideGroundCheckOverride);
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
 
-	//Set the position of the player 
-	//TODO lerp these values for smoother transition
-	player->playerCollider->SetRelativeLocation(FVector(currentPos.X, currentPos.Y, currentPos.Z + capsuleHeight));
-	player->playerCollider->SetCapsuleHalfHeight(capsuleHeight);
+	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
 
-	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
+	if (bHitGround)
+	{
+		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+
+		if (struckProfile != FName(TEXT("Slide")))
+		{
+			player->SetState(UCrouchState::GetInstance());		
+		}
+
+		else
+		{
+			slideNormal = player->GroundHitPoint.Normal;
+			slideNormal.Z = 0;
+			slideNormal.Normalize(0.001);
+		}
+	}
+
+	else 
+	{
+		player->SetState(UCrouchState::GetInstance());
+		player->bIsGrounded = false;
+	}
+}
+
+void USlideState::HandleCrouchDown(float deltaTime)
+{
+	//Only handle crouch if the player isn't already crouched down
+	if (player->playerCollider->GetScaledCapsuleHalfHeight() > player->crouchSlidePlayerHeight)
+	{
+		float frac = crouchTimer / player->crouchTransitionTime;
+		float newCapHeight = FMath::Lerp(player->standingPlayerHeight, player->crouchSlidePlayerHeight, frac);
+		float newCamHeight = FMath::Lerp(player->standingCameraHeight, player->crouchSlideCameraHeight, frac);
+
+		player->playerCollider->SetCapsuleHalfHeight(newCapHeight);
+		player->playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
+
+		crouchTimer += deltaTime;
+		bIsCrouching = true;
+	}
+
+	else
+	{
+		bIsCrouching = false;
+	}
+}
+
+void USlideState::HandleCameraTransition(float deltaTime)
+{
+	if (bIsTransitioning)
+	{
+		float frac = camTimer / player->camSlideTransitionTime;
+		FRotator newCamRotator = FMath::Lerp(player->playerCamera->GetRelativeRotation(), slideNormal.Rotation(), frac);
+		player->playerCamera->SetRelativeRotation(newCamRotator);
+
+		camTimer += deltaTime;
+		
+		if (frac >= 1)
+			bIsTransitioning = false;
+	}
 }
 
 #pragma endregion
