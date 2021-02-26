@@ -6,9 +6,6 @@
 #include "GrappleReactor.h"
 #include "ButtonGrappleReactor.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class GRAPPLEDEMO_API AButtonGrappleReactor : public AGrappleReactor
 {
@@ -16,19 +13,12 @@ class GRAPPLEDEMO_API AButtonGrappleReactor : public AGrappleReactor
 	
 protected:
 	bool isPressed;
+	float startTime;
 
-	UPROPERTY(EditAnywhere, Category = "Lever Parameters")
+	UPROPERTY(EditAnywhere, Category = "Button Parameters")
 	bool IsTimer;
-	UPROPERTY(EditAnywhere, Category = "Lever Parameters")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Parameters")
 	float TimerDuration;
-
-public:
-
-	bool GetIsPressed();
-
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void ApplyPullForce(const FVector force) override;
 
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnActivated"))
 	void ReceiveOnActivated();
@@ -37,6 +27,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnTimerTick"))
 	void ReceiveOnTimerTick(float timeRemaining01, float timeRemainingSeconds);
 
+public:
+	AButtonGrappleReactor();
+
+	bool GetIsPressed();
+
+	virtual void Tick(float DeltaTime) override;
+	virtual void ApplyPullForce(const FVector force) override;
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "OnSwitched"))
 	void Reset();
 
