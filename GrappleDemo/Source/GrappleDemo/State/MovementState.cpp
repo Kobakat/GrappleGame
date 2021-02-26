@@ -50,36 +50,41 @@ void UMovementState::PlayerLook(float deltaTime)
 
 void UMovementState::CheckIfGrounded()
 {
-	FHitResult hit;
 	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
 	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector * 100);
+	FVector rayDest = rayOrigin + (FVector::DownVector * player->groundCheckDistance);
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel1, param);
+	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
 
-	if (!bHitGround) 
+	if (bHitGround)
 	{
-		bool bHitSlide = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel2, param);
-		
-		if (bHitSlide && player->state != USlideState::GetInstance()) 
+		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+
+		if (struckProfile == FName(TEXT("Ground")))
+		{
+			player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+			player->bIsGrounded = true;
+		}
+
+		else if (struckProfile == FName(TEXT("Slide")))
 		{
 			player->SetState(USlideState::GetInstance());
 			player->bIsGrounded = true;
 		}
 
-		else if (!bHitSlide) 
+		else
 		{
 			player->bIsGrounded = false;
 			player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
 		}
 	}
 
-	else 
+	else
 	{
-		player->bIsGrounded = true;
-		player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+		player->bIsGrounded = false;
+		player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
 	}
 }
 

@@ -18,6 +18,7 @@ public:
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
+	virtual void CheckIfGrounded() override;
 
 protected:
 	virtual void HandleJump(float jumpForce) override;
