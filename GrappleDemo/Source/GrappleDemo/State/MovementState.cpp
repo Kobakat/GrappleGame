@@ -53,7 +53,7 @@ void UMovementState::CheckIfGrounded()
 	FHitResult hit;
 	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
 	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector);
+	FVector rayDest = rayOrigin + (FVector::DownVector * 100);
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
