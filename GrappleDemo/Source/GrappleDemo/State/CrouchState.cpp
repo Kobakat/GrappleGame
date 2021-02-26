@@ -50,11 +50,51 @@ void UCrouchState::OnStateExit()
 #pragma endregion
 
 #pragma region Game Logic
+void UCrouchState::CheckIfGrounded()
+{
+	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
+	FVector rayDest = rayOrigin + (FVector::DownVector * player->crouchGroundCheckOverride);
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
+
+	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
+
+	if (bHitGround)
+	{
+		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+
+		if (struckProfile == FName(TEXT("Ground")))
+		{
+			player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+			player->bIsGrounded = true;
+		}
+
+		else if (struckProfile == FName(TEXT("Slide")))
+		{
+			player->SetState(USlideState::GetInstance());
+			player->bIsGrounded = true;
+		}
+
+		else
+		{
+			player->bIsGrounded = false;
+			player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
+		}
+	}
+
+	else
+	{
+		player->bIsGrounded = false;
+		player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
+	}
+	
+}
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
 	if (!player->tryingToCrouch && !bIsCrouching) 
 	{
-		FHitResult hit = FHitResult();
+		FHitResult hit;
 		
 		//Cast a ray FROM the top of the crouched capsule height TO the top of the standing capsule height
 		FVector currentPos = player->playerCollider->GetRelativeLocation();
@@ -65,7 +105,7 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 		FCollisionQueryParams param;
 		param.AddIgnoredActor(player);
 
-		bool bHitCeiling = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_GameTraceChannel1, param);
+		bool bHitCeiling = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_Visibility, param);
 
 		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 

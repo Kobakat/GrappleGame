@@ -50,14 +50,33 @@ void URunSlideState::OnStateExit()
 #pragma endregion
 
 #pragma region Game Logic
+void URunSlideState::CheckIfGrounded()
+{
+	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
+	FVector rayDest = rayOrigin + (FVector::DownVector * player->runSlideGroundCheckOverride);
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
+
+	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
+
+	//CheckIfSlideCompletes handles the rest
+	if(!bHitGround)
+	{
+		player->bIsGrounded = false;		
+	}	
+}
 
 void URunSlideState::CheckIfSlideComplete() 
 {
-	//Passing to crouch so we don't have to reimplement the logic for standing up in enclosed spaces rules
-	if (!player->bIsGrounded || player->playerCollider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
+	if (!bIsCrouching) //this might f things up
 	{
-		player->SetState(UCrouchState::GetInstance());
-	}
+		//Passing to crouch so we don't have to reimplement the logic for standing up in enclosed spaces rules
+		if (!player->bIsGrounded || player->playerCollider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
+		{
+			player->SetState(UCrouchState::GetInstance());
+		}
+	}	
 }
 
 void URunSlideState::HandleCrouchDown(float deltaTime)

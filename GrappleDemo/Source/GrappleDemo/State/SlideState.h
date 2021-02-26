@@ -20,10 +20,21 @@ public:
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
+	virtual void CheckIfGrounded() override;
+	virtual void PlayerMove(float accel, float airControlFactor) override;
 
 private:
 	static USlideState* instance;
-	void CheckIfStillOnSlide();
-	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
+	void HandleCameraTransition(float deltaTime);
+	void HandleCrouchDown(float deltaTime);
+
+	float crouchTimer;
+	float camTimer;
+	bool bIsCrouching;
+	bool bIsTransitioning;
+
+	FVector slideNormal;
+
+	
 };
 
