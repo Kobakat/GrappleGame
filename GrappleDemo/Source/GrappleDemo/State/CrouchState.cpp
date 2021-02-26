@@ -18,17 +18,19 @@ UCrouchState* UCrouchState::GetInstance()
 void UCrouchState::Initialize(APlayerPawn* pawn)
 {
 	this->stateName = "Crouching";
+	this->crouchTimer = 0;
 	UState::Initialize(pawn);	
 }
 
 void UCrouchState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
+	crouchTimer = 0;
 }
 
 void UCrouchState::StateTick(float deltaTime)
 {
+	HandleCrouchDown(deltaTime);
 	CheckIfGrounded();
 	CheckIfPlayerIsTryingToStand();
 	HandleJump(player->crouchJumpForce);
@@ -41,7 +43,8 @@ void UCrouchState::StateTick(float deltaTime)
 
 void UCrouchState::OnStateExit()
 {
-	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
+	crouchTimer = 0;
+	player->bNeedsToStand = true;
 }
 
 #pragma endregion
@@ -49,7 +52,7 @@ void UCrouchState::OnStateExit()
 #pragma region Game Logic
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
-	if (!player->tryingToCrouch) 
+	if (!player->tryingToCrouch && !bIsCrouching) 
 	{
 		FHitResult hit = FHitResult();
 		
@@ -80,18 +83,26 @@ void UCrouchState::HandleJump(float jumpForce)
 	}
 }
 
-void UCrouchState::AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight)
+void UCrouchState::HandleCrouchDown(float deltaTime)
 {
-	//Get the very bottom of the collider position
-	FVector currentPos = player->playerCollider->GetRelativeLocation();
-	currentPos = currentPos - FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	//Only handle crouch if the player isn't already crouched down
+	if (player->playerCollider->GetScaledCapsuleHalfHeight() > player->crouchSlidePlayerHeight) 
+	{
+		float frac = crouchTimer / player->crouchTransitionTime;
+		float newCapHeight = FMath::Lerp(player->standingPlayerHeight, player->crouchSlidePlayerHeight, frac);
+		float newCamHeight = FMath::Lerp(player->standingCameraHeight, player->crouchSlideCameraHeight, frac);
 
-	//Set the position of the player 
-	//TODO lerp these values for smoother transition
-	player->playerCollider->SetRelativeLocation(FVector(currentPos.X, currentPos.Y, currentPos.Z + capsuleHeight));
-	player->playerCollider->SetCapsuleHalfHeight(capsuleHeight);
+		player->playerCollider->SetCapsuleHalfHeight(newCapHeight);
+		player->playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
 
-	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
+		crouchTimer += deltaTime;
+		bIsCrouching = true;
+	}
+
+	else 
+	{
+		bIsCrouching = false;		
+	}
 }
 
 #pragma endregion

@@ -27,7 +27,7 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
-
+	this->standUpTimer = 0;
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
@@ -46,10 +46,7 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
-	else 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
-	}
+	HandleStandUp(deltaTime);
 }
 
 #pragma endregion
@@ -111,6 +108,31 @@ void APlayerPawn::InstantReelPress()
 void APlayerPawn::SetState(UState* newState) 
 {
 	stateMachine->SetState(newState);
+}
+
+void APlayerPawn::HandleStandUp(float deltaTime)
+{
+	if (bNeedsToStand)
+	{
+		if (playerCollider->GetScaledCapsuleHalfHeight() < standingPlayerHeight)
+		{
+			float frac = standUpTimer / crouchTransitionTime;
+			float newCapHeight = FMath::Lerp(crouchSlidePlayerHeight, standingPlayerHeight, frac);
+			float newCamHeight = FMath::Lerp(crouchSlideCameraHeight, standingCameraHeight, frac);
+
+			playerCollider->SetCapsuleHalfHeight(newCapHeight);
+			playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
+
+			standUpTimer += deltaTime;
+
+		}
+
+		else
+		{
+			bNeedsToStand = false;
+			standUpTimer = 0;
+		}
+	}
 }
 
 bool APlayerPawn::CastGrappleRaycast()
