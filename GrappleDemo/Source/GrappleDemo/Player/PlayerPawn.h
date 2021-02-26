@@ -24,8 +24,11 @@ public:
 	AGrappleReactor* grappleReactor;
 	UStateMachine* stateMachine;
 	UState* state;
-	bool CastGrappleRaycast();
 	void SetState(UState* state);
+	bool bNeedsToStand;
+
+	FHitResult GrappleHitPoint;
+	bool grappleCanAttach;
 
 #pragma region Designer Props
 
@@ -33,6 +36,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 		UCameraComponent* playerCamera;
+	
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float normalCameraFOV;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float maxCameraFOV;
+
+	float cameraTargetFOV;
+	float averageVelocity;
+
+	void UpdateCameraFOV();
 
 	//================Collider================//
 
@@ -104,7 +117,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		float crouchAirControlPercentage;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchTransitionTime;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
+
 
 	//===============Running=Slide==============//
 
@@ -158,7 +174,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	void HandleStandUp(float deltaTime);
+	float standUpTimer;
 #pragma region Input Functions
+	//===================Input Functions=================//
+
 	void MoveInputX(float value);
 	void MoveInputY(float value);
 	void LookInputX(float value);
@@ -173,6 +193,11 @@ private:
 	void ShootReleasePress();
 	void ShootReleaseRelease();
 	void InstantReelPress();
+#pragma endregion
+
+#pragma region Grapple Functions
+	bool CastGrappleRaycast();
+	bool ShootGrapple();
 #pragma endregion
 };
 
