@@ -46,6 +46,21 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, .01f, FColor::Yellow, FString::SanitizeFloat(this->GetVelocity().Size()));
+	}
+
+	// Updates Camera FOV based on player velocity
+	UpdateCameraFOV();
+
+	// Checks if the player is looking at a grappable object
+	CastGrappleRaycast();
 	HandleStandUp(deltaTime);
 }
 
@@ -83,10 +98,9 @@ void APlayerPawn::RunPress() { tryingToSprint = true; }
 void APlayerPawn::RunRelease() { tryingToSprint = false; }
 void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
-
 void APlayerPawn::ShootReleasePress() 
 {
-	if (CastGrappleRaycast())
+	if (ShootGrapple())
 	{
 		SetState(UGrappleAirborneState::GetInstance());
 	}
@@ -95,7 +109,7 @@ void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
 
 void APlayerPawn::InstantReelPress()
 {
-	if (CastGrappleRaycast())
+	if (ShootGrapple())
 	{
 		SetState(UGrappleInstantReelState::GetInstance());
 	}
@@ -137,33 +151,71 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 
 bool APlayerPawn::CastGrappleRaycast()
 {
-	FHitResult* outHit = new FHitResult();
-
 	FVector Start = playerCamera->GetComponentLocation();
 	FVector End = playerCamera->GetForwardVector() * grappleComponent->grappleFireRange + Start;
 	FCollisionQueryParams CollisionParams;
+
+	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 
-	if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
+	// called if they raycast hits something
+	if (GetWorld()->LineTraceSingleByChannel(GrappleHitPoint, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
-		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
-
-		if (IsValid(playerGrappleReactor))
-		{
-			grappleComponent->grappleReactor = playerGrappleReactor;
-			
-			return true;
-		}
-		else
-		{
-			grappleComponent->grappleReactor = nullptr;
-		}
+		grappleCanAttach = true;
 
 		return true;
+	}
+	else
+	{
+		grappleCanAttach = false;
 	}
 
 	return false;
 }
 
+bool APlayerPawn::ShootGrapple()
+{
+	if (grappleCanAttach)
+	{
+		// Attaches the cable component to the grappable object
+		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, GrappleHitPoint.GetActor());
+
+		AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(GrappleHitPoint.GetActor());
+	  CollisionParams.AddIgnoredActor(this);
+
+	  if (GetWorld()->LineTraceSingleByChannel(*outHit, Start, End, ECC_GameTraceChannel3, CollisionParams))
+	  {
+		  grappleComponent->Attach(outHit->GetActor()->GetActorLocation(), outHit->GetActor());
+		  AGrappleReactor* playerGrappleReactor = Cast<AGrappleReactor>(outHit->GetActor());
+
+		  if (IsValid(playerGrappleReactor))
+		  {
+		  	grappleComponent->grappleReactor = playerGrappleReactor;
+		  }
+		  else
+		  {
+			  grappleComponent->grappleReactor = nullptr;
+		  }
+		  return true;
+    }
+	}
+	return false;
+}
+
+void APlayerPawn::UpdateCameraFOV()
+{
+	if (this->GetVelocity().Size() >= 1000)
+	{
+		cameraTargetFOV = 110;
+	}
+	else
+	{
+		cameraTargetFOV = 90;
+	}
+	
+	// TODO replace hard coded value with cameraTargetFOV
+	
+	playerCamera->FieldOfView = FMath::Lerp(playerCamera->FieldOfView, cameraTargetFOV, 0.03);
+  }
+}
 #pragma endregion

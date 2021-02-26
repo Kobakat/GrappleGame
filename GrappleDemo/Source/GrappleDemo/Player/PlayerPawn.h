@@ -28,12 +28,26 @@ public:
 	void SetState(UState* state);
 	bool bNeedsToStand;
 
+	FHitResult GrappleHitPoint;
+	bool grappleCanAttach;
+	bool tryingToInstantReel;
+
 #pragma region Designer Props
 
 	//=================Camera=================//
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 		UCameraComponent* playerCamera;
+	
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float normalCameraFOV;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float maxCameraFOV;
+
+	float cameraTargetFOV;
+	float averageVelocity;
+
+	void UpdateCameraFOV();
 
 	//================Collider================//
 
@@ -165,6 +179,8 @@ private:
 	void HandleStandUp(float deltaTime);
 	float standUpTimer;
 #pragma region Input Functions
+	//===================Input Functions=================//
+
 	void MoveInputX(float value);
 	void MoveInputY(float value);
 	void LookInputX(float value);
@@ -179,6 +195,11 @@ private:
 	void ShootReleasePress();
 	void ShootReleaseRelease();
 	void InstantReelPress();
+#pragma endregion
+
+#pragma region Grapple Functions
+	bool CastGrappleRaycast();
+	bool ShootGrapple();
 #pragma endregion
 };
 
