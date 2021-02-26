@@ -161,6 +161,13 @@ bool APlayerPawn::CastGrappleRaycast()
 	// called if they raycast hits something
 	if (GetWorld()->LineTraceSingleByChannel(GrappleHitPoint, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
+		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
+		if (IsValid(reactor))
+			grappleComponent->grappleReactor = reactor;
+		else
+			grappleComponent->grappleReactor = nullptr;
+
+
 		grappleCanAttach = true;
 
 		return true;

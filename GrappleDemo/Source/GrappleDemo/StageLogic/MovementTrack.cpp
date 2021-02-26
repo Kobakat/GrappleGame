@@ -4,7 +4,6 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
-#include "../Utilities/SingleLinkedComponent.h"
 
 // Sets default values.
 AMovementTrack::AMovementTrack()
