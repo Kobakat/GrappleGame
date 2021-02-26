@@ -17,25 +17,23 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
-
+	
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//================Grapple===================//
-
-	UGrappleComponent* grappleComponent;
 	AGrappleReactor* grappleReactor;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple Parameters")
-		USceneComponent* grappleStart;
-	UPROPERTY()
-		float raycastDistance;
+	UStateMachine* stateMachine;
+	UState* state;
+	bool CastGrappleRaycast();
+	void SetState(UState* state);
+	bool bNeedsToStand;
 
 	FHitResult GrappleHitPoint;
 	bool grappleCanAttach;
 	bool tryingToInstantReel;
 
 #pragma region Designer Props
+
 	//=================Camera=================//
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
@@ -83,6 +81,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		FVector2D viewLookBounds;
 
+	//=================Grapple================//
+	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
+		USceneComponent* grappleStart;
+	UPROPERTY(EditAnywhere, Category = "Grapple")
+		UGrappleComponent* grappleComponent;
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
@@ -116,7 +119,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		float crouchAirControlPercentage;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
+		float crouchTransitionTime;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
+
 
 	//===============Running=Slide==============//
 
@@ -147,14 +153,14 @@ public:
 	//===================State=================//
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
-		FString state;
+		FString stateName;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		bool bIsGrounded;
-	UPROPERTY() //garbage collector gets angry if this isn't a uprop?
-		UStateMachine* stateMachine;
+		
 #pragma endregion
 	
 #pragma region Input State
+
 	FVector2D moveVector;
 	FVector2D lookVector;
 	float reelingAxis;
@@ -162,18 +168,16 @@ public:
 	bool tryingToJump;
 	bool tryingToCrouch;
 	bool tryingToGrapple;
-	// These inputs are consumed when observed.
-	//bool IsTryingToGrapple();
-	bool IsTryingToInstantReel();
-#pragma endregion
+	bool tryingToInstantReel;
 
-private:
-	bool grappleInputBuffered;
-	bool instantReelInputBuffered;
+#pragma endregion
 
 protected:
 	virtual void BeginPlay() override;
 
+private:
+	void HandleStandUp(float deltaTime);
+	float standUpTimer;
 #pragma region Input Functions
 	//===================Input Functions=================//
 
@@ -181,13 +185,13 @@ protected:
 	void MoveInputY(float value);
 	void LookInputX(float value);
 	void LookInputY(float value);
+	void ReelInputAxis(float value);
 	void JumpPress();
 	void JumpRelease();
 	void RunPress();
 	void RunRelease();
 	void CrouchSlidePress();
 	void CrouchSlideRelease();
-	void ReelInputAxis(float value);
 	void ShootReleasePress();
 	void ShootReleaseRelease();
 	void InstantReelPress();

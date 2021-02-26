@@ -12,6 +12,7 @@ class GRAPPLEDEMO_API UIdleState : public UMovementState
 public:
 	UIdleState();
 	~UIdleState();
+	static UIdleState* GetInstance();
 
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
@@ -20,6 +21,7 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 private:
+	static UIdleState* instance;
 	void CheckForVelocityChange();
 	void CheckIfPlayerIsTryingToCrouch();
 	

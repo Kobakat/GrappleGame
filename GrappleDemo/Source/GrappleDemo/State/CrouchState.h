@@ -12,7 +12,7 @@ class GRAPPLEDEMO_API UCrouchState : public UMovementState
 public:
 	UCrouchState();
 	~UCrouchState();
-
+	static UCrouchState* GetInstance();
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
@@ -23,6 +23,10 @@ protected:
 	virtual void HandleJump(float jumpForce) override;
 
 private:
+	static UCrouchState* instance;
 	void CheckIfPlayerIsTryingToStand();
-	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
+	void HandleCrouchDown(float deltaTime);
+	float crouchTimer;
+	bool bIsCrouching;
 };
+

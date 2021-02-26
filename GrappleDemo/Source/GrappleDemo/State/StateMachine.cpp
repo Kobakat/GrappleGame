@@ -1,55 +1,39 @@
 #include "StateMachine.h"
-#include "Engine.h"
+#include "../Player/PlayerPawn.h"
+UStateMachine::UStateMachine() { }
+UStateMachine::~UStateMachine() { }
 
-UStateMachine::UStateMachine()
-{
-}
-
-UStateMachine::~UStateMachine()
-{
-}
 
 void UStateMachine::Initialize(APlayerPawn* pawn)
 {
 	this->player = pawn;
 
-	//Create all the states
-	idleState = NewObject<UIdleState>();
-	walkState = NewObject<UWalkState>();
-	runState = NewObject<URunState>();
-	crouchState = NewObject<UCrouchState>();
-	slideState = NewObject<USlideState>();
-	runSlideState = NewObject<URunSlideState>();
-	grappleAirborneState = NewObject<UGrappleAirborneState>();
-	grappleInstantReelState = NewObject<UGrappleInstantReelState>();
+	UGrappleAirborneState::GetInstance()->Initialize(pawn);
+	UGrappleInstantReelState::GetInstance()->Initialize(pawn);;
+	UCrouchState::GetInstance()->Initialize(pawn);;
+	UIdleState::GetInstance()->Initialize(pawn);;
+	URunSlideState::GetInstance()->Initialize(pawn);;
+	URunState::GetInstance()->Initialize(pawn);;
+	USlideState::GetInstance()->Initialize(pawn);;
+	UWalkState::GetInstance()->Initialize(pawn);;
 
-	//Initialize any new states here
-	idleState->Initialize(this->player);
-	walkState->Initialize(this->player);
-	runState->Initialize(this->player);
-	crouchState->Initialize(this->player);
-	slideState->Initialize(this->player);
-	runSlideState->Initialize(this->player);
-	grappleAirborneState->Initialize(this->player);
-	grappleInstantReelState->Initialize(this->player);
-	
-	//Set the default starting state here
-	this->state = idleState;
+	this->state = UIdleState::GetInstance();
 }
 
 void UStateMachine::SetState(UState* newState)
 {
-	if (newState != nullptr && state != nullptr)
+	if (newState != nullptr && this->state != nullptr)
 	{
 		this->state->OnStateExit();
 		this->state = newState;
+		this->player->state = this->state;
 		this->state->OnStateEnter();
 	}
 }
 
 void UStateMachine::Tick(float deltaTime)
 {
-	if (state != nullptr)
+	if (this->state != nullptr)
 	{
 		this->state->StateTick(deltaTime);
 	}

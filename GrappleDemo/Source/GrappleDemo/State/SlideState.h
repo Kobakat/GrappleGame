@@ -13,6 +13,7 @@ class GRAPPLEDEMO_API USlideState : public UMovementState
 public:
 	USlideState();
 	~USlideState();
+	static USlideState* GetInstance();
 
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
@@ -21,6 +22,8 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 private:
+	static USlideState* instance;
 	void CheckIfStillOnSlide();
 	void AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight);
 };
+

@@ -13,6 +13,7 @@ class GRAPPLEDEMO_API URunState : public UMovementState
 public:
 	URunState();
 	~URunState();
+	static URunState* GetInstance();
 
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
@@ -21,6 +22,8 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 private:
+	static URunState* instance;
 	void CheckIfPlayerStopsRunning();
 	void CheckifPlayerWantsToSlide();
 };
+

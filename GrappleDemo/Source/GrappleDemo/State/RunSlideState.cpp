@@ -3,23 +3,35 @@
 
 URunSlideState::URunSlideState() { }
 URunSlideState::~URunSlideState() { }
+URunSlideState* URunSlideState::instance;
+URunSlideState* URunSlideState::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = NewObject<URunSlideState>();
+	}
+	return instance;
+}
 
+#pragma region State Events
 void URunSlideState::Initialize(APlayerPawn* pawn)
 {
-	UState::Initialize(pawn);
 	this->stateName = "Running Slide";
+	this->crouchTimer = 0;
+	UState::Initialize(pawn);
 }
 
 void URunSlideState::OnStateEnter()
 {
-	player->state = this->stateName;
+	player->stateName = this->stateName;
 	player->playerCollider->SetPhysMaterialOverride(player->runSlideMat);
 	player->playerCollider->AddForce(player->playerCollider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 10k to keep designer values small
-	AdjustCameraAndColliderPosition(player->crouchSlidePlayerHeight, player->crouchSlideCameraHeight);
+	crouchTimer = 0;
 }
 
 void URunSlideState::StateTick(float deltaTime)
 {
+	HandleCrouchDown(deltaTime);
 	CheckIfSlideComplete();
 	CheckIfGrounded();
 	HandleJump(player->runSlideJumpForce);
@@ -32,29 +44,42 @@ void URunSlideState::StateTick(float deltaTime)
 void URunSlideState::OnStateExit()
 {
 	player->playerCollider->SetPhysMaterialOverride(player->moveMat);
-	AdjustCameraAndColliderPosition(player->standingPlayerHeight, player->standingCameraHeight);
+	crouchTimer = 0;
 }
 
+#pragma endregion
+
+#pragma region Game Logic
 
 void URunSlideState::CheckIfSlideComplete() 
 {
 	//Passing to crouch so we don't have to reimplement the logic for standing up in enclosed spaces rules
 	if (!player->bIsGrounded || player->playerCollider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
 	{
-		player->stateMachine->SetState(player->stateMachine->crouchState);
+		player->SetState(UCrouchState::GetInstance());
 	}
 }
 
-void URunSlideState::AdjustCameraAndColliderPosition(float capsuleHeight, float cameraHeight)
+void URunSlideState::HandleCrouchDown(float deltaTime)
 {
-	//Get the very bottom of the collider position
-	FVector currentPos = player->playerCollider->GetRelativeLocation();
-	currentPos = currentPos - FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
+	//Only handle crouch if the player isn't already crouched down
+	if (player->playerCollider->GetScaledCapsuleHalfHeight() > player->crouchSlidePlayerHeight)
+	{
+		float frac = crouchTimer / player->crouchTransitionTime;
+		float newCapHeight = FMath::Lerp(player->standingPlayerHeight, player->crouchSlidePlayerHeight, frac);
+		float newCamHeight = FMath::Lerp(player->standingCameraHeight, player->crouchSlideCameraHeight, frac);
 
-	//Set the position of the player 
-	//TODO lerp these values for smoother transition
-	player->playerCollider->SetRelativeLocation(FVector(currentPos.X, currentPos.Y, currentPos.Z + capsuleHeight));
-	player->playerCollider->SetCapsuleHalfHeight(capsuleHeight);
+		player->playerCollider->SetCapsuleHalfHeight(newCapHeight);
+		player->playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
 
-	player->playerCamera->SetRelativeLocation(FVector(0, 0, cameraHeight));
+		crouchTimer += deltaTime;
+		bIsCrouching = true;
+	}
+
+	else
+	{
+		bIsCrouching = false;
+	}
 }
+
+#pragma endregion
