@@ -30,6 +30,7 @@ public:
 	FHitResult GrappleHitPoint;
 	FHitResult GroundHitPoint;
 	bool bNeedsToStand;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Grapple")
 	bool grappleCanAttach;
 
 #pragma region Designer Props
