@@ -13,13 +13,16 @@ class GRAPPLEDEMO_API ALeverGrappleReactor : public AGrappleReactor
 	GENERATED_BODY()
 	
 protected:
-	UPROPERTY(EditAnywhere, Category = "Lever Parameters")
-	FVector LeverOnDirection;
-	UPROPERTY(EditAnywhere, Category = "Lever Parameters")
-	float ForceThreshold;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere, Category = "Lever Parameters", meta=(
+		ClampMin = "1.0", ClampMax = "90.0",
+		UIMin = "1.0", UIMax = "90.0"))
+	float AngleTolerance = 30.F;
 
 private:
 	bool isSwitched;
+	float dotThreshold;
 
 public:
 	bool GetIsSwitched();
