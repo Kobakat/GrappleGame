@@ -13,13 +13,6 @@ ALevelChangeTrigger::ALevelChangeTrigger()
 
 }
 
-// Called when the game starts or when spawned
-void ALevelChangeTrigger::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 void ALevelChangeTrigger::ChangeLevel()
 {
 	UWorld* world = level.Get();

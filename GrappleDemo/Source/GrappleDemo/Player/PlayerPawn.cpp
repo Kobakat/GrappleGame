@@ -51,10 +51,10 @@ void APlayerPawn::Tick(float deltaTime)
 		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
 	}
 
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, .01f, FColor::Yellow, FString::SanitizeFloat(this->GetVelocity().Size()));
-	}
+	}*/
 
 	// Updates Camera FOV based on player velocity
 	UpdateCameraFOV();
@@ -103,6 +103,12 @@ void APlayerPawn::ShootReleasePress()
 	if (ShootGrapple())
 	{
 		SetState(UGrappleAirborneState::GetInstance());
+	}
+	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
+	{
+		// This detaches the grapple if the player clicks
+		// again and there is nothing within grapple range.
+		SetState(UWalkState::GetInstance());
 	}
 }
 void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
