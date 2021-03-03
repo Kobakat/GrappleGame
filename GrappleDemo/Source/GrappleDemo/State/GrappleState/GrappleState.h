@@ -17,7 +17,7 @@ protected:
 	UGrappleComponent* grappleComponent;
 	USceneComponent* grappleGunStart;
 	// Common grapple leash behaviour.
-	void UpdateGrappleRestraint();
+	bool SolveGrappleRestraint();
 
 public:
 	// UMovementState Implementation.

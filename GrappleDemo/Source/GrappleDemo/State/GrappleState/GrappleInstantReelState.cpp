@@ -33,7 +33,7 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 	CheckStateChange();
 	PlayerLook(deltaTime);
 	UpdateGrappleRope(deltaTime);
-	UpdateGrappleRestraint();
+	SolveGrappleRestraint();
 
 	UMovementState::CheckStateChangeGrapple();
 }

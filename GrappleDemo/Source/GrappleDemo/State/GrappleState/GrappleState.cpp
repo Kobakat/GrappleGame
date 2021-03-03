@@ -13,7 +13,7 @@ void UGrappleState::Initialize(APlayerPawn* pawn)
 	//grappleComponent->SetHiddenInGame(true); // TODO
 }
 
-void UGrappleState::UpdateGrappleRestraint()
+bool UGrappleState::SolveGrappleRestraint()
 {
 	// Get a vector pointing from the grapple
 	// gun to the grapple hook point.
@@ -32,13 +32,21 @@ void UGrappleState::UpdateGrappleRestraint()
 		FVector tensileDelta = ropeDirection * lengthDifference;
 		grappleComponent->ApplyForce(-tensileDelta);
 
-		if (lengthDifference > 0.0F)
-		{
-			// Pull the player back in, and offset that force
-			// by invoking the grapple to apply the opposite
-			// force on a GrappleReactor (if available).
-			player->AddActorWorldOffset(tensileDelta);
+		// Pull the player back in, and offset that force
+		// by invoking the grapple to apply the opposite
+		// force on a GrappleReactor (if available).
+		player->AddActorWorldOffset(tensileDelta, true);
 
+		ropeVector =
+			grappleComponent->GetAttachedLocation()
+			- grappleGunStart->GetComponentLocation();
+
+		if (ropeVector.Size() - grappleComponent->GetCableLength() > 1.F)
+		{
+			return false;
+		}
+		else
+		{
 			// Get the current velocity and the point on the sphere surface.
 			FVector velocity = player->playerCollider->GetPhysicsLinearVelocity();
 			FVector tangentPoint = player->GetActorLocation();
@@ -52,4 +60,5 @@ void UGrappleState::UpdateGrappleRestraint()
 				- tangentPoint);
 		}
 	}
+	return true;
 }

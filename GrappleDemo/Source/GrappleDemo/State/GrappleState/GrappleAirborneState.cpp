@@ -40,7 +40,12 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	CheckStateChange();
 	HandleJump(player->walkJumpForce);
 	HandleGrappleInput();
-	UpdateGrappleRestraint();
+
+	bool isSolved =	SolveGrappleRestraint();
+	if (!isSolved)
+	{
+		player->SetState(UWalkState::GetInstance());
+	}
 	CheckIfGrounded();
 	ClampPlayerVelocity(player->airborneMaxSpeed);
 }
