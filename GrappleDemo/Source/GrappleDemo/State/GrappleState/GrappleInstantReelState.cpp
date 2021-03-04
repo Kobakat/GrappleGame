@@ -20,6 +20,7 @@ void UGrappleInstantReelState::Initialize(APlayerPawn* pawn)
 
 void UGrappleInstantReelState::OnStateEnter()
 {
+	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
 }
