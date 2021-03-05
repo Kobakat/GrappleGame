@@ -266,7 +266,7 @@ private:
 #pragma endregion
 
 #pragma region Grapple Functions
-	bool CastGrappleRaycast();
+	void CastGrappleRaycast();
 	bool ShootGrapple();
 #pragma endregion
 

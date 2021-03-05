@@ -22,6 +22,7 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
@@ -29,7 +30,6 @@ void APlayerPawn::BeginPlay()
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
-	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	grappleComponent->NumSegments = 10;
 	grappleComponent->NumSides = 8;
 	grappleComponent->SolverIterations = 4;
@@ -145,35 +145,46 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 	}
 }
 
-bool APlayerPawn::CastGrappleRaycast()
+void APlayerPawn::CastGrappleRaycast()
 {
+	// Cast from the camera out to the grapple fire range.
 	FVector Start = playerCamera->GetComponentLocation();
-	FVector End = playerCamera->GetForwardVector() * grappleComponent->grappleFireRange + Start;
+	FVector End = Start + playerCamera->GetForwardVector() * grappleComponent->grappleFireRange;
+	// Ignore collision with player.
 	FCollisionQueryParams CollisionParams;
-
-	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 
-	// called if they raycast hits something
+	// Is there a grapple surface within range?
 	if (GetWorld()->LineTraceSingleByChannel(GrappleHitPoint, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
-		if (IsValid(reactor))
-			grappleComponent->grappleReactor = reactor;
+		// Check for a grapple blocker that may be closer.
+		FHitResult blockerHitPoint;
+		bool isBlocked = false;
+		if (GetWorld()->LineTraceSingleByChannel(blockerHitPoint, Start, End, ECC_GameTraceChannel4, CollisionParams))
+		{
+			if ((blockerHitPoint.Location - Start).SizeSquared()
+				< (GrappleHitPoint.Location - Start).SizeSquared())
+			{
+				isBlocked = true;
+			}
+		}
+		// Set the state of attachability based on whether we are
+		// currently blocked.
+		if (isBlocked)
+			grappleCanAttach = false;
 		else
-			grappleComponent->grappleReactor = nullptr;
-
-
-		grappleCanAttach = true;
-
-		return true;
+		{
+			grappleCanAttach = true;
+			// Document a grapple reactor if it exists on the actor.
+			AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
+			if (IsValid(reactor))
+				grappleComponent->grappleReactor = reactor;
+			else
+				grappleComponent->grappleReactor = nullptr;
+		}
 	}
 	else
-	{
 		grappleCanAttach = false;
-	}
-
-	return false;
 }
 
 bool APlayerPawn::ShootGrapple()

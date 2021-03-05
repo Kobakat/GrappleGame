@@ -23,6 +23,7 @@ void UGrappleAirborneState::Initialize(APlayerPawn* pawn)
 
 void UGrappleAirborneState::OnStateEnter()
 {
+	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
 	player->tryingToGrapple = false;
