@@ -7,7 +7,6 @@
 #include "Camera/CameraShake.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "PlayerPawn.generated.h"
@@ -23,9 +22,7 @@ UENUM()
 enum ECameraShakeState
 {
 	Stopped,
-	Started,
-	Shaking,
-	Finishing
+	Shaking
 };
 
 UCLASS()
@@ -60,58 +57,37 @@ public:
 	//How many seconds does it take to pan the camera when the player steps on a slide
 	UPROPERTY(EditAnywhere, Category = "Camera | General")
 		float camSlideTransitionTime;
-
 	//When the player is moving faster than this, increase the FOV
 	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
 		float FOVVelocityThreshold;
-
 	//This FOV is used while walking, crouching, and idling
 	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
 		float FOVPassive;
-
 	//This FOV is used while running, sliding, and swinging
 	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
 		float FOVActive;
-
 	//How many seconds does it take to adjust the camera FOV when switching to/from active or passive states
 	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
 		float FOVTransitionTime;
-
 	//Duration of the blend-in, where the oscillation scales from 0 to 1.
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float shakeBlendInTime;
-
 	//Duration of the blend-out, where the oscillation scales from 1 to 0.
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float shakeBlendOutTime;
-
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float passiveAmplitude;
-
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float passiveFrequency;
-
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float activeAmplitude;
-
 	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
 		float activeFrequency;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Camera | General")
 		TEnumAsByte<ECameraFOVState> fovState;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Camera | General")
 		TEnumAsByte<ECameraShakeState> shakeState;
-
-
-	TEnumAsByte<ECameraFOVState> prevFOVState;
-	TEnumAsByte<ECameraShakeState> prevShakeState;
-
-	float shakeTimer;
-	float shakeOffset;
-	bool shakeTransition;
-
-	float fovTimer;
-	bool stateTransition;
 
 	//================Collider================//
 
@@ -133,7 +109,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | General")
-		float groundCheckDistance = 5;
+		float groundCheckDistance = 30;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float lookSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
@@ -191,7 +167,7 @@ public:
 
 	//How many extra units do we cast the ground checking ray?
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Crouching")
-		float crouchGroundCheckOverride = 10;
+		float crouchGroundCheckOverride = 40;
 
 
 	//===============Running=Slide==============//
@@ -258,6 +234,20 @@ private:
 	void HandleStandUp(float deltaTime);
 	float standUpTimer;
 
+	TEnumAsByte<ECameraFOVState> prevFOVState;
+	float shakeInTimer;
+	float shakeOutTimer;
+	float shakeOffset;
+	float shakeAmp;
+	float shakeFreq;
+	float shakeStartOffset;
+	float shakeHeight;
+	bool blendingIn;
+	bool blendingOut;
+
+	float fovTimer;
+	bool fovTransition;
+
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
@@ -283,10 +273,8 @@ private:
 #pragma region Camera Functions
 	void UpdateCameraFOVState();
 	void UpdateCameraFOV(float deltaTime);
-	void UpdateCameraShakeState(float deltaTime);
-	void StartCameraShake(float deltaTime, float camHeight, float amplitude, float freq);
-	void EndCameraShake(float deltaTime, float camHeight, float amplitude, float freq);
-	void UpdateCameraShake(float deltaTime, float camHeight, float amplitude, float freq);
+	void UpdateCameraShakeState();
+	void UpdateCameraShake(const float deltaTime, const float amplitude, const float freq);
 #pragma endregion
 };
 

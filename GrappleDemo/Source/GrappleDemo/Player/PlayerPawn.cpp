@@ -1,5 +1,4 @@
 #include "PlayerPawn.h"
-#include "Engine/StaticMesh.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
@@ -27,7 +26,6 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
-	this->standUpTimer = 0;
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
@@ -46,13 +44,15 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
+	HandleStandUp(deltaTime);
+
 	UpdateCameraFOVState();
 	UpdateCameraFOV(deltaTime);
-	UpdateCameraShakeState(deltaTime);
+	UpdateCameraShakeState();
+	UpdateCameraShake(deltaTime, shakeAmp, shakeFreq);
 
-	// Checks if the player is looking at a grappable object
-	CastGrappleRaycast();
-	HandleStandUp(deltaTime);
+
+	CastGrappleRaycast();	
 }
 
 #pragma endregion
@@ -135,7 +135,6 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 			playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
 
 			standUpTimer += deltaTime;
-
 		}
 
 		else
@@ -203,13 +202,13 @@ void APlayerPawn::UpdateCameraFOVState()
 
 	//If the player swapped states we need to signal that the FOV needs to lerp
 	if (this->prevFOVState != this->fovState)
-		stateTransition = true;
+		fovTransition = true;
 
 }
 
 void APlayerPawn::UpdateCameraFOV(float deltaTime)
 {
-	if (stateTransition)
+	if (fovTransition)
 	{
 		float frac = fovTimer / FOVTransitionTime;
 		float newFOV;
@@ -230,156 +229,112 @@ void APlayerPawn::UpdateCameraFOV(float deltaTime)
 
 		if (frac >= 1)
 		{
-			stateTransition = false;
+			fovTransition = false;
 			fovTimer = 0;
 		}
 	}
 }
 
-void APlayerPawn::UpdateCameraShakeState(float deltaTime)
+void APlayerPawn::UpdateCameraShakeState()
 {
-	this->prevShakeState = this->shakeState;
-
-	//We should only apply shake when the player is both grounded and moving
-	if (this->bIsGrounded && !moveVector.IsNearlyZero(0.05f))
+	if (state == UWalkState::GetInstance() || state == URunState::GetInstance())
 	{
-		//If they're not already shaking
-		if (shakeState == Stopped)
+		if (this->bIsGrounded && !moveVector.IsNearlyZero(0.05f))
 		{
-			//In the crouching/walking state we need to apply the passive shake 
-			if (state == UCrouchState::GetInstance() || state == UWalkState::GetInstance())
+			//We should only apply shake when the player is both grounded and moving
+			if (shakeState != Shaking)
 			{
-				shakeState = Started;
-			}
+					blendingIn = true;
+					shakeState = Shaking;
+					shakeOffset = 0;
+					shakeInTimer = 0;
+					shakeOutTimer = 0;
 
-			//In the running state we need to apply the active shake
-			else if (state == URunState::GetInstance())
-			{
-				shakeState = Started;
+					
 			}
 		}
-	}
-	//Otherwise we need to stop the shake if its not already
-	else if(shakeState != Stopped)
-	{
-		shakeState = Finishing;
-	}
 
-	if (prevShakeState != shakeState)
-	{
-		shakeTransition = true;
+		else if(shakeState == Shaking && !blendingOut)
+		{
+			blendingIn = false;
+			blendingOut = true;
+			shakeStartOffset = shakeHeight;
+		}
 	}
 
-
-	//TODO This is cringe. Refactor this whole switch block
-	switch (shakeState)
+	else if(shakeState == Shaking && !blendingOut)
 	{
-	case Stopped:
-		break;
-	case Shaking:
-		if (state == UCrouchState::GetInstance())
-		{
-			UpdateCameraShake(deltaTime, crouchSlideCameraHeight, passiveAmplitude, passiveFrequency);
-		}
-		else if (state == UWalkState::GetInstance())
-		{
-			UpdateCameraShake(deltaTime, standingCameraHeight, passiveAmplitude, passiveFrequency);
-		}
+		blendingIn = false;
+		blendingOut = true;
+		shakeStartOffset = shakeHeight;
+	}
 
-		else if (state == URunState::GetInstance())
-		{
-			UpdateCameraShake(deltaTime, standingPlayerHeight, activeAmplitude, activeFrequency);
-		}
-		
-		break;
-	case Finishing:
-		if (state == UCrouchState::GetInstance())
-		{
-			EndCameraShake(deltaTime, crouchSlideCameraHeight, passiveAmplitude, passiveFrequency);
-		}
-		else if (state == UWalkState::GetInstance())
-		{
-			EndCameraShake(deltaTime, standingCameraHeight, passiveAmplitude, passiveFrequency);
-		}
+	if (state == UWalkState::GetInstance())
+	{
+		shakeAmp = passiveAmplitude;
+		shakeFreq = passiveFrequency;
+	}
 
-		else if (state == URunState::GetInstance())
-		{
-			EndCameraShake(deltaTime, standingPlayerHeight, activeAmplitude, activeFrequency);
-		}
-		break;
-	case Started:
-		if (state == UCrouchState::GetInstance())
-		{
-			StartCameraShake(deltaTime, crouchSlideCameraHeight, passiveAmplitude, passiveFrequency);
-		}
-		else if (state == UWalkState::GetInstance())
-		{
-			StartCameraShake(deltaTime, standingCameraHeight, passiveAmplitude, passiveFrequency);
-		}
-
-		else if (state == URunState::GetInstance())
-		{
-			StartCameraShake(deltaTime, standingPlayerHeight, activeAmplitude, activeFrequency);
-		}
-		break;
+	else if (state == URunState::GetInstance())
+	{
+		shakeAmp = activeAmplitude;
+		shakeFreq = activeFrequency;
 	}
 }
 
-void APlayerPawn::StartCameraShake(float deltaTime, float camHeight, float amplitude, float freq)
+void APlayerPawn::UpdateCameraShake(const float deltaTime, const float amplitude, const float freq)
 {
-	if (shakeTransition)
+	if (shakeState == Shaking)
 	{
-		shakeTransition = false;
-		shakeTimer = 0;
-		shakeOffset = 0;
+		if (blendingIn && shakeInTimer < shakeBlendInTime)
+		{
+			//If we're blending in, tick the timer.
+			shakeInTimer += deltaTime;
+		}
+
+		else if (shakeInTimer >= shakeBlendInTime)
+		{
+			//Blend in complete
+			blendingIn = false;
+			shakeInTimer = 0;
+		}
+
+		if (blendingOut && shakeOutTimer < shakeBlendInTime)
+		{
+			//If we're blending out, tick the timer and lerp offset towards 0
+			shakeOutTimer += deltaTime;
+
+			float frac = shakeOutTimer / shakeBlendOutTime;
+			frac = FMath::Clamp(frac, 0.f, 1.f);
+			
+			shakeHeight = FMath::Lerp(shakeStartOffset, 0.f, frac);
+		}
+
+		else if (shakeOutTimer >= shakeBlendInTime)
+		{
+			//Blend out complete
+			blendingOut = false;
+			shakeState = Stopped;
+			shakeOutTimer = 0;
+		}
+
+		else
+		{
+			//Calculate the blend strength
+			const float in = shakeInTimer / shakeBlendInTime;
+	
+			float blendStrength = 1.f;
+
+			if (blendingIn)
+				blendStrength = in;
+
+			shakeOffset += (deltaTime * blendStrength * freq);
+
+			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
+		}
+
+		playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + shakeHeight));
 	}
-
-	float frac = shakeTimer / shakeBlendInTime;
-
-	shakeOffset += (deltaTime * frac * freq);
-	float newZ = FMath::Sin(shakeOffset);
-	newZ *= amplitude;
-
-	playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + newZ));
-
-	if (frac >= 1)
-	{
-		shakeState = Shaking;
-	}
-
-	shakeTimer += deltaTime;
 }
 
-void APlayerPawn::UpdateCameraShake(float deltaTime, float camHeight, float amplitude, float freq)
-{
-	shakeOffset += (deltaTime * freq);
-	float newZ = FMath::Sin(shakeOffset);
-	newZ *= amplitude;
-
-	playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + newZ));
-}
-
-void APlayerPawn::EndCameraShake(float deltaTime, float camHeight, float amplitude, float freq)
-{
-	if (shakeTransition)
-	{
-		shakeTransition = false;
-		shakeTimer = 0;
-	}
-
-	float frac = 1 - (shakeTimer / shakeBlendInTime);
-
-	shakeOffset += (deltaTime * frac * freq);
-	float newZ = FMath::Sin(shakeOffset);
-	newZ *= amplitude;
-
-	playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + newZ));
-
-	if (frac <= 0)
-	{
-		shakeState = Stopped;
-	}
-
-	shakeTimer += deltaTime;
-}
 #pragma endregion
