@@ -4,11 +4,26 @@
 #include "GameFramework/Pawn.h"
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraShake.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "PlayerPawn.generated.h"
+
+UENUM()
+enum ECameraFOVState
+{
+	Passive,
+	Active
+};
+
+UENUM()
+enum ECameraShakeState
+{
+	Stopped,
+	Shaking
+};
 
 UCLASS()
 class GRAPPLEDEMO_API APlayerPawn : public APawn
@@ -23,10 +38,10 @@ public:
 
 	AGrappleReactor* grappleReactor;
 	UStateMachine* stateMachine;
+
 	UState* state;
 	void SetState(UState* state);
 	
-
 	FHitResult GrappleHitPoint;
 	FHitResult GroundHitPoint;
 	bool bNeedsToStand;
@@ -36,21 +51,43 @@ public:
 
 	//=================Camera=================//
 
-	UPROPERTY(EditAnywhere, Category = "Camera")
+	UPROPERTY(EditAnywhere, Category = "Camera | General")
 		UCameraComponent* playerCamera;
 
 	//How many seconds does it take to pan the camera when the player steps on a slide
-	UPROPERTY(EditAnywhere, Category = "Camera")
+	UPROPERTY(EditAnywhere, Category = "Camera | General")
 		float camSlideTransitionTime;
-	UPROPERTY(EditAnywhere, Category = "Camera")
-		float normalCameraFOV;
-	UPROPERTY(EditAnywhere, Category = "Camera")
-		float maxCameraFOV;
+	//When the player is moving faster than this, increase the FOV
+	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
+		float FOVVelocityThreshold;
+	//This FOV is used while walking, crouching, and idling
+	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
+		float FOVPassive;
+	//This FOV is used while running, sliding, and swinging
+	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
+		float FOVActive;
+	//How many seconds does it take to adjust the camera FOV when switching to/from active or passive states
+	UPROPERTY(EditAnywhere, Category = "Camera | FOV")
+		float FOVTransitionTime;
+	//Duration of the blend-in, where the oscillation scales from 0 to 1.
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float shakeBlendInTime;
+	//Duration of the blend-out, where the oscillation scales from 1 to 0.
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float shakeBlendOutTime;
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float passiveAmplitude;
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float passiveFrequency;
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float activeAmplitude;
+	UPROPERTY(EditAnywhere, Category = "Camera | Shake", meta = (ClampMin = "0.0"))
+		float activeFrequency;
 
-	float cameraTargetFOV;
-	float averageVelocity;
-
-	void UpdateCameraFOV();
+	UPROPERTY(VisibleAnywhere, Category = "Camera | General")
+		TEnumAsByte<ECameraFOVState> fovState;
+	UPROPERTY(VisibleAnywhere, Category = "Camera | General")
+		TEnumAsByte<ECameraShakeState> shakeState;
 
 	//================Collider================//
 
@@ -72,7 +109,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | General")
-		float groundCheckDistance = 5;
+		float groundCheckDistance = 30;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float lookSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
@@ -130,7 +167,7 @@ public:
 
 	//How many extra units do we cast the ground checking ray?
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Crouching")
-		float crouchGroundCheckOverride = 10;
+		float crouchGroundCheckOverride = 40;
 
 
 	//===============Running=Slide==============//
@@ -197,6 +234,20 @@ private:
 	void HandleStandUp(float deltaTime);
 	float standUpTimer;
 
+	TEnumAsByte<ECameraFOVState> prevFOVState;
+	float shakeInTimer;
+	float shakeOutTimer;
+	float shakeOffset;
+	float shakeAmp;
+	float shakeFreq;
+	float shakeStartOffset;
+	float shakeHeight;
+	bool blendingIn;
+	bool blendingOut;
+
+	float fovTimer;
+	bool fovTransition;
+
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
@@ -217,6 +268,13 @@ private:
 #pragma region Grapple Functions
 	void CastGrappleRaycast();
 	bool ShootGrapple();
+#pragma endregion
+
+#pragma region Camera Functions
+	void UpdateCameraFOVState();
+	void UpdateCameraFOV(float deltaTime);
+	void UpdateCameraShakeState();
+	void UpdateCameraShake(const float deltaTime, const float amplitude, const float freq);
 #pragma endregion
 };
 
