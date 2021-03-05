@@ -48,7 +48,7 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 		player->SetState(UWalkState::GetInstance());
 	}
 	CheckIfGrounded();
-	ClampPlayerVelocity(player->airborneMaxSpeed);
+	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 }
 
 #pragma endregion
