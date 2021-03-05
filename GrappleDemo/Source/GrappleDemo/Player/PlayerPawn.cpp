@@ -1,5 +1,4 @@
 #include "PlayerPawn.h"
-#include "Engine/StaticMesh.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
@@ -23,15 +22,17 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
-	this->standUpTimer = 0;
+
+	// TODO please fucking delete me
+	startLocation = GetActorLocation();
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
-	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	grappleComponent->NumSegments = 10;
 	grappleComponent->NumSides = 8;
 	grappleComponent->SolverIterations = 4;
@@ -46,22 +47,21 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
-	else 
+	// TODO delete me
+	if (GetActorLocation().Z < -5000)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("StateMachine was set to a nullptr!!!"));
+		SetActorLocation(startLocation);
 	}
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, .01f, FColor::Yellow, FString::SanitizeFloat(this->GetVelocity().Size()));
-	}
-
-	// Updates Camera FOV based on player velocity
-	UpdateCameraFOV();
-
-	// Checks if the player is looking at a grappable object
-	CastGrappleRaycast();
 	HandleStandUp(deltaTime);
+
+	UpdateCameraFOVState();
+	UpdateCameraFOV(deltaTime);
+	UpdateCameraShakeState();
+	UpdateCameraShake(deltaTime, shakeAmp, shakeFreq);
+
+
+	CastGrappleRaycast();	
 }
 
 #pragma endregion
@@ -104,6 +104,12 @@ void APlayerPawn::ShootReleasePress()
 	{
 		SetState(UGrappleAirborneState::GetInstance());
 	}
+	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
+	{
+		// This detaches the grapple if the player clicks
+		// again and there is nothing within grapple range.
+		SetState(UWalkState::GetInstance());
+	}
 }
 void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
 
@@ -138,7 +144,6 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 			playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
 
 			standUpTimer += deltaTime;
-
 		}
 
 		else
@@ -149,35 +154,46 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 	}
 }
 
-bool APlayerPawn::CastGrappleRaycast()
+void APlayerPawn::CastGrappleRaycast()
 {
+	// Cast from the camera out to the grapple fire range.
 	FVector Start = playerCamera->GetComponentLocation();
-	FVector End = playerCamera->GetForwardVector() * grappleComponent->grappleFireRange + Start;
+	FVector End = Start + playerCamera->GetForwardVector() * grappleComponent->grappleFireRange;
+	// Ignore collision with player.
 	FCollisionQueryParams CollisionParams;
-
-	// ignore collision with player
 	CollisionParams.AddIgnoredActor(this);
 
-	// called if they raycast hits something
+	// Is there a grapple surface within range?
 	if (GetWorld()->LineTraceSingleByChannel(GrappleHitPoint, Start, End, ECC_GameTraceChannel3, CollisionParams))
 	{
-		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
-		if (IsValid(reactor))
-			grappleComponent->grappleReactor = reactor;
+		// Check for a grapple blocker that may be closer.
+		FHitResult blockerHitPoint;
+		bool isBlocked = false;
+		if (GetWorld()->LineTraceSingleByChannel(blockerHitPoint, Start, End, ECC_GameTraceChannel4, CollisionParams))
+		{
+			if ((blockerHitPoint.Location - Start).SizeSquared()
+				< (GrappleHitPoint.Location - Start).SizeSquared())
+			{
+				isBlocked = true;
+			}
+		}
+		// Set the state of attachability based on whether we are
+		// currently blocked.
+		if (isBlocked)
+			grappleCanAttach = false;
 		else
-			grappleComponent->grappleReactor = nullptr;
-
-
-		grappleCanAttach = true;
-
-		return true;
+		{
+			grappleCanAttach = true;
+			// Document a grapple reactor if it exists on the actor.
+			AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
+			if (IsValid(reactor))
+				grappleComponent->grappleReactor = reactor;
+			else
+				grappleComponent->grappleReactor = nullptr;
+		}
 	}
 	else
-	{
 		grappleCanAttach = false;
-	}
-
-	return false;
 }
 
 bool APlayerPawn::ShootGrapple()
@@ -191,19 +207,154 @@ bool APlayerPawn::ShootGrapple()
 	return false;
 }
 
-void APlayerPawn::UpdateCameraFOV()
+#pragma endregion
+
+#pragma region Camera Logic
+
+void APlayerPawn::UpdateCameraFOVState()
 {
-	if (this->GetVelocity().Size() >= 1000)
-	{
-		cameraTargetFOV = 110;
-	}
+	this->prevFOVState = this->fovState;
+
+	if (this->playerCollider->GetPhysicsLinearVelocity().Size() >= FOVVelocityThreshold)
+		this->fovState = Active;
 	else
+		this->fovState = Passive;
+
+	//If the player swapped states we need to signal that the FOV needs to lerp
+	if (this->prevFOVState != this->fovState)
+		fovTransition = true;
+
+}
+
+void APlayerPawn::UpdateCameraFOV(float deltaTime)
+{
+	if (fovTransition)
 	{
-		cameraTargetFOV = 90;
+		float frac = fovTimer / FOVTransitionTime;
+		float newFOV;
+
+		switch (this->fovState)
+		{
+		case Passive:
+			newFOV = FMath::Lerp(FOVActive, FOVPassive, frac);
+			playerCamera->FieldOfView = newFOV;
+			break;
+		case Active:
+			newFOV = FMath::Lerp(FOVPassive, FOVActive, frac);
+			playerCamera->FieldOfView = newFOV;
+			break;
+		}
+
+		fovTimer += deltaTime;
+
+		if (frac >= 1)
+		{
+			fovTransition = false;
+			fovTimer = 0;
+		}
 	}
+}
+
+void APlayerPawn::UpdateCameraShakeState()
+{
+	if (state == UWalkState::GetInstance() || state == URunState::GetInstance())
+	{
+		if (this->bIsGrounded && !moveVector.IsNearlyZero(0.05f))
+		{
+			//We should only apply shake when the player is both grounded and moving
+			if (shakeState != Shaking)
+			{
+					blendingIn = true;
+					shakeState = Shaking;
+					shakeOffset = 0;
+					shakeInTimer = 0;
+					shakeOutTimer = 0;
+
+					
+			}
+		}
+
+		else if(shakeState == Shaking && !blendingOut)
+		{
+			blendingIn = false;
+			blendingOut = true;
+			shakeStartOffset = shakeHeight;
+		}
+	}
+
+	else if(shakeState == Shaking && !blendingOut)
+	{
+		blendingIn = false;
+		blendingOut = true;
+		shakeStartOffset = shakeHeight;
+	}
+
+	if (state == UWalkState::GetInstance())
+	{
+		shakeAmp = passiveAmplitude;
+		shakeFreq = passiveFrequency;
+	}
+
+	else if (state == URunState::GetInstance())
+	{
+		shakeAmp = activeAmplitude;
+		shakeFreq = activeFrequency;
+	}
+}
+
+void APlayerPawn::UpdateCameraShake(const float deltaTime, const float amplitude, const float freq)
+{
+	if (shakeState == Shaking)
+	{
+		if (blendingIn && shakeInTimer < shakeBlendInTime)
+		{
+			//If we're blending in, tick the timer.
+			shakeInTimer += deltaTime;
+		}
+
+		else if (shakeInTimer >= shakeBlendInTime)
+		{
+			//Blend in complete
+			blendingIn = false;
+			shakeInTimer = 0;
+		}
+
+		if (blendingOut && shakeOutTimer < shakeBlendInTime)
+		{
+			//If we're blending out, tick the timer and lerp offset towards 0
+			shakeOutTimer += deltaTime;
+
+			float frac = shakeOutTimer / shakeBlendOutTime;
+			frac = FMath::Clamp(frac, 0.f, 1.f);
+			
+			shakeHeight = FMath::Lerp(shakeStartOffset, 0.f, frac);
+		}
+
+		else if (shakeOutTimer >= shakeBlendInTime)
+		{
+			//Blend out complete
+			blendingOut = false;
+			shakeState = Stopped;
+			shakeOutTimer = 0;
+		}
+
+		else
+		{
+			//Calculate the blend strength
+			const float in = shakeInTimer / shakeBlendInTime;
 	
-	// TODO replace hard coded value with cameraTargetFOV
-	
-	playerCamera->FieldOfView = FMath::Lerp(playerCamera->FieldOfView, cameraTargetFOV, 0.03);
- }
+			float blendStrength = 1.f;
+
+			if (blendingIn)
+				blendStrength = in;
+
+			shakeOffset += (deltaTime * blendStrength * freq);
+
+			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
+		}
+
+		playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + shakeHeight));
+	}
+}
+
 #pragma endregion

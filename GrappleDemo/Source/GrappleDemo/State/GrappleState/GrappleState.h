@@ -12,14 +12,24 @@ class GRAPPLEDEMO_API UGrappleState : public UMovementState
 {
 	GENERATED_BODY()
 	
+private:
+	void SolveWrap();
+
 protected:
 	// Grapple References.
 	UGrappleComponent* grappleComponent;
 	USceneComponent* grappleGunStart;
 	// Common grapple leash behaviour.
-	void UpdateGrappleRestraint();
+	bool SolveGrappleRestraint();
+
+	// EXPERIMENTAL: Used to track wrapping points for the grapple.
+	TArray<FVector> WrapPivots;
+	int WrapCheckIterations;
+	FVector LastFramePlayerLocation;
 
 public:
 	// UMovementState Implementation.
 	virtual void Initialize(APlayerPawn* pawn) override;
+
+	virtual void OnStateEnter() override;
 };

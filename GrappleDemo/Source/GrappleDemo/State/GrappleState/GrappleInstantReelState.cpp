@@ -20,6 +20,7 @@ void UGrappleInstantReelState::Initialize(APlayerPawn* pawn)
 
 void UGrappleInstantReelState::OnStateEnter()
 {
+	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
 }
@@ -33,7 +34,7 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 	CheckStateChange();
 	PlayerLook(deltaTime);
 	UpdateGrappleRope(deltaTime);
-	UpdateGrappleRestraint();
+	SolveGrappleRestraint();
 
 	UMovementState::CheckStateChangeGrapple();
 }
