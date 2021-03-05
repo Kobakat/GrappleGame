@@ -11,13 +11,13 @@ class GRAPPLEDEMO_API ALevelChangeTrigger : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	// Sets default values for this actor's properties
 	ALevelChangeTrigger();
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Target Map")
-	TSoftObjectPtr<UWorld> level;
+	FString stageName = TEXT("JethroTest");
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Change Level"))
