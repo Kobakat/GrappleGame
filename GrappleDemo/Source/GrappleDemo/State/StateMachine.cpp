@@ -18,6 +18,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	UWalkState::GetInstance()->Initialize(pawn);
 
 	this->state = UIdleState::GetInstance();
+	this->AddToRoot();
 }
 
 void UStateMachine::SetState(UState* newState)
