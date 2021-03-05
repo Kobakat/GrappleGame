@@ -28,6 +28,9 @@ void APlayerPawn::BeginPlay()
 	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
 	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
 
+	// TODO please fucking delete me
+	startLocation = GetActorLocation();
+
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
 	grappleComponent->NumSegments = 10;
@@ -42,6 +45,12 @@ void APlayerPawn::Tick(float deltaTime)
 	if (this->stateMachine != nullptr) 
 	{
 		stateMachine->Tick(deltaTime);
+	}
+
+	// TODO delete me
+	if (GetActorLocation().Z < -5000)
+	{
+		SetActorLocation(startLocation);
 	}
 
 	HandleStandUp(deltaTime);

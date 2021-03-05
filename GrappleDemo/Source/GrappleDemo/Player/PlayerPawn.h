@@ -229,6 +229,8 @@ public:
 
 #pragma endregion
 
+	FVector startLocation;
+
 protected:
 	virtual void BeginPlay() override;
 
