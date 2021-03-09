@@ -28,22 +28,6 @@ public:
 	
 	UPROPERTY()
 		UState* state;
-	UPROPERTY()
-		UGrappleAirborneState* test1;
-	UPROPERTY()
-		UGrappleInstantReelState* test2;
-	UPROPERTY()
-		UCrouchState* test3;
-	UPROPERTY()
-		UIdleState* test4;
-	UPROPERTY()
-		URunSlideState* test5;
-	UPROPERTY()
-		URunState* test6;
-	UPROPERTY()
-		USlideState* test7;
-	UPROPERTY()
-		UWalkState* test8;
 
 private:
 	APlayerPawn* player;

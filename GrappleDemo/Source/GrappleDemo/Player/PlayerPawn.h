@@ -45,7 +45,9 @@ public:
 	FHitResult GrappleHitPoint;
 	FHitResult GroundHitPoint;
 	bool bNeedsToStand;
-	bool grappleCanAttach;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
+		bool grappleCanAttach;
 
 #pragma region Designer Props
 
@@ -227,6 +229,8 @@ public:
 
 #pragma endregion
 
+	FVector startLocation;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -266,7 +270,7 @@ private:
 #pragma endregion
 
 #pragma region Grapple Functions
-	bool CastGrappleRaycast();
+	void CastGrappleRaycast();
 	bool ShootGrapple();
 #pragma endregion
 

@@ -23,6 +23,7 @@ void UGrappleAirborneState::Initialize(APlayerPawn* pawn)
 
 void UGrappleAirborneState::OnStateEnter()
 {
+	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
 	grappleComponent->SetHiddenInGame(false);
 	player->tryingToGrapple = false;
@@ -47,7 +48,7 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 		player->SetState(UWalkState::GetInstance());
 	}
 	CheckIfGrounded();
-	ClampPlayerVelocity(player->airborneMaxSpeed);
+	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 }
 
 #pragma endregion

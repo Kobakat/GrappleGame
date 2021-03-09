@@ -9,15 +9,16 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	this->player = pawn;
 
 	UGrappleAirborneState::GetInstance()->Initialize(pawn);
-	UGrappleInstantReelState::GetInstance()->Initialize(pawn);;
-	UCrouchState::GetInstance()->Initialize(pawn);;
-	UIdleState::GetInstance()->Initialize(pawn);;
-	URunSlideState::GetInstance()->Initialize(pawn);;
-	URunState::GetInstance()->Initialize(pawn);;
-	USlideState::GetInstance()->Initialize(pawn);;
-	UWalkState::GetInstance()->Initialize(pawn);;
+	UGrappleInstantReelState::GetInstance()->Initialize(pawn);
+	UCrouchState::GetInstance()->Initialize(pawn);
+	UIdleState::GetInstance()->Initialize(pawn);
+	URunSlideState::GetInstance()->Initialize(pawn);
+	URunState::GetInstance()->Initialize(pawn);
+	USlideState::GetInstance()->Initialize(pawn);
+	UWalkState::GetInstance()->Initialize(pawn);
 
 	this->state = UIdleState::GetInstance();
+	this->AddToRoot();
 }
 
 void UStateMachine::SetState(UState* newState)

@@ -28,13 +28,12 @@ void UIdleState::OnStateEnter()
 
 void UIdleState::StateTick(float deltaTime)
 {
-	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
-
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();
 	CheckIfGrounded();
 	HandleJump(player->walkJumpForce);
 	PlayerLook(deltaTime);	
+	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
 	UMovementState::CheckStateChangeGrapple();
 }
 
