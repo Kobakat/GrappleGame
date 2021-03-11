@@ -30,16 +30,16 @@ void UIdleState::StateTick(float deltaTime)
 {
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();
-	CheckIfGrounded();
+	CheckIfGrounded(player->groundCheckDistance);
 	HandleJump(player->walkJumpForce);
 	PlayerLook(deltaTime);	
-	player->playerCollider->SetPhysMaterialOverride(player->stopMat);
+	player->collider->SetPhysMaterialOverride(player->stopMat);
 	UMovementState::CheckStateChangeGrapple();
 }
 
 void UIdleState::OnStateExit() 
 {
-	player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+	player->collider->SetPhysMaterialOverride(player->moveMat);
 }
 
 #pragma endregion

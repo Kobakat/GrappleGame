@@ -25,13 +25,14 @@ void UCrouchState::Initialize(APlayerPawn* pawn)
 void UCrouchState::OnStateEnter()
 {
 	player->stateName = this->stateName;
+	player->bNeedsToStand = false;
 	crouchTimer = 0;
 }
 
 void UCrouchState::StateTick(float deltaTime)
 {
 	HandleCrouchDown(deltaTime);
-	CheckIfGrounded();
+	CheckIfGrounded(player->crouchGroundCheckOverride);
 	CheckIfPlayerIsTryingToStand();
 	HandleJump(player->crouchJumpForce);
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
@@ -45,67 +46,29 @@ void UCrouchState::OnStateExit()
 {
 	crouchTimer = 0;
 	player->bNeedsToStand = true;
+	player->standUpTimer = 0;
 }
 
 #pragma endregion
 
 #pragma region Game Logic
-void UCrouchState::CheckIfGrounded()
-{
-	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
-	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector * player->crouchGroundCheckOverride);
-	FCollisionQueryParams param;
-	param.AddIgnoredActor(player);
 
-	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
-
-	if (bHitGround)
-	{
-		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
-
-		if (struckProfile == FName(TEXT("Ground")))
-		{
-			player->playerCollider->SetPhysMaterialOverride(player->moveMat);
-			player->bIsGrounded = true;
-		}
-
-		else if (struckProfile == FName(TEXT("Slide")))
-		{
-			player->SetState(USlideState::GetInstance());
-			player->bIsGrounded = true;
-		}
-
-		else
-		{
-			player->bIsGrounded = false;
-			player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
-		}
-	}
-
-	else
-	{
-		player->bIsGrounded = false;
-		player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
-	}
-	
-}
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
 	if (!player->tryingToCrouch && !bIsCrouching) 
 	{
-		FHitResult hit;
-		
-		//Cast a ray FROM the top of the crouched capsule height TO the top of the standing capsule height
-		FVector currentPos = player->playerCollider->GetRelativeLocation();
-		FVector rayOrigin = currentPos + (FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight()));
-		FVector rayDest = currentPos - FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
-		rayDest = rayDest + (FVector(0, 0, player->standingPlayerHeight * 2));
-
 		FCollisionQueryParams param;
 		param.AddIgnoredActor(player);
 
-		bool bHitCeiling = player->GetWorld()->LineTraceSingleByChannel(hit, rayOrigin, rayDest, ECC_Visibility, param);
+		FCollisionShape box = FCollisionShape::MakeBox(player->bounds);
+		bool bHitCeiling = player->GetWorld()->SweepSingleByChannel(
+			player->CrouchHitPoint, 
+			player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+			player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+			FQuat::Identity, 
+			ECC_Visibility, 
+			box,
+			param);
 
 		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 
@@ -125,17 +88,17 @@ void UCrouchState::HandleJump(float jumpForce)
 
 void UCrouchState::HandleCrouchDown(float deltaTime)
 {
+	const float currentScale = player->collider->GetRelativeScale3D().Z;
 	//Only handle crouch if the player isn't already crouched down
-	if (player->playerCollider->GetScaledCapsuleHalfHeight() > player->crouchSlidePlayerHeight) 
+	if (currentScale > player->crouchHeightScale) 
 	{
-		float frac = crouchTimer / player->crouchTransitionTime;
-		float newCapHeight = FMath::Lerp(player->standingPlayerHeight, player->crouchSlidePlayerHeight, frac);
-		float newCamHeight = FMath::Lerp(player->standingCameraHeight, player->crouchSlideCameraHeight, frac);
-
-		player->playerCollider->SetCapsuleHalfHeight(newCapHeight);
-		player->playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
-
 		crouchTimer += deltaTime;
+
+		const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
+		const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+
+		player->collider->SetRelativeScale3D(FVector(1,1, newScale));
+
 		bIsCrouching = true;
 	}
 

@@ -59,11 +59,11 @@ bool UGrappleState::SolveGrappleRestraint()
 		else
 		{
 			// Get the current velocity and the point on the sphere surface.
-			FVector velocity = player->playerCollider->GetPhysicsLinearVelocity();
+			FVector velocity = player->collider->GetPhysicsLinearVelocity();
 			FVector tangentPoint = player->GetActorLocation();
 			// Project the player velocity such that it is tangent to the
 			// sphere of the rope radius.
-			player->playerCollider->SetPhysicsLinearVelocity(
+			player->collider->SetPhysicsLinearVelocity(
 				FVector::PointPlaneProject(
 					tangentPoint + velocity,
 					tangentPoint,

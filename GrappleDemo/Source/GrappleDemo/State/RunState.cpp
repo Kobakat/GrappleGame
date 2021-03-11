@@ -28,7 +28,7 @@ void URunState::OnStateEnter()
 
 void URunState::StateTick(float deltaTime)
 {
-	CheckIfGrounded();
+	CheckIfGrounded(player->groundCheckDistance);
 	CheckifPlayerWantsToSlide();
 	CheckIfPlayerStopsRunning();
 	HandleJump(player->runJumpForce);

@@ -20,7 +20,6 @@ public:
 	virtual void OnStateExit() override;
 
 	virtual void Initialize(APlayerPawn* pawn) override;
-	virtual void CheckIfGrounded() override;
 
 private:
 	static URunSlideState* instance;
