@@ -1,4 +1,5 @@
 #include "PlayerPawn.h"
+#include "Components/ChildActorComponent.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
@@ -10,11 +11,11 @@ APlayerPawn::APlayerPawn()
 
 	bUseControllerRotationYaw = false;
 
-	playerCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collider"));
-	playerCollider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	collider = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Collider"));
+	collider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
-	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	playerCamera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));
+	camera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 }
@@ -22,11 +23,17 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Ensure the grapple polyline is instantiated.
+	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
+	if (!childActor->HasBeenCreated())
+		childActor->CreateChildActor();
+	GrapplePolyline = Cast<APolylineCylinderRenderer>(childActor->GetChildActor());
+
 	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
-	this->playerCollider->SetCapsuleHalfHeight(standingPlayerHeight);
-	this->playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight));
+	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
 
 	// TODO please fucking delete me
 	startLocation = GetActorLocation();
@@ -36,6 +43,8 @@ void APlayerPawn::BeginPlay()
 	grappleComponent->NumSegments = 10;
 	grappleComponent->NumSides = 8;
 	grappleComponent->SolverIterations = 4;
+
+	this->bounds = CalculateBounds();
 }
 
 void APlayerPawn::Tick(float deltaTime)
@@ -55,13 +64,7 @@ void APlayerPawn::Tick(float deltaTime)
 
 	HandleStandUp(deltaTime);
 
-	UpdateCameraFOVState();
-	UpdateCameraFOV(deltaTime);
-	UpdateCameraShakeState();
-	UpdateCameraShake(deltaTime, shakeAmp, shakeFreq);
-
-
-	CastGrappleRaycast();	
+	CastGrappleRaycast();
 }
 
 #pragma endregion
@@ -134,31 +137,51 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 {
 	if (bNeedsToStand)
 	{
-		if (playerCollider->GetScaledCapsuleHalfHeight() < standingPlayerHeight)
+		FCollisionQueryParams param;
+		param.AddIgnoredActor(this);
+
+		FCollisionShape box = FCollisionShape::MakeBox(bounds);
+
+		bool bHitCeiling = GetWorld()->SweepSingleByChannel(
+			CrouchHitPoint,
+			GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector,
+			GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector,
+			FQuat::Identity,
+			ECC_Visibility,
+			box,
+			param);
+
+		if (bHitCeiling) 
 		{
-			float frac = standUpTimer / crouchTransitionTime;
-			float newCapHeight = FMath::Lerp(crouchSlidePlayerHeight, standingPlayerHeight, frac);
-			float newCamHeight = FMath::Lerp(crouchSlideCameraHeight, standingCameraHeight, frac);
-
-			playerCollider->SetCapsuleHalfHeight(newCapHeight);
-			playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
-
-			standUpTimer += deltaTime;
+			SetState(UCrouchState::GetInstance());
 		}
 
-		else
+		else 
 		{
-			bNeedsToStand = false;
-			standUpTimer = 0;
-		}
+			const float currentScale = collider->GetRelativeScale3D().Z;
+			if (currentScale != standHeightScale)
+			{
+				standUpTimer += deltaTime;
+				const float frac = FMath::Clamp(standUpTimer / crouchTransitionTime, 0.f, 1.f);
+				const float newScale = FMath::Lerp(currentScale, standHeightScale, frac);
+
+				collider->SetRelativeScale3D(FVector(1, 1, newScale));
+			}
+
+			else
+			{
+				bNeedsToStand = false;
+				standUpTimer = 0;
+			}
+		}	
 	}
 }
 
 void APlayerPawn::CastGrappleRaycast()
 {
 	// Cast from the camera out to the grapple fire range.
-	FVector Start = playerCamera->GetComponentLocation();
-	FVector End = Start + playerCamera->GetForwardVector() * grappleComponent->grappleFireRange;
+	FVector Start = camera->GetComponentLocation();
+	FVector End = Start + camera->GetForwardVector() * grappleComponent->grappleFireRange;
 	// Ignore collision with player.
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
@@ -201,7 +224,7 @@ bool APlayerPawn::ShootGrapple()
 	if (grappleCanAttach)
 	{
 		// Attaches the cable component to the grappable object
-		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, GrappleHitPoint.GetActor());
+		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, camera->GetComponentLocation(), GrappleHitPoint.GetActor());
 		return true;
 	}
 	return false;
@@ -209,152 +232,8 @@ bool APlayerPawn::ShootGrapple()
 
 #pragma endregion
 
-#pragma region Camera Logic
-
-void APlayerPawn::UpdateCameraFOVState()
+FVector APlayerPawn::CalculateBounds() 
 {
-	this->prevFOVState = this->fovState;
-
-	if (this->playerCollider->GetPhysicsLinearVelocity().Size() >= FOVVelocityThreshold)
-		this->fovState = Active;
-	else
-		this->fovState = Passive;
-
-	//If the player swapped states we need to signal that the FOV needs to lerp
-	if (this->prevFOVState != this->fovState)
-		fovTransition = true;
-
+	return collider->GetStaticMesh()->GetBounds().BoxExtent;
 }
 
-void APlayerPawn::UpdateCameraFOV(float deltaTime)
-{
-	if (fovTransition)
-	{
-		float frac = fovTimer / FOVTransitionTime;
-		float newFOV;
-
-		switch (this->fovState)
-		{
-		case Passive:
-			newFOV = FMath::Lerp(FOVActive, FOVPassive, frac);
-			playerCamera->FieldOfView = newFOV;
-			break;
-		case Active:
-			newFOV = FMath::Lerp(FOVPassive, FOVActive, frac);
-			playerCamera->FieldOfView = newFOV;
-			break;
-		}
-
-		fovTimer += deltaTime;
-
-		if (frac >= 1)
-		{
-			fovTransition = false;
-			fovTimer = 0;
-		}
-	}
-}
-
-void APlayerPawn::UpdateCameraShakeState()
-{
-	if (state == UWalkState::GetInstance() || state == URunState::GetInstance())
-	{
-		if (this->bIsGrounded && !moveVector.IsNearlyZero(0.05f))
-		{
-			//We should only apply shake when the player is both grounded and moving
-			if (shakeState != Shaking)
-			{
-					blendingIn = true;
-					shakeState = Shaking;
-					shakeOffset = 0;
-					shakeInTimer = 0;
-					shakeOutTimer = 0;
-
-					
-			}
-		}
-
-		else if(shakeState == Shaking && !blendingOut)
-		{
-			blendingIn = false;
-			blendingOut = true;
-			shakeStartOffset = shakeHeight;
-		}
-	}
-
-	else if(shakeState == Shaking && !blendingOut)
-	{
-		blendingIn = false;
-		blendingOut = true;
-		shakeStartOffset = shakeHeight;
-	}
-
-	if (state == UWalkState::GetInstance())
-	{
-		shakeAmp = passiveAmplitude;
-		shakeFreq = passiveFrequency;
-	}
-
-	else if (state == URunState::GetInstance())
-	{
-		shakeAmp = activeAmplitude;
-		shakeFreq = activeFrequency;
-	}
-}
-
-void APlayerPawn::UpdateCameraShake(const float deltaTime, const float amplitude, const float freq)
-{
-	if (shakeState == Shaking)
-	{
-		if (blendingIn && shakeInTimer < shakeBlendInTime)
-		{
-			//If we're blending in, tick the timer.
-			shakeInTimer += deltaTime;
-		}
-
-		else if (shakeInTimer >= shakeBlendInTime)
-		{
-			//Blend in complete
-			blendingIn = false;
-			shakeInTimer = 0;
-		}
-
-		if (blendingOut && shakeOutTimer < shakeBlendInTime)
-		{
-			//If we're blending out, tick the timer and lerp offset towards 0
-			shakeOutTimer += deltaTime;
-
-			float frac = shakeOutTimer / shakeBlendOutTime;
-			frac = FMath::Clamp(frac, 0.f, 1.f);
-			
-			shakeHeight = FMath::Lerp(shakeStartOffset, 0.f, frac);
-		}
-
-		else if (shakeOutTimer >= shakeBlendInTime)
-		{
-			//Blend out complete
-			blendingOut = false;
-			shakeState = Stopped;
-			shakeOutTimer = 0;
-		}
-
-		else
-		{
-			//Calculate the blend strength
-			const float in = shakeInTimer / shakeBlendInTime;
-	
-			float blendStrength = 1.f;
-
-			if (blendingIn)
-				blendStrength = in;
-
-			shakeOffset += (deltaTime * blendStrength * freq);
-
-			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
-		}
-
-		playerCamera->SetRelativeLocation(FVector(0, 0, standingCameraHeight + shakeHeight));
-	}
-}
-
-#pragma endregion

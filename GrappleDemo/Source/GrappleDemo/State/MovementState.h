@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,7 +22,7 @@ public:
 protected:
 	virtual void PlayerMove(float accel, float airControlFactor);
 	virtual void PlayerLook(float deltaTime);
-	virtual void CheckIfGrounded();
+	virtual void CheckIfGrounded(float overrideHeight);
 	virtual void HandleJump(float jumpForce);
 	virtual void ClampPlayerVelocity(float max);
 	virtual FVector ConvertPlayerInputRelativeToCamera();

@@ -24,16 +24,19 @@ void URunSlideState::Initialize(APlayerPawn* pawn)
 void URunSlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->playerCollider->SetPhysMaterialOverride(player->runSlideMat);
-	player->playerCollider->AddForce(player->playerCollider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 10k to keep designer values small
+	player->collider->SetPhysMaterialOverride(player->runSlideMat);
+	player->collider->AddForce(player->collider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 10k to keep designer values small
+	
+	bIsCrouching = true;
 	crouchTimer = 0;
+	player->bNeedsToStand = false;
 }
 
 void URunSlideState::StateTick(float deltaTime)
 {
 	HandleCrouchDown(deltaTime);
 	CheckIfSlideComplete();
-	CheckIfGrounded();
+	CheckIfGrounded(player->runSlideGroundCheckOverride);
 	HandleJump(player->runSlideJumpForce);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
@@ -43,36 +46,20 @@ void URunSlideState::StateTick(float deltaTime)
 
 void URunSlideState::OnStateExit()
 {
-	player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+	player->collider->SetPhysMaterialOverride(player->moveMat);
+	bIsCrouching = false;
 	crouchTimer = 0;
 }
 
 #pragma endregion
 
 #pragma region Game Logic
-void URunSlideState::CheckIfGrounded()
-{
-	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
-	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector * player->runSlideGroundCheckOverride);
-	FCollisionQueryParams param;
-	param.AddIgnoredActor(player);
-
-	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
-
-	//CheckIfSlideCompletes handles the rest
-	if(!bHitGround)
-	{
-		player->bIsGrounded = false;		
-	}	
-}
-
 void URunSlideState::CheckIfSlideComplete() 
 {
-	if (!bIsCrouching) //this might f things up
+	if (!bIsCrouching)
 	{
 		//Passing to crouch so we don't have to reimplement the logic for standing up in enclosed spaces rules
-		if (!player->bIsGrounded || player->playerCollider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
+		if (!player->bIsGrounded || player->collider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
 		{
 			player->SetState(UCrouchState::GetInstance());
 		}
@@ -81,23 +68,24 @@ void URunSlideState::CheckIfSlideComplete()
 
 void URunSlideState::HandleCrouchDown(float deltaTime)
 {
-	//Only handle crouch if the player isn't already crouched down
-	if (player->playerCollider->GetScaledCapsuleHalfHeight() > player->crouchSlidePlayerHeight)
+	if (bIsCrouching)
 	{
-		float frac = crouchTimer / player->crouchTransitionTime;
-		float newCapHeight = FMath::Lerp(player->standingPlayerHeight, player->crouchSlidePlayerHeight, frac);
-		float newCamHeight = FMath::Lerp(player->standingCameraHeight, player->crouchSlideCameraHeight, frac);
+		const float currentScale = player->collider->GetRelativeScale3D().Z;
+		//Only handle crouch if the player isn't already crouched down
+		if (currentScale != player->crouchHeightScale)
+		{
+			crouchTimer += deltaTime;
 
-		player->playerCollider->SetCapsuleHalfHeight(newCapHeight);
-		player->playerCamera->SetRelativeLocation(FVector(0, 0, newCamHeight));
+			const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
+			const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
 
-		crouchTimer += deltaTime;
-		bIsCrouching = true;
-	}
+			player->collider->SetRelativeScale3D(FVector(1, 1, newScale));
+		}
 
-	else
-	{
-		bIsCrouching = false;
+		else
+		{
+			bIsCrouching = false;
+		}
 	}
 }
 

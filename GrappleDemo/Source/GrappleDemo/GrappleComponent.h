@@ -38,7 +38,7 @@ public:
 	void ApplyForce(FVector force);
 	void Reel(float value);
 	// function that takes in vector and attaches endpoint of grapple to that
-	void Attach(FVector vector, AActor* actor);
+	void Attach(FVector start, FVector end, AActor* actor);
 	void Detach();
 
 	AGrappleReactor* grappleReactor;
