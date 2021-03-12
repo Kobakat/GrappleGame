@@ -25,6 +25,7 @@ void APlayerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	// Ensure the grapple polyline is instantiated.
+
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
 	if (!childActor->HasBeenCreated())
 		childActor->CreateChildActor();
