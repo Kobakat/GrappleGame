@@ -62,7 +62,9 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 	boxBounds.Y *= .75f;
 	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
 
-	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Purple, false, 0.1f);
+#if WITH_EDITOR
+	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Red, false, 0.05f);
+#endif
 
 	bool bHitGround = player->GetWorld()->SweepSingleByChannel(
 		player->GroundHitPoint,

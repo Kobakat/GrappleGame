@@ -61,6 +61,7 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 		param.AddIgnoredActor(player);
 
 		FCollisionShape box = FCollisionShape::MakeBox(player->bounds);
+
 		bool bHitCeiling = player->GetWorld()->SweepSingleByChannel(
 			player->CrouchHitPoint, 
 			player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
@@ -69,6 +70,10 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 			ECC_Visibility, 
 			box,
 			param);
+
+#if WITH_EDITOR
+		DrawDebugBox(player->GetWorld(), player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector, player->bounds, FColor::Purple, false, .05f);
+#endif
 
 		//if we don't hit anything they're good to stand up
 		if (!bHitCeiling) 

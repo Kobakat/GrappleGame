@@ -76,18 +76,47 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 
 void USlideState::CheckIfGrounded(float overrideHeight)
 {
-	FVector rayOrigin = player->collider->GetRelativeLocation();
-	FVector rayDest = rayOrigin + (FVector::DownVector * overrideHeight);
+	player->collider->SetPhysMaterialOverride(player->frictionlessMat); //TODO dont sent this every frame, do a better check
+
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	bool bHitSlide = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_GameTraceChannel2, param);
+	FVector boxBounds = FVector(player->bounds.X, player->bounds.Y, overrideHeight);
+	//shrink so they dont extend beyond the player collider and stay central
+	boxBounds.X *= .75f;
+	boxBounds.Y *= .75f;
+	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
+
+#if WITH_EDITOR
+	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Red, false, 0.05f);
+#endif
+
+	bool bHitSlide= player->GetWorld()->SweepSingleByChannel(
+		player->GroundHitPoint,
+		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+		FQuat::Identity,
+		ECC_Visibility,
+		box,
+		param);
 
 	if (bHitSlide)
 	{
-		slideNormal = player->GroundHitPoint.Normal;
-		slideNormal.Z = 0;
-		slideNormal.Normalize(0.001);
+		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+
+		if (struckProfile == FName(TEXT("Slide")))
+		{
+			slideNormal = player->GroundHitPoint.Normal;
+			slideNormal.Z = 0;
+			slideNormal.Normalize(0.001);
+			player->bIsGrounded = true;
+		}
+		
+		else
+		{
+			player->SetState(UCrouchState::GetInstance());
+			player->bIsGrounded = true;
+		}
 	}
 
 	else

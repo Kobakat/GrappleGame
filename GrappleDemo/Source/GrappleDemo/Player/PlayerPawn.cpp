@@ -11,10 +11,10 @@ APlayerPawn::APlayerPawn()
 	bUseControllerRotationYaw = false;
 
 	collider = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Collider"));
-	collider->SetupAttachment(RootComponent);
+	collider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));
-	camera->SetupAttachment(collider);
+	camera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 }
@@ -23,7 +23,7 @@ void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	grappleComponent->SetupAttachment(grappleStart);
+	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
 	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
@@ -152,7 +152,7 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 		else 
 		{
 			const float currentScale = collider->GetRelativeScale3D().Z;
-			if (currentScale <= standHeightScale)
+			if (currentScale != standHeightScale)
 			{
 				standUpTimer += deltaTime;
 				const float frac = FMath::Clamp(standUpTimer / crouchTransitionTime, 0.f, 1.f);
