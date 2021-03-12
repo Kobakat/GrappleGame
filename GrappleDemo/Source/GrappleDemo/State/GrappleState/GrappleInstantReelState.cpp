@@ -30,6 +30,7 @@ void UGrappleInstantReelState::OnStateExit()
 
 void UGrappleInstantReelState::StateTick(float deltaTime)
 {
+	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	CheckStateChange();
 	PlayerLook(deltaTime);
 	UpdateGrappleRope(deltaTime);

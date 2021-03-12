@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CheckpointManager.h"
 #include "Checkpoint.generated.h"
 
 UCLASS()
@@ -11,11 +12,14 @@ class GRAPPLEDEMO_API ACheckpoint : public AActor
 {
 	GENERATED_BODY()
 
-		
+
+	ACheckpointManager* checkpointManager;
 	
 public:	
 	// Sets default values for this actor's properties
 	ACheckpoint();
+
+	
 
 protected:
 	// Called when the game starts or when spawned
@@ -26,5 +30,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void SetCurrentCheckpoint();
+	void SetCheckpoint();
+
+	UFUNCTION(BlueprintCallable)
+	void CheckLevelStart();
+
+	UFUNCTION(BlueprintCallable)
+	void FellOutOfBounds();
 };

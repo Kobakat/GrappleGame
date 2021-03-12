@@ -16,7 +16,11 @@ void ACheckpointManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	//this->player = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+	this->player = GetWorld()->GetFirstPlayerController()->GetPawn();
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Checkpoints[0]->GetName());
+
+
 
 	// The first checkpoint in the array is the start by default
 	currentCheckpoint = Checkpoints[0];
@@ -29,12 +33,34 @@ void ACheckpointManager::Tick(float DeltaTime)
 
 	if (Timer)
 	{
-
+		LevelTime++;
 	}
 
 }
 
-void OutOfBounds()
+void ACheckpointManager::OutOfBounds()
 {
-	player.location = currentCheckPoint;
+	player->SetActorLocation(currentCheckpoint->GetActorLocation());
+}
+
+void ACheckpointManager::SetCurrentCheckpoint(AActor* checkpoint)
+{
+	currentCheckpoint = checkpoint;
+	CheckLevelEnd();
+}
+
+void ACheckpointManager::CheckLevelStart(AActor* checkpoint)
+{
+	if (checkpoint == Checkpoints[0])
+	{
+		Timer = true;
+	}
+}
+
+void ACheckpointManager::CheckLevelEnd()
+{
+	if (currentCheckpoint == Checkpoints.Last())
+	{
+		Timer = false;
+	}
 }

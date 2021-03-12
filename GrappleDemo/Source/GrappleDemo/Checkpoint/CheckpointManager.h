@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Checkpoint.h"
 #include "../Player/PlayerPawn.h"
 #include "CheckpointManager.generated.h"
 
@@ -20,26 +19,35 @@ class GRAPPLEDEMO_API ACheckpointManager : public AActor
 
 protected:
 	// reference of the player
-	APlayerPawn player;
+	APawn* player;
 
-private:
+public:
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
-	TArray<ACheckpoint*> Checkpoints;
+	TArray<AActor*> Checkpoints;
 
 	// Last checkpoint the player went through
 	UPROPERTY(VisibleAnywhere)
-	static ACheckpoint* currentCheckpoint;
+	AActor* currentCheckpoint;
 
 	UPROPERTY(BlueprintReadWrite)
-	double LevelTime;
+	float LevelTime;
 
 	bool Timer;
 
 	UFUNCTION(BlueprintCallable)
 	void OutOfBounds();
+
+	UFUNCTION()
+	void SetCurrentCheckpoint(AActor* checkpoint);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckLevelStart(AActor* checkpoint);
+
+	void CheckLevelEnd();
 	
-public:	
+
+	
 	// Sets default values for this actor's properties
 	ACheckpointManager();
 

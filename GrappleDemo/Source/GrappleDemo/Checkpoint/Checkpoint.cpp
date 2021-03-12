@@ -25,7 +25,17 @@ void ACheckpoint::Tick(float DeltaTime)
 
 }
 
-void ACheckpoint::SetCurrentCheckpoint()
+void ACheckpoint::SetCheckpoint()
 {
-	ACheckpointManager.currentCheckpoint = this;
+	checkpointManager->SetCurrentCheckpoint(this);
+}
+
+void ACheckpoint::CheckLevelStart()
+{
+	checkpointManager->CheckLevelStart(this);
+}
+
+void ACheckpoint::FellOutOfBounds()
+{
+	checkpointManager->OutOfBounds();
 }
