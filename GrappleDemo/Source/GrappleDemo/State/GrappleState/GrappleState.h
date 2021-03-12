@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "../MovementState.h"
 #include "../../GrappleComponent.h"
+#include "../../GrappleRendering/PolylineCylinderRenderer.h"
 #include "GrappleState.generated.h"
 
 UCLASS()
@@ -19,17 +20,20 @@ protected:
 	// Grapple References.
 	UGrappleComponent* grappleComponent;
 	USceneComponent* grappleGunStart;
+	APolylineCylinderRenderer* grapplePolyline;
 	// Common grapple leash behaviour.
 	bool SolveGrappleRestraint();
 
 	// EXPERIMENTAL: Used to track wrapping points for the grapple.
 	TArray<FVector> WrapPivots;
-	int WrapCheckIterations;
+	int MaxWrapPivots;
 	FVector LastFramePlayerLocation;
+	int WrapCheckIterations;
 
 public:
 	// UMovementState Implementation.
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 	virtual void OnStateEnter() override;
+	virtual void OnStateExit() override;
 };

@@ -25,13 +25,12 @@ void UGrappleAirborneState::OnStateEnter()
 {
 	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
-	grappleComponent->SetHiddenInGame(false);
 	player->tryingToGrapple = false;
 }
 void UGrappleAirborneState::OnStateExit()
 {
+	UGrappleState::OnStateExit();
 	grappleComponent->Detach();
-	grappleComponent->SetHiddenInGame(true);
 }
 
 void UGrappleAirborneState::StateTick(float deltaTime)
