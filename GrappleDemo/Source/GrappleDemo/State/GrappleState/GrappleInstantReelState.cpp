@@ -22,11 +22,10 @@ void UGrappleInstantReelState::OnStateEnter()
 {
 	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
-	grappleComponent->SetHiddenInGame(false);
 }
 void UGrappleInstantReelState::OnStateExit()
 {
-	grappleComponent->SetHiddenInGame(true);
+	UGrappleState::OnStateExit();
 }
 
 void UGrappleInstantReelState::StateTick(float deltaTime)

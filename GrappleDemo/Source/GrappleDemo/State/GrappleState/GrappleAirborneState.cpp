@@ -25,13 +25,12 @@ void UGrappleAirborneState::OnStateEnter()
 {
 	UGrappleState::OnStateEnter();
 	player->stateName = this->stateName;
-	grappleComponent->SetHiddenInGame(false);
 	player->tryingToGrapple = false;
 }
 void UGrappleAirborneState::OnStateExit()
 {
+	UGrappleState::OnStateExit();
 	grappleComponent->Detach();
-	grappleComponent->SetHiddenInGame(true);
 }
 
 void UGrappleAirborneState::StateTick(float deltaTime)
@@ -47,7 +46,7 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	{
 		player->SetState(UWalkState::GetInstance());
 	}
-	CheckIfGrounded();
+	CheckIfGrounded(player->groundCheckDistance);
 	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 }
 

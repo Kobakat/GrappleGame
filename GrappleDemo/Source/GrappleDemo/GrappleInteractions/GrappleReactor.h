@@ -15,6 +15,7 @@ class GRAPPLEDEMO_API AGrappleReactor : public AActor
 protected:
 	// Store the state for current hook
 	bool isHookedOnto;
+	FVector localHookPosition;
 	// TODO this should be a reference to the grapplegun class
 	FTransform* hookedTransform;
 
@@ -40,7 +41,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	// Call these methods to control the hooked state
-	virtual void Hook();
+	virtual void Hook(FVector location);
 	virtual void Unhook();
 	// Applys a directional force to this grapple reactor
 	// Sub classes, blueprints will process this

@@ -21,7 +21,7 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		}
 
 		//multiplying by 100 so the designer values aren't so massive
-		player->playerCollider->AddForce(relativeInputVector * accel, NAME_None, true); //Set to false if you want player mass to matter
+		player->collider->AddForce(relativeInputVector * accel, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
 	else if (
@@ -39,24 +39,41 @@ void UMovementState::PlayerLook(float deltaTime)
 {
 	if (!player->lookVector.IsZero())
 	{
-		FRotator camRotation = player->playerCamera->GetRelativeRotation();
+		FRotator camRotation = player->camera->GetRelativeRotation();
 
-		camRotation.Yaw += (player->lookVector.X * player->lookSpeed * player->GetWorld()->GetDeltaSeconds());
-		camRotation.Pitch = FMath::Clamp(camRotation.Pitch + (player->lookVector.Y * player->lookSpeed * deltaTime), player->viewLookBounds.X, player->viewLookBounds.Y);
+		camRotation.Yaw += (player->lookVector.X * player->camera->lookSpeed * player->GetWorld()->GetDeltaSeconds());
+		camRotation.Pitch = FMath::Clamp(
+			camRotation.Pitch + (player->lookVector.Y * player->camera->lookSpeed * deltaTime), 
+			player->camera->viewLookBounds.X, 
+			player->camera->viewLookBounds.Y);
 
-		player->playerCamera->SetRelativeRotation(camRotation);
+		player->camera->SetRelativeRotation(camRotation);
 	}
 }
 
-void UMovementState::CheckIfGrounded()
+void UMovementState::CheckIfGrounded(float overrideHeight)
 {
-	FVector playerBottomLocation = FVector(0, 0, player->playerCollider->GetScaledCapsuleHalfHeight());
-	FVector rayOrigin = player->playerCollider->GetRelativeLocation() - playerBottomLocation;
-	FVector rayDest = rayOrigin + (FVector::DownVector * player->groundCheckDistance);
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	bool bHitGround = player->GetWorld()->LineTraceSingleByChannel(player->GroundHitPoint, rayOrigin, rayDest, ECC_Visibility, param);
+	FVector boxBounds = FVector(player->bounds.X, player->bounds.Y, overrideHeight);
+	//shrink so they dont extend beyond the player collider and stay central
+	boxBounds.X *= .75f;
+	boxBounds.Y *= .75f;
+	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
+
+#if WITH_EDITOR
+	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Red, false, 0.05f);
+#endif
+
+	bool bHitGround = player->GetWorld()->SweepSingleByChannel(
+		player->GroundHitPoint,
+		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+		FQuat::Identity,
+		ECC_Visibility,
+		box,
+		param);
 
 	if (bHitGround)
 	{
@@ -64,7 +81,7 @@ void UMovementState::CheckIfGrounded()
 
 		if (struckProfile == FName(TEXT("Ground")))
 		{
-			player->playerCollider->SetPhysMaterialOverride(player->moveMat);
+			player->collider->SetPhysMaterialOverride(player->moveMat);
 			player->bIsGrounded = true;
 		}
 
@@ -77,20 +94,20 @@ void UMovementState::CheckIfGrounded()
 		else
 		{
 			player->bIsGrounded = false;
-			player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
+			player->collider->SetPhysMaterialOverride(player->frictionlessMat);
 		}
 	}
 
 	else
 	{
 		player->bIsGrounded = false;
-		player->playerCollider->SetPhysMaterialOverride(player->frictionlessMat);
+		player->collider->SetPhysMaterialOverride(player->frictionlessMat);
 	}
 }
 
 void UMovementState::ClampPlayerVelocity(float max)
 {
-	FVector movementVelocity = player->playerCollider->GetPhysicsLinearVelocity();
+	FVector movementVelocity = player->collider->GetPhysicsLinearVelocity();
 	movementVelocity.Z = 0;
 
 	//If the player is airborne we probably don't want to clamp speed
@@ -99,14 +116,14 @@ void UMovementState::ClampPlayerVelocity(float max)
 	else
 		movementVelocity = movementVelocity.GetClampedToMaxSize(player->airborneMaxSpeed);
 
-	FVector fallVelocity = player->playerCollider->GetPhysicsLinearVelocity();
+	FVector fallVelocity = player->collider->GetPhysicsLinearVelocity();
 	fallVelocity.X = 0;
 	fallVelocity.Y = 0;
 	fallVelocity = fallVelocity.GetClampedToMaxSize(player->maxFallSpeed);
 
 	FVector playerVelocity = movementVelocity + fallVelocity;
 
-	player->playerCollider->SetPhysicsLinearVelocity(playerVelocity);
+	player->collider->SetPhysicsLinearVelocity(playerVelocity);
 }
 
 void UMovementState::HandleJump(float jumpForce) 
@@ -115,15 +132,15 @@ void UMovementState::HandleJump(float jumpForce)
 	{
 		player->tryingToJump = false;
 		//multiply by 100 so designer values aren't so high
-		player->playerCollider->SetPhysicsLinearVelocity(player->playerCollider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
+		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
 	}
 }
 
 FVector UMovementState::ConvertPlayerInputRelativeToCamera()
 {
 	//Kill Z component and normalize vectors
-	FVector camForwardVector = player->playerCamera->GetForwardVector();
-	FVector camRightVector = player->playerCamera->GetRightVector();
+	FVector camForwardVector = player->camera->GetForwardVector();
+	FVector camRightVector = player->camera->GetRightVector();
 	camForwardVector.Z = 0;
 	camRightVector.Z = 0;
 	camForwardVector.Normalize(0.0001);
