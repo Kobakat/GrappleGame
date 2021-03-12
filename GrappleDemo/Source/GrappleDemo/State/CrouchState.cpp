@@ -26,6 +26,7 @@ void UCrouchState::OnStateEnter()
 {
 	player->stateName = this->stateName;
 	player->bNeedsToStand = false;
+	bIsCrouching = true;
 	crouchTimer = 0;
 }
 
@@ -93,23 +94,26 @@ void UCrouchState::HandleJump(float jumpForce)
 
 void UCrouchState::HandleCrouchDown(float deltaTime)
 {
-	const float currentScale = player->collider->GetRelativeScale3D().Z;
-	//Only handle crouch if the player isn't already crouched down
-	if (currentScale > player->crouchHeightScale) 
+	if (bIsCrouching)
 	{
-		crouchTimer += deltaTime;
+		const float currentScale = player->collider->GetRelativeScale3D().Z;
+	
+		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
+		//Only handle crouch if the player isn't already crouched down
+		if (currentScale > player->crouchHeightScale) 
+		{
+			crouchTimer += deltaTime;
 
-		const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-		const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+			const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
+			const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
 
-		player->collider->SetRelativeScale3D(FVector(1,1, newScale));
+			player->collider->SetRelativeScale3D(FVector(1,1, newScale));
+		}
 
-		bIsCrouching = true;
-	}
-
-	else 
-	{
-		bIsCrouching = false;		
+		else 
+		{
+			bIsCrouching = false;		
+		}
 	}
 }
 
