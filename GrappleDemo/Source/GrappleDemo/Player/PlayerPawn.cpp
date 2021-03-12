@@ -151,6 +151,8 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 			box,
 			param);
 
+		
+
 		if (bHitCeiling) 
 		{
 			SetState(UCrouchState::GetInstance());
@@ -159,6 +161,7 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 		else 
 		{
 			const float currentScale = collider->GetRelativeScale3D().Z;
+			gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
 			if (currentScale != standHeightScale)
 			{
 				standUpTimer += deltaTime;

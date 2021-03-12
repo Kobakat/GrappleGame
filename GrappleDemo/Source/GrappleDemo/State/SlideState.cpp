@@ -30,6 +30,7 @@ void USlideState::OnStateEnter()
 	crouchTimer = 0;
 	camTimer = 0;
 	bIsTransitioning = true;
+	bIsCrouching = true;
 	player->bNeedsToStand = false;
 }
 
@@ -128,23 +129,25 @@ void USlideState::CheckIfGrounded(float overrideHeight)
 
 void USlideState::HandleCrouchDown(float deltaTime)
 {
-	float currentScale = player->collider->GetRelativeScale3D().Z;
-	//Only handle crouch if the player isn't already crouched down
-	if (currentScale > player->crouchHeightScale)
+	if (bIsCrouching)
 	{
-		crouchTimer += deltaTime;
+		float currentScale = player->collider->GetRelativeScale3D().Z;
+		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
+		//Only handle crouch if the player isn't already crouched down
+		if (currentScale > player->crouchHeightScale)
+		{
+			crouchTimer += deltaTime;
 
-		float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-		float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+			float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
+			float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
 
-		player->collider->SetRelativeScale3D(FVector(1, 1, newScale));
+			player->collider->SetRelativeScale3D(FVector(1, 1, newScale));
+		}
 
-		bIsCrouching = true;
-	}
-
-	else
-	{
-		bIsCrouching = false;
+		else
+		{
+			bIsCrouching = false;
+		}
 	}
 }
 

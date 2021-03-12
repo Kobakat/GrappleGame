@@ -71,6 +71,7 @@ void URunSlideState::HandleCrouchDown(float deltaTime)
 	if (bIsCrouching)
 	{
 		const float currentScale = player->collider->GetRelativeScale3D().Z;
+		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
 		//Only handle crouch if the player isn't already crouched down
 		if (currentScale != player->crouchHeightScale)
 		{
