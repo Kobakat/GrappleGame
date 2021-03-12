@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
+#include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "PlayerPawn.generated.h"
 
 UENUM()
@@ -213,6 +214,11 @@ public:
 		FString stateName;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		bool bIsGrounded;
+
+	//===============Grapple=Wrap==============//
+
+	UPROPERTY(EditAnywhere, Category = "Grapple Wrap")
+	APolylineCylinderRenderer* GrapplePolyline;
 		
 #pragma endregion
 	
