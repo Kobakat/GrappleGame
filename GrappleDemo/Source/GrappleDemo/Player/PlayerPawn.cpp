@@ -1,4 +1,5 @@
 #include "PlayerPawn.h"
+#include "Components/ChildActorComponent.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
@@ -22,6 +23,12 @@ APlayerPawn::APlayerPawn()
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Ensure the grapple polyline is instantiated.
+	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
+	if (!childActor->HasBeenCreated())
+		childActor->CreateChildActor();
+	GrapplePolyline = Cast<APolylineCylinderRenderer>(childActor->GetChildActor());
 
 	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
@@ -217,7 +224,7 @@ bool APlayerPawn::ShootGrapple()
 	if (grappleCanAttach)
 	{
 		// Attaches the cable component to the grappable object
-		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, GrappleHitPoint.GetActor());
+		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, camera->GetComponentLocation(), GrappleHitPoint.GetActor());
 		return true;
 	}
 	return false;

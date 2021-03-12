@@ -37,27 +37,22 @@ void UGrappleComponent::Reel(float value)
 	if (currentCableLength + value * grappleReelSpeed >= 0.F && currentCableLength + value < grappleMaxDistance)
 	{
 		currentCableLength += value * grappleReelSpeed;
-		CableLength = currentCableLength * grappleVisualMultiplier;
 	}
 	
 }
 
-void UGrappleComponent::Attach(FVector vector, AActor* actor)
+void UGrappleComponent::Attach(FVector start, FVector end, AActor* actor)
 {
-	//attachedLocation = vector - actor->GetActorLocation();
-	attachedLocation = actor->GetActorTransform().InverseTransformPosition(vector);
+	attachedLocation = actor->GetActorTransform().InverseTransformPosition(start);
 	attachedActor = actor;
 
 	if (IsValid(grappleReactor))
 	{
-		grappleReactor->Hook(vector);
+		grappleReactor->Hook(start);
 	}
 
-	bAttachStart = true;
-
 	// gets the distance between the attach point and the start of the cable
-	currentCableLength = FMath::Min(FVector::Distance(vector, GetComponentLocation()), grappleMaxDistance);
-	CableLength = currentCableLength * grappleVisualMultiplier;
+	currentCableLength = FMath::Min(FVector::Distance(start, end), grappleMaxDistance);
 }
 
 void UGrappleComponent::Detach()

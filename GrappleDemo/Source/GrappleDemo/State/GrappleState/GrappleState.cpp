@@ -22,7 +22,7 @@ void UGrappleState::OnStateEnter()
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
 	grapplePolyline->PushPoint(grappleGunStart->GetComponentLocation());
-	LastFramePlayerLocation = grappleGunStart->GetComponentLocation();
+	LastFramePlayerLocation = player->camera->GetComponentLocation();
 }
 void UGrappleState::OnStateExit()
 {
@@ -44,9 +44,9 @@ bool UGrappleState::SolveGrappleRestraint()
 	// gun to the grapple hook point.
 	FVector ropeVector;
 	if (WrapPivots.Num() > 0)
-		ropeVector = WrapPivots.Last() - player->GetActorLocation();
+		ropeVector = WrapPivots.Last() - player->camera->GetComponentLocation();
 	else
-		ropeVector = grappleComponent->GetAttachedLocation() - player->GetActorLocation();
+		ropeVector = grappleComponent->GetAttachedLocation() - player->camera->GetComponentLocation();
 	// Get the difference in length from the rope
 	// radius to the grapple gun.
 	float lengthDifference = ropeVector.Size() - lengthLeft;
@@ -64,9 +64,9 @@ bool UGrappleState::SolveGrappleRestraint()
 		player->AddActorWorldOffset(tensileDelta, true);
 
 		if (WrapPivots.Num() > 0)
-			ropeVector = WrapPivots.Last() - player->GetActorLocation();
+			ropeVector = WrapPivots.Last() - player->camera->GetComponentLocation();
 		else
-			ropeVector = grappleComponent->GetAttachedLocation() - player->GetActorLocation();
+			ropeVector = grappleComponent->GetAttachedLocation() - player->camera->GetComponentLocation();
 
 		if (ropeVector.Size() - grappleComponent->GetCableLength() > 1.F)
 		{
@@ -76,7 +76,7 @@ bool UGrappleState::SolveGrappleRestraint()
 		{
 			// Get the current velocity and the point on the sphere surface.
 			FVector velocity = player->collider->GetPhysicsLinearVelocity();
-			FVector tangentPoint = player->GetActorLocation();
+			FVector tangentPoint = player->camera->GetComponentLocation();
 			// Project the player velocity such that it is tangent to the
 			// sphere of the rope radius.
 			player->collider->SetPhysicsLinearVelocity(
@@ -96,7 +96,7 @@ void UGrappleState::SolveWrap()
 	UWorld* world = grappleComponent->GetWorld();
 	FVector hook = grappleComponent->GetAttachedLocation();
 	FVector gun = grappleGunStart->GetComponentLocation();
-	FVector capsule = player->GetActorLocation();
+	FVector capsule = player->camera->GetComponentLocation();
 	// Create space for raycast elements.
 	FHitResult GrappleHitPoint;
 	FCollisionQueryParams CollisionParams;

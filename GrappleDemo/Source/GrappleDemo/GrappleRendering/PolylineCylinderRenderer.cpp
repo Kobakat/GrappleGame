@@ -37,7 +37,7 @@ void APolylineCylinderRenderer::BeginPlay()
 	// Otherwise it would require another exposed field.
 	int maxCount = MaxPointCount;
 	MaxPointCount = 0;
-	SetMaxPointCount(30);
+	SetMaxPointCount(maxCount);
 	// Set all points using an empty array.
 	// This will hide all instantiated components.
 	SetAllPoints(TArray<FVector>());

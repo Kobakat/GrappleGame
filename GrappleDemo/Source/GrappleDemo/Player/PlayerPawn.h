@@ -160,7 +160,6 @@ public:
 
 	//===============Grapple=Wrap==============//
 
-	UPROPERTY(EditAnywhere, Category = "Grapple Wrap")
 	APolylineCylinderRenderer* GrapplePolyline;
 		
 #pragma endregion
