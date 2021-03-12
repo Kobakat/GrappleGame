@@ -10,6 +10,8 @@ UCLASS()
 class GRAPPLEDEMO_API ACheckpoint : public AActor
 {
 	GENERATED_BODY()
+
+		
 	
 public:	
 	// Sets default values for this actor's properties
@@ -23,4 +25,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentCheckpoint();
 };

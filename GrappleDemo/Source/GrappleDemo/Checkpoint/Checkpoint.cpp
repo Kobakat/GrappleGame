@@ -25,3 +25,7 @@ void ACheckpoint::Tick(float DeltaTime)
 
 }
 
+void ACheckpoint::SetCurrentCheckpoint()
+{
+	ACheckpointManager.currentCheckpoint = this;
+}
