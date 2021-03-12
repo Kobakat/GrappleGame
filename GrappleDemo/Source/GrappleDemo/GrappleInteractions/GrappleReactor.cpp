@@ -3,6 +3,7 @@
 
 #include "GrappleReactor.h"
 #include "CollisionQueryParams.h"
+#include "Math/TransformNonVectorized.h"
 
 // Sets default values
 AGrappleReactor::AGrappleReactor()
@@ -29,8 +30,9 @@ void AGrappleReactor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGrappleReactor::Hook()
+void AGrappleReactor::Hook(FVector location)
 {
+	localHookPosition = GetActorTransform().InverseTransformPosition(location);
 	isHookedOnto = true;
 	ReceiveOnHooked();
 }

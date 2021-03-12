@@ -12,7 +12,8 @@ void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 FVector UGrappleComponent::GetAttachedLocation()
 {
 	if (attachedActor != nullptr)
-		return attachedLocation + attachedActor->GetActorLocation();
+		/*return attachedLocation + attachedActor->GetActorLocation();*/
+		return attachedActor->GetActorTransform().TransformPosition(attachedLocation);
 	else
 		return FVector::ZeroVector;
 }
@@ -43,8 +44,14 @@ void UGrappleComponent::Reel(float value)
 
 void UGrappleComponent::Attach(FVector vector, AActor* actor)
 {
-	attachedLocation = vector - actor->GetActorLocation();
+	//attachedLocation = vector - actor->GetActorLocation();
+	attachedLocation = actor->GetActorTransform().InverseTransformPosition(vector);
 	attachedActor = actor;
+
+	if (IsValid(grappleReactor))
+	{
+		grappleReactor->Hook(vector);
+	}
 
 	bAttachStart = true;
 
