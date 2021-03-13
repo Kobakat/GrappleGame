@@ -2,6 +2,7 @@
 
 
 #include "CheckpointManager.h"
+#include "Checkpoint.h"
 
 // Sets default values
 ACheckpointManager::ACheckpointManager()
@@ -18,9 +19,13 @@ void ACheckpointManager::BeginPlay()
 	
 
 	this->player = GetWorld()->GetFirstPlayerController()->GetPawn();
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Checkpoints[0]->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *player->GetName());
 
 
+	for (ACheckpoint* checkpoint : Checkpoints)
+	{
+		checkpoint->SetCheckpointManager(this);
+	}
 
 	// The first checkpoint in the array is the start by default
 	currentCheckpoint = Checkpoints[0];
@@ -31,27 +36,32 @@ void ACheckpointManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Timer)
+	/*if (Timer)
 	{
 		LevelTime++;
-	}
+	}*/
 
 }
 
 void ACheckpointManager::OutOfBounds()
 {
-	player->SetActorLocation(currentCheckpoint->GetActorLocation());
+	//TODO kill momentum
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
+	//player->SetActorLocation(currentCheckpoint->GetActorLocation());
 }
 
-void ACheckpointManager::SetCurrentCheckpoint(AActor* checkpoint)
+void ACheckpointManager::SetCurrentCheckpoint(ACheckpoint* checkpoint)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
 	currentCheckpoint = checkpoint;
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
 	CheckLevelEnd();
 }
 
-void ACheckpointManager::CheckLevelStart(AActor* checkpoint)
+void ACheckpointManager::CheckLevelStart(ACheckpoint* checkpoint)
 {
-	if (checkpoint == Checkpoints[0])
+	
+	if (checkpoint == currentCheckpoint)
 	{
 		Timer = true;
 	}

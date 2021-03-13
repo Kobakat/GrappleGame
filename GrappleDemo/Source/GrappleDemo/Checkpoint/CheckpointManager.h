@@ -7,6 +7,8 @@
 #include "../Player/PlayerPawn.h"
 #include "CheckpointManager.generated.h"
 
+class ACheckpoint;
+
 UCLASS()
 class GRAPPLEDEMO_API ACheckpointManager : public AActor
 {
@@ -24,11 +26,11 @@ protected:
 public:
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
-	TArray<AActor*> Checkpoints;
+	TArray<ACheckpoint*> Checkpoints;
 
 	// Last checkpoint the player went through
-	UPROPERTY(VisibleAnywhere)
-	AActor* currentCheckpoint;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	ACheckpoint* currentCheckpoint;
 
 	UPROPERTY(BlueprintReadWrite)
 	float LevelTime;
@@ -39,10 +41,10 @@ public:
 	void OutOfBounds();
 
 	UFUNCTION()
-	void SetCurrentCheckpoint(AActor* checkpoint);
+	void SetCurrentCheckpoint(ACheckpoint* checkpoint);
 
 	UFUNCTION(BlueprintCallable)
-	void CheckLevelStart(AActor* checkpoint);
+	void CheckLevelStart(ACheckpoint* checkpoint);
 
 	void CheckLevelEnd();
 	

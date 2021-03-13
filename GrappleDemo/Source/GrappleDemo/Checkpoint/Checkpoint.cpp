@@ -16,6 +16,7 @@ void ACheckpoint::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 }
 
 // Called every frame
@@ -33,9 +34,15 @@ void ACheckpoint::SetCheckpoint()
 void ACheckpoint::CheckLevelStart()
 {
 	checkpointManager->CheckLevelStart(this);
+	// Check level end
 }
 
 void ACheckpoint::FellOutOfBounds()
 {
 	checkpointManager->OutOfBounds();
+}
+
+void ACheckpoint::SetCheckpointManager(ACheckpointManager* cpManager)
+{
+	this->checkpointManager = cpManager;
 }
