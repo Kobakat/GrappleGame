@@ -25,7 +25,6 @@ void APlayerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	// Ensure the grapple polyline is instantiated.
-
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
 	if (!childActor->HasBeenCreated())
 		childActor->CreateChildActor();
@@ -37,7 +36,7 @@ void APlayerPawn::BeginPlay()
 	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
 
 	// TODO please fucking delete me
-	startLocation = GetActorLocation();
+	//startLocation = GetActorLocation();
 
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
@@ -58,10 +57,10 @@ void APlayerPawn::Tick(float deltaTime)
 	}
 
 	// TODO delete me
-	if (GetActorLocation().Z < -5000)
+	/*if (GetActorLocation().Z < -5000)
 	{
 		SetActorLocation(startLocation);
-	}
+	}*/
 
 	HandleStandUp(deltaTime);
 
