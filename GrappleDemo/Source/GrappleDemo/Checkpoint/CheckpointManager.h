@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/World.h"
 #include "../Player/PlayerPawn.h"
 #include "CheckpointManager.generated.h"
 
@@ -48,7 +49,7 @@ public:
 
 	void CheckLevelEnd();
 	
-
+	float TimeElasped;
 	
 	// Sets default values for this actor's properties
 	ACheckpointManager();

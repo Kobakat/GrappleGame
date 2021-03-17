@@ -35,12 +35,7 @@ void ACheckpointManager::BeginPlay()
 void ACheckpointManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	/*if (Timer)
-	{
-		LevelTime++;
-	}*/
-
+	UE_LOG(LogTemp, Warning, TEXT("%s"), GetWorld()->GetDeltaSeconds());
 }
 
 void ACheckpointManager::OutOfBounds()
@@ -52,16 +47,13 @@ void ACheckpointManager::OutOfBounds()
 
 void ACheckpointManager::SetCurrentCheckpoint(ACheckpoint* checkpoint)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
 	currentCheckpoint = checkpoint;
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
 	CheckLevelEnd();
 }
 
 void ACheckpointManager::CheckLevelStart(ACheckpoint* checkpoint)
 {
-	
-	if (checkpoint == currentCheckpoint)
+	if (checkpoint == Checkpoints[0])
 	{
 		Timer = true;
 	}
@@ -71,6 +63,7 @@ void ACheckpointManager::CheckLevelEnd()
 {
 	if (currentCheckpoint == Checkpoints.Last())
 	{
-		Timer = false;
+		//GetWorld()->GetDeltaSeconds() - Timer;
+
 	}
 }
