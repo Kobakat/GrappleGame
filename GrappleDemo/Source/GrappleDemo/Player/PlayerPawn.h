@@ -32,6 +32,7 @@ public:
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
 	bool bNeedsToStand;
+	bool bPreviousGround;
 	float standUpTimer;
 
 	FVector bounds;

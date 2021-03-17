@@ -65,6 +65,7 @@ void APlayerPawn::Tick(float deltaTime)
 	HandleStandUp(deltaTime);
 
 	CastGrappleRaycast();
+	bPreviousGround = bIsGrounded;
 }
 
 #pragma endregion

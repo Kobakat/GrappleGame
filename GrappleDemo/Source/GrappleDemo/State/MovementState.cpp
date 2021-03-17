@@ -83,6 +83,13 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 		{
 			player->collider->SetPhysMaterialOverride(player->moveMat);
 			player->bIsGrounded = true;
+
+			if (player->bPreviousGround != player->bIsGrounded)
+			{
+				FVector velocity = player->collider->GetPhysicsLinearVelocity();
+				player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
+			}
+				
 		}
 
 		else if (struckProfile == FName(TEXT("Slide")))
