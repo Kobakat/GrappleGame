@@ -31,11 +31,15 @@ void UGrappleInstantReelState::OnStateExit()
 void UGrappleInstantReelState::StateTick(float deltaTime)
 {
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
-	CheckStateChange();
 	PlayerLook(deltaTime);
 	UpdateGrappleRope(deltaTime);
-	SolveRestraint();
+	bool isSolved = SolveRestraint();
+	if (!isSolved)
+	{
+		player->SetState(UWalkState::GetInstance());
+	}
 
+	CheckStateChange();
 	UMovementState::CheckStateChangeGrapple();
 }
 

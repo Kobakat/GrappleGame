@@ -40,17 +40,19 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	else
 		PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
-	CheckStateChange();
 	HandleJump(player->walkJumpForce);
 	HandleGrappleInput();
+
+	CheckIfGrounded(player->groundCheckDistance);
+	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 
 	bool isSolved =	SolveRestraint();
 	if (!isSolved)
 	{
 		player->SetState(UWalkState::GetInstance());
 	}
-	CheckIfGrounded(player->groundCheckDistance);
-	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
+
+	CheckStateChange();
 }
 
 #pragma endregion
