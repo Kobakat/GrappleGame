@@ -14,31 +14,24 @@ class GRAPPLEDEMO_API ACheckpointManager : public AActor
 {
 	GENERATED_BODY()
 
-	// TODO----------------------------
-		// Start timer when player leaves first checkpoint
-		// End Timer when player hits last checkpoint
-
-
 protected:
 	// reference of the player
 	APawn* player;
 
-public:
+
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
 	TArray<ACheckpoint*> Checkpoints;
 
+public:
 	// Last checkpoint the player went through
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Checkpoints")
 	ACheckpoint* currentCheckpoint;
 
-	UPROPERTY(BlueprintReadWrite)
-	float LevelTime;
+	// Time since player has left start checkpoint
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Timer")
+	float timeElasped;
 
-	bool Timer;
-
-	UFUNCTION(BlueprintCallable)
-	void OutOfBounds();
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);
@@ -48,11 +41,10 @@ public:
 
 	void CheckLevelEnd();
 	
-
+protected:
+	float startTime;
+	bool bTimer;
 	
-	// Sets default values for this actor's properties
-	ACheckpointManager();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -60,5 +52,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	
+	// Sets default values for this actor's properties
+	ACheckpointManager();
 };
