@@ -36,18 +36,44 @@ void ATrackPullableGrappleReactor::BeginPlay()
 	}
 }
 
-void ATrackPullableGrappleReactor::ApplyPullForce(const FVector force)
+void ATrackPullableGrappleReactor::ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance)
 {
-	// Calculate the new track distance that the platform
-	// should be at
-	float newTrackDistance = FVector::PointPlaneDist(
-		GetActorLocation() + force,
-		TrackStart,
-		trackAlongNormal
-	);
-	newTrackDistance = FMath::Clamp(newTrackDistance, 0.0f, trackLength);
-	// Apply the new track distance
-	SetActorLocation(TrackStart + trackAlongNormal * newTrackDistance);
+	// Get the projected snap of the pull path.
+	FVector perpendicularSnap =
+		(pullTowards - pullPoint).ProjectOnToNormal(trackAlongNormal) + pullPoint;
+	float snapDistance = FVector::Distance(perpendicularSnap, pullTowards);
+
+	// Is it impossible to meet the distance?
+	float distanceDelta;
+	if (snapDistance >= desiredDistance)
+	{
+		// If so then the desired snap location is just the snap point.
+		distanceDelta = FVector::PointPlaneDist(perpendicularSnap, pullPoint, trackAlongNormal);
+	}
+	else
+	{
+		// Otherwise we solve the right triangle
+		// to get the distance in either direction.
+		float distanceFromSnap =
+			FMath::Sqrt(desiredDistance * desiredDistance - snapDistance * snapDistance);
+		// Take whichever distance along is less effort.
+		float distanceLeft = FVector::PointPlaneDist(
+			perpendicularSnap + trackAlongNormal * distanceFromSnap,
+			pullPoint, trackAlongNormal);
+		float distanceRight = FVector::PointPlaneDist(
+			perpendicularSnap - trackAlongNormal * distanceFromSnap,
+			pullPoint, trackAlongNormal);
+		if (FMath::Abs(distanceLeft) < FMath::Abs(distanceRight))
+			distanceDelta = distanceLeft;
+		else
+			distanceDelta = distanceRight;
+	}
+	
+	float priorDistanceAlong = FVector::PointPlaneDist(GetActorLocation(), TrackStart, trackAlongNormal);
+	// Lock the distance in the track range.
+	float distanceAlong = FMath::Clamp(priorDistanceAlong + distanceDelta, 0.F, trackLength);
+	// Apply the new track distance.
+	SetActorLocation(TrackStart + trackAlongNormal * distanceAlong);
 }
 
 void ATrackPullableGrappleReactor::SetIsPullable(const bool isPullable)

@@ -34,7 +34,7 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 	CheckStateChange();
 	PlayerLook(deltaTime);
 	UpdateGrappleRope(deltaTime);
-	SolveGrappleRestraint();
+	SolveRestraint();
 
 	UMovementState::CheckStateChangeGrapple();
 }
@@ -52,7 +52,7 @@ void UGrappleInstantReelState::CheckStateChange()
 }
 void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {
-	grappleComponent->Reel(-player->instantGrappleSpeed * deltaTime);
+	grappleComponent->Reel(-player->instantGrappleSpeed * 5.F * deltaTime);
 	if (grappleComponent->GetCableLength() < player->reelCompleteDistance)
 		player->SetState(UGrappleAirborneState::GetInstance());
 }

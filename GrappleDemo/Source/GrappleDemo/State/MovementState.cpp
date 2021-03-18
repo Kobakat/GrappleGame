@@ -29,6 +29,7 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 		&& player->bIsGrounded
 		&& player->state != UCrouchState::GetInstance()
 		&& player->state != UGrappleAirborneState::GetInstance()
+		&& player->state != UGrappleInstantReelState::GetInstance()
 		&& player->state != UIdleState::GetInstance())
 	{	
 		player->SetState(UIdleState::GetInstance());	

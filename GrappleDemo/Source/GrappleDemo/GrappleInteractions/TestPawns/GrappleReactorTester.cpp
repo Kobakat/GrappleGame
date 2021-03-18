@@ -30,10 +30,10 @@ void AGrappleReactorTester::SetupPlayerInputComponent(UInputComponent* PlayerInp
 // Run the simulated pull forces
 void AGrappleReactorTester::OnButtonOnePressed()
 {
-	Reactor->ApplyPullForce(KeyNineForceVector);
+	Reactor->ApplyPullForce(KeyNineForceVector, FVector::ZeroVector, 10.F);
 }
 void AGrappleReactorTester::OnButtonTwoPressed()
 {
-	Reactor->ApplyPullForce(KeyZeroForceVector);
+	Reactor->ApplyPullForce(KeyZeroForceVector, FVector::ZeroVector, 10.F);
 }
 

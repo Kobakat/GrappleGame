@@ -39,10 +39,10 @@ void AButtonGrappleReactor::Tick(float DeltaTime)
 	}
 }
 
-void AButtonGrappleReactor::ApplyPullForce(const FVector force)
+void AButtonGrappleReactor::ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance)
 {
 	// Check to see if the button should be triggered.
-	if (!isPressed && force != FVector::ZeroVector)
+	if (!isPressed)
 	{
 		isPressed = true;
 		startTime = GetWorld()->TimeSeconds;
