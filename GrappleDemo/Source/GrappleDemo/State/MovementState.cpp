@@ -79,9 +79,8 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 	{
 		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
 
-		if (struckProfile == FName(TEXT("Ground")))
+		if (struckProfile == FName(TEXT("Ground")) || struckProfile == FName(TEXT("Ledge")))
 		{
-			player->collider->SetPhysMaterialOverride(player->moveMat);
 			player->bIsGrounded = true;
 
 			if (player->bPreviousGround != player->bIsGrounded)
@@ -101,14 +100,12 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 		else
 		{
 			player->bIsGrounded = false;
-			player->collider->SetPhysMaterialOverride(player->frictionlessMat);
 		}
 	}
 
 	else
 	{
 		player->bIsGrounded = false;
-		player->collider->SetPhysMaterialOverride(player->frictionlessMat);
 	}
 }
 
@@ -133,13 +130,21 @@ void UMovementState::ClampPlayerVelocity(float max)
 	player->collider->SetPhysicsLinearVelocity(playerVelocity);
 }
 
-void UMovementState::HandleJump(float jumpForce) 
+void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab) 
 {
-	if (player->tryingToJump && player->bIsGrounded) 
+	if (player->tryingToJump) 
 	{
-		player->tryingToJump = false;
-		//multiply by 100 so designer values aren't so high
-		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
+		if (bCanPlayerLedgeGrab && CanPlayerLedgeGrab())
+		{
+			player->tryingToJump = false;
+			player->SetState(ULedgeGrabState::GetInstance());
+		}
+
+		else if (player->bIsGrounded)
+		{
+			player->tryingToJump = false;
+			player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
+		}
 	}
 }
 
@@ -158,6 +163,61 @@ FVector UMovementState::ConvertPlayerInputRelativeToCamera()
 	relativeVector.Normalize(0.0001);
 
 	return relativeVector;
+}
+
+bool UMovementState::CanPlayerLedgeGrab() 
+{
+	//Start by sweeping our player region for a ledge
+
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
+
+	FCollisionShape box = FCollisionShape::MakeBox(player->bounds);
+	bool bHitLedge = player->GetWorld()->SweepSingleByChannel(
+		player->LedgeHitPoint,
+		player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+		player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+		FQuat::Identity,
+		ECC_GameTraceChannel6,
+		box,
+		param);
+
+	//If we hit something in this layer
+	if (bHitLedge)
+	{
+		//Lets make sure its exactly a ledge
+		if (player->LedgeHitPoint.Component->GetCollisionProfileName() == FName(TEXT("Ledge")))
+		{	
+
+			FVector camLoc = player->camera->GetComponentLocation();
+
+			//Calculate the normal of the way our player is looking (without Z)
+			FVector camForward = player->camera->GetForwardVector();
+			camForward.Z = 0;
+			camForward.Normalize(0.01f);
+
+			//Calculate the opposite of the ledge's normal
+			FVector impactNormal = player->LedgeHitPoint.Normal;
+			impactNormal.Z = 0;
+			impactNormal.Normalize(0.01f);
+			impactNormal *= -1;
+
+			//Calculate the Angle between the two vectors
+			const float dot = FVector::DotProduct(camForward, impactNormal);
+			const float angle = FMath::RadiansToDegrees(FMath::Acos(dot));
+
+			//If the angle is small enough, the player is eligible to climb the ledge
+			const bool lookingAt = angle <= player->ledgeLookAngle;
+
+			if (lookingAt)
+				return true;
+
+			return false;
+		}
+
+		return false;
+	}
+	return false;
 }
 
 void UMovementState::CheckStateChangeGrapple()

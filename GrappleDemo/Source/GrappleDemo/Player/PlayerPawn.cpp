@@ -35,9 +35,6 @@ void APlayerPawn::BeginPlay()
 	this->stateMachine->Initialize(this);
 	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
 
-	// TODO please fucking delete me
-	//startLocation = GetActorLocation();
-
 	// This is done in begin play because otherwise it
 	// shows up in the editor and acts kinda janky.
 	grappleComponent->NumSegments = 10;
@@ -55,12 +52,6 @@ void APlayerPawn::Tick(float deltaTime)
 	{
 		stateMachine->Tick(deltaTime);
 	}
-
-	// TODO delete me
-	/*if (GetActorLocation().Z < -5000)
-	{
-		SetActorLocation(startLocation);
-	}*/
 
 	HandleStandUp(deltaTime);
 

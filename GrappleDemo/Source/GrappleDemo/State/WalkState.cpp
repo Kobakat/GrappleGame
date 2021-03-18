@@ -31,7 +31,7 @@ void UWalkState::StateTick(float deltaTime)
 	CheckIfGrounded(player->groundCheckDistance);
 	CheckIfPlayerIsTryingToRun();
 	CheckIfPlayerIsTryingToCrouch();
-	HandleJump(player->walkJumpForce);
+	HandleJump(player->walkJumpForce, true);
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->walkMaxSpeed);

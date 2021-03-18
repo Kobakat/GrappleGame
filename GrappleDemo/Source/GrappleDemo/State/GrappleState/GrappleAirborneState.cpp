@@ -38,7 +38,7 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
 	CheckStateChange();
-	HandleJump(player->walkJumpForce);
+	HandleJump(player->walkJumpForce, false);
 	HandleGrappleInput();
 
 	bool isSolved =	SolveGrappleRestraint();

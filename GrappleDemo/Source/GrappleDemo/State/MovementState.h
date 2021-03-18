@@ -23,9 +23,9 @@ protected:
 	virtual void PlayerMove(float accel, float airControlFactor);
 	virtual void PlayerLook(float deltaTime);
 	virtual void CheckIfGrounded(float overrideHeight);
-	virtual void HandleJump(float jumpForce);
+	virtual void HandleJump(float jumpForce, bool bCanPlayerLedgeGrab);
 	virtual void ClampPlayerVelocity(float max);
 	virtual FVector ConvertPlayerInputRelativeToCamera();
-	
+	virtual bool CanPlayerLedgeGrab();
 	virtual void CheckStateChangeGrapple();
 };

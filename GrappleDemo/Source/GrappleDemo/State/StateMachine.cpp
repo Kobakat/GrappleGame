@@ -16,6 +16,7 @@ void UStateMachine::Initialize(APlayerPawn* pawn)
 	URunState::GetInstance()->Initialize(pawn);
 	USlideState::GetInstance()->Initialize(pawn);
 	UWalkState::GetInstance()->Initialize(pawn);
+	ULedgeGrabState::GetInstance()->Initialize(pawn);
 
 	this->state = UIdleState::GetInstance();
 	this->AddToRoot();

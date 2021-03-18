@@ -31,7 +31,7 @@ void URunState::StateTick(float deltaTime)
 	CheckIfGrounded(player->groundCheckDistance);
 	CheckifPlayerWantsToSlide();
 	CheckIfPlayerStopsRunning();
-	HandleJump(player->runJumpForce);
+	HandleJump(player->runJumpForce, true);
 	PlayerMove(player->runAcceleration, player->runAirControlPercentage);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runMaxSpeed);
