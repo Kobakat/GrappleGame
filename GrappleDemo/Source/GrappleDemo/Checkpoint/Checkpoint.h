@@ -33,8 +33,5 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CheckLevelStart();
 
-	UFUNCTION(BlueprintCallable)
-	void FellOutOfBounds();
-
 	void SetCheckpointManager(ACheckpointManager* cpManager);
 };
