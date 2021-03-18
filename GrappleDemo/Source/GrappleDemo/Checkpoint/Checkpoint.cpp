@@ -34,12 +34,6 @@ void ACheckpoint::SetCheckpoint()
 void ACheckpoint::CheckLevelStart()
 {
 	checkpointManager->CheckLevelStart(this);
-	// Check level end
-}
-
-void ACheckpoint::FellOutOfBounds()
-{
-	checkpointManager->OutOfBounds();
 }
 
 void ACheckpoint::SetCheckpointManager(ACheckpointManager* cpManager)
