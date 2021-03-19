@@ -32,7 +32,7 @@ void UGrappleState::OnStateExit()
 	UMovementState::OnStateExit();
 	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
-	grappleClaw->SetWorldLocation(player->grappleClawOrigin->GetComponentLocation());
+	grappleClaw->SetVisibility(true);
 }
 #pragma endregion
 #pragma region Solve Restraint
@@ -122,7 +122,7 @@ bool UGrappleState::SolveRestraint()
 		}
 	}
 	//Place the claw on the surface
-	grappleClaw->SetWorldLocation(attachedLocation);
+	grappleClaw->SetVisibility(false);
 
 	// Update the grapple rope.
 	TArray<FVector> allPoints;
