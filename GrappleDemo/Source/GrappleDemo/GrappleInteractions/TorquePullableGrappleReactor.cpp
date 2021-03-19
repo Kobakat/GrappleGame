@@ -2,6 +2,7 @@
 
 
 #include "TorquePullableGrappleReactor.h"
+#include "DrawDebugHelpers.h"
 
 ATorquePullableGrappleReactor::ATorquePullableGrappleReactor()
 {
@@ -13,35 +14,82 @@ void ATorquePullableGrappleReactor::BeginPlay()
 
 }
 
-void ATorquePullableGrappleReactor::ApplyPullForce(const FVector force)
+void ATorquePullableGrappleReactor::ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance)
 {
-	// Get the force in local space.
-	FVector localForce = GetActorTransform().InverseTransformVectorNoScale(force);
-	FVector localAttach = localHookPosition;
-	FVector localAxis;
-	// Ignore the vector components aligned with the revolution axis.
+	// Get the pivot and rotation vector.
+	FVector actorLocation = GetActorLocation();
+	FVector axisNormal;
 	switch (Axis)
 	{
 	case EAxis::X:
-		localForce.X = 0.F;
-		localAttach.X = 0.F;
-		localAxis = FVector::ForwardVector;
+		axisNormal = FVector::ForwardVector;
+		break;
 	case EAxis::Y:
-		localForce.Y = 0.F;
-		localAttach.Y = 0.F;
-		localAxis = FVector::RightVector;
+		axisNormal = FVector::RightVector;
+		break;
 	case EAxis::Z:
-		localForce.Z = 0.F;
-		localAttach.Z = 0.F;
-		localAxis = FVector::UpVector;
+		axisNormal = FVector::UpVector;
+		break;
 	}
+	FVector pivot = (pullPoint - actorLocation).ProjectOnToNormal(axisNormal) + actorLocation;
 
-	float angle = acosf(FVector::DotProduct(localAttach.GetSafeNormal(), (localAttach + localForce).GetSafeNormal()));
+	// Calculate the radius from the attached point to the revolution axis.
+	float radius = FVector::Distance(pullPoint, pivot);
+	// Crush the problem into two dimensions by solving the right triangle
+	// with edge extending along the revolution axis.
+	float alongAxisLength = FVector::PointPlaneDist(pullTowards, pullPoint, axisNormal);
+	float flatDesiredDistance =
+		FMath::Sqrt(desiredDistance * desiredDistance - alongAxisLength * alongAxisLength);
+	
+	// What is the projected pull vector and it's distance from the pivot?
+	FVector flatPullTowards = FVector::PointPlaneProject(pullTowards, pivot, axisNormal);
+	float totalDistanceToPivot = FVector::Distance(pivot, flatPullTowards);
 
-	float dist = FVector::PointPlaneDist(localAttach + localForce, localAttach, FVector::CrossProduct(localAxis, localAttach));
+	// Now that the problem is projected onto a 2D plane aligned
+	// to the revolution axis we use what we know to determine whether
+	// there are perfect solutions.
+	// Start with the base radians required to get to the shortest
+	// snap starting point.
+	float deltaRadians = FMath::Acos(
+		FVector::DotProduct(
+			(pullPoint - pivot).GetSafeNormal(),
+			(flatPullTowards - pivot).GetSafeNormal()));
 
-	if (dist < 0.F)
-		angle *= -1.F;
+	float beforeRadians = deltaRadians;
 
-	AddActorLocalRotation(FQuat(localAxis, angle));
+	// Do we need to flip the polarity of those radians?
+	if (FVector::PointPlaneDist(flatPullTowards, pullPoint,
+		FVector::CrossProduct(axisNormal, pullPoint - pivot)) < 0.F)
+	{
+		deltaRadians *= -1.F;
+	}
+	if (flatDesiredDistance > totalDistanceToPivot + radius)
+	{
+		// The distance cannot be this long, spinning 180
+		// degrees is as far as we can get.
+		deltaRadians += PI;
+	}
+	else if (flatDesiredDistance < totalDistanceToPivot - radius)
+	{
+		// The distance cannot get any closer. The closest
+		// snap is already optimal so we don't need to do anything.
+	}
+	else
+	{
+		// There is a perfect solution and we can use the law of
+		// cosines to solve the SSS triangle.
+		float addedRadians = FMath::Acos(
+			(radius * radius + totalDistanceToPivot * totalDistanceToPivot - flatDesiredDistance * flatDesiredDistance)
+			/
+			(2.F * radius * totalDistanceToPivot));
+
+		// Should we add or subtract? To minimize effort
+		// we should do the operation that undoes the existing delta.
+		if (deltaRadians > 0.F)
+			deltaRadians -= addedRadians;
+		else
+			deltaRadians += addedRadians;
+	}
+	// Apply the reaction.
+	AddActorLocalRotation(FQuat(axisNormal, deltaRadians));
 }

@@ -43,8 +43,8 @@ void AGrappleReactor::Unhook()
 	ReceiveOnUnhooked();
 }
 
-void AGrappleReactor::ApplyPullForce(const FVector force)
+void AGrappleReactor::ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance)
 {
-	ReceiveOnForceApplied(force);
+	ReceiveOnForceApplied();
 }
 
