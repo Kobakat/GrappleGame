@@ -1,5 +1,5 @@
 # Hardcore Pizza Delivery
-> Papa's Speedys Pizza is hiring for their new position: "Delivery Swinger", and it turns out you fit the job's description perfectly. After years and years of searching for work you decide it's probably a good idea to apply. What you weren't ready for is actually getting hired and risking your life to deliver some Pizza!
+Papa's Speedys Pizza is hiring for their new position: "Delivery Swinger", and it turns out you fit the job's description perfectly. After years and years of searching for work you decide it's probably a good idea to apply. What you weren't ready for is actually getting hired and risking your life to deliver some Pizza!
 
 > TODO thumbnail(s) here
 
