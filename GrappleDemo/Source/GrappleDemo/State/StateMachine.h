@@ -8,6 +8,7 @@
 #include "CrouchState.h"
 #include "RunSlideState.h"
 #include "SlideState.h"
+#include "LedgeGrabState.h"
 #include "./GrappleState/GrappleAirborneState.h"
 #include "GrappleState/GrappleInstantReelState.h"
 #include "StateMachine.generated.h"

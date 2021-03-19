@@ -22,10 +22,10 @@ protected:
 	USceneComponent* grappleGunStart;
 	APolylineCylinderRenderer* grapplePolyline;
 	// Common grapple leash behaviour.
-	bool SolveGrappleRestraint();
+	bool SolveRestraint();
 
-	// EXPERIMENTAL: Used to track wrapping points for the grapple.
 	TArray<FVector> WrapPivots;
+	TArray<AActor*> WrapActors;
 	int MaxWrapPivots;
 	FVector LastFramePlayerLocation;
 	int WrapCheckIterations;

@@ -1,10 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "GrappleState.h"
 #include "DrawDebugHelpers.h"
 #include "../../Player/PlayerPawn.h"
 
+#pragma region State Initialization
 void UGrappleState::Initialize(APlayerPawn* pawn)
 {
 	UState::Initialize(pawn);
@@ -12,113 +10,166 @@ void UGrappleState::Initialize(APlayerPawn* pawn)
 	grappleComponent = pawn->grappleComponent;
 	grappleGunStart = pawn->grappleStart;
 	grapplePolyline = pawn->GrapplePolyline;
+	// Set the number of raycasts used for the
+	// wrap solving at each wrap pivot.
 	WrapCheckIterations = 10;
 }
-
+#pragma endregion
+#pragma region State Enter and Exit
 void UGrappleState::OnStateEnter()
 {
 	UMovementState::OnStateEnter();
+	// Reset parameters for wrapping.
 	WrapPivots.Empty();
+	WrapActors.Empty();
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
 	grapplePolyline->PushPoint(grappleGunStart->GetComponentLocation());
-	LastFramePlayerLocation = player->camera->GetComponentLocation();
 }
 void UGrappleState::OnStateExit()
 {
 	UMovementState::OnStateExit();
+	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 }
-
-bool UGrappleState::SolveGrappleRestraint()
+#pragma endregion
+#pragma region Solve Restraint
+bool UGrappleState::SolveRestraint()
 {
+	// Solve the wrapping first to determine the current pivot.
 	SolveWrap();
+	// Transform the pivots from object space into global space.
+	FVector attachedLocation = grappleComponent->GetAttachedLocation();
+	TArray<FVector> GlobalPivots;
+	GlobalPivots.SetNum(WrapPivots.Num());
+	for (int i = 0; i < WrapPivots.Num(); i++)
+		GlobalPivots[i] = WrapActors[i]->GetTransform().TransformPosition(WrapPivots[i]);
+	// Get the last pivot that we will solve relative to.
+	FVector pivot = (GlobalPivots.Num() > 0)
+		? GlobalPivots.Last() : attachedLocation;
+
+	// Using the wrap data, calculate how much rope length is left.
 	float lengthLeft = grappleComponent->GetCableLength();
+	// Trace along the rope wrap subtracting distance.
 	if (WrapPivots.Num() > 0)
-		lengthLeft -= FVector::Distance(grappleComponent->GetAttachedLocation(), WrapPivots[0]);
+		lengthLeft -= FVector::Distance(attachedLocation, GlobalPivots[0]);
 	for (int i = 1; i < WrapPivots.Num(); i++)
-		lengthLeft -= FVector::Distance(WrapPivots[i], WrapPivots[i - 1]);
+		lengthLeft -= FVector::Distance(GlobalPivots[i], GlobalPivots[i - 1]);
 
-
-	// Get a vector pointing from the grapple
-	// gun to the grapple hook point.
-	FVector ropeVector;
-	if (WrapPivots.Num() > 0)
-		ropeVector = WrapPivots.Last() - player->camera->GetComponentLocation();
-	else
-		ropeVector = grappleComponent->GetAttachedLocation() - player->camera->GetComponentLocation();
 	// Get the difference in length from the rope
 	// radius to the grapple gun.
+	FVector ropeVector = pivot - player->camera->GetComponentLocation();
 	float lengthDifference = ropeVector.Size() - lengthLeft;
-	// If we are outside the radius:
-	if (lengthDifference > 0.F)
+
+	// Are we inside the grapple radius?
+	if (lengthDifference < 0.F)
 	{
-		FVector ropeDirection = ropeVector.GetSafeNormal();
-		// Get a vector for the tensile offset.
-		FVector tensileDelta = ropeDirection * lengthDifference;
-		grappleComponent->ApplyForce(-tensileDelta);
+		// Automatically reel in the grapple to the closer distance.
+		grappleComponent->Reel(lengthDifference);
+	}
+	// Are we outside the grapple radius?
+	else if (lengthDifference > 0.F)
+	{
+		// Apply the pulling force to the reactor along the first rope segment.
+		FVector pivotAfterReactor =
+			(GlobalPivots.Num() > 0) ? GlobalPivots[0] : player->camera->GetComponentLocation();
+		float distanceBeforeReaction = FVector::Dist(attachedLocation, pivotAfterReactor);
+		// Apply the pulling force to a grapple reactor.
+		grappleComponent->ApplyForce(attachedLocation, pivotAfterReactor, distanceBeforeReaction - lengthDifference);
+		attachedLocation = grappleComponent->GetAttachedLocation();
+		// Peek how this has changed the distance.
+		lengthDifference -= distanceBeforeReaction - FVector::Dist(attachedLocation, pivotAfterReactor);
 
-		// Pull the player back in, and offset that force
-		// by invoking the grapple to apply the opposite
-		// force on a GrappleReactor (if available).
-		player->AddActorWorldOffset(tensileDelta, true);
-
-		if (WrapPivots.Num() > 0)
-			ropeVector = WrapPivots.Last() - player->camera->GetComponentLocation();
-		else
-			ropeVector = grappleComponent->GetAttachedLocation() - player->camera->GetComponentLocation();
-
-		if (ropeVector.Size() - grappleComponent->GetCableLength() > 1.F)
+		// Was the reactor unable to take up the pull force?
+		// If so then the player needs to be pulled in.
+		if (lengthDifference > 0.F)
 		{
-			return false;
-		}
-		else
-		{
-			// Get the current velocity and the point on the sphere surface.
-			FVector velocity = player->collider->GetPhysicsLinearVelocity();
-			FVector tangentPoint = player->camera->GetComponentLocation();
-			// Project the player velocity such that it is tangent to the
-			// sphere of the rope radius.
-			player->collider->SetPhysicsLinearVelocity(
-				FVector::PointPlaneProject(
-					tangentPoint + velocity,
-					tangentPoint,
-					-ropeDirection)
-				- tangentPoint);
+			// Get the direction vector and magnitude vector.
+			FVector pullDirection = ropeVector.GetSafeNormal();
+			FVector tensileDelta = pullDirection * lengthDifference;
+
+			// Pull the player in.
+			FVector beforePull = player->GetActorLocation();
+			player->AddActorWorldOffset(tensileDelta, true);
+			if ((player->GetActorLocation() - beforePull).SizeSquared() - lengthDifference * lengthDifference > 1.F)
+			{
+				// Not able to pull the player in!
+				return false;
+			}
+			else
+			{
+				// Get the current player velocity, updating it to reflect
+				// the pulling force of the grapple rope.
+				FVector velocity = player->collider->GetPhysicsLinearVelocity()
+					+ tensileDelta / grappleComponent->GetWorld()->DeltaTimeSeconds;
+				FVector tangentPoint = player->camera->GetComponentLocation();
+
+				// Is the velocity pointing outwards?
+				if (FVector::Distance(pivot, tangentPoint) <= FVector::Distance(pivot, tangentPoint + velocity))
+				{
+					// Project the player velocity such that it is tangent to the
+					// sphere of the rope radius.
+					velocity = FVector::PointPlaneProject(
+						tangentPoint + velocity,
+						tangentPoint,
+						-pullDirection) - tangentPoint;
+				}
+				// Set the player velocity.
+				player->collider->SetPhysicsLinearVelocity(velocity);
+			}
 		}
 	}
+	// Update the grapple rope.
+	TArray<FVector> allPoints;
+	allPoints.SetNum(GlobalPivots.Num() + 2);
+	allPoints[0] = attachedLocation;
+	for (int i = 0; i < GlobalPivots.Num(); i++)
+		allPoints[i + 1] = GlobalPivots[i];
+	allPoints[allPoints.Num() - 1] = grappleGunStart->GetComponentLocation();
+	grapplePolyline->SetAllPoints(allPoints);
 	return true;
 }
-
+#pragma endregion
+#pragma region Solve Wrap
 void UGrappleState::SolveWrap()
 {
-	// Grab key elements.
+	// Grab key locations.
 	UWorld* world = grappleComponent->GetWorld();
-	FVector hook = grappleComponent->GetAttachedLocation();
-	FVector gun = grappleGunStart->GetComponentLocation();
-	FVector capsule = player->camera->GetComponentLocation();
-	// Create space for raycast elements.
+	FVector hookLocation = grappleComponent->GetAttachedLocation();
+	FVector gunTipLocation = grappleGunStart->GetComponentLocation();
+	FVector camLocation = player->camera->GetComponentLocation();
+	// Create fields for raycasts.
 	FHitResult GrappleHitPoint;
 	FCollisionQueryParams CollisionParams;
+
 	// Handle any unwrapping.
-	// TODO this has a bug where the unwrap process can be shortcircuited.
-	// The wrap pivots need to hold normal data to fix this.
 	if (WrapPivots.Num() > 0)
 	{
 		// Step backwards, checking if each pivot can be unwrapped.
 		for (int i = WrapPivots.Num() - 1; i >= 0; i--)
 		{
-			FVector nextPivot = ((i == 0) ? hook : WrapPivots[i - 1]);
+			// Look one pivot further, or to the hook location,
+			// to determine what the unwrapped segment would look like.
+			FVector nextPivot = ((i == 0) ? hookLocation : WrapActors[i - 1]->GetTransform().TransformPosition(WrapPivots[i - 1]));
 			// Is there a clear line around this wrap point?
 			// If so unwind the pivot, otherwise stop checking pivots.
-			if (!world->LineTraceSingleByChannel(GrappleHitPoint, nextPivot, capsule, ECC_GameTraceChannel4, CollisionParams))
+			if (!world->LineTraceSingleByChannel(GrappleHitPoint,
+				nextPivot, camLocation, ECC_GameTraceChannel4, CollisionParams))
 			{
-				FVector normalSideCheck = (WrapPivots[i] - capsule).ProjectOnTo(nextPivot - capsule) + capsule;
-				if (!world->LineTraceSingleByChannel(GrappleHitPoint, WrapPivots[i], normalSideCheck, ECC_GameTraceChannel4, CollisionParams))
+				// Project the pivot onto the new prospective unwrapped segment.
+				FVector unwrapCheck = (WrapActors[i]->GetTransform().TransformPosition(WrapPivots[i]) - camLocation).
+					ProjectOnTo(nextPivot - camLocation) + camLocation;
+				// See if the unwrap can be done without an intersection.
+				// This is what establishes the normal context of the pivots.
+				if (!world->LineTraceSingleByChannel(GrappleHitPoint,
+					WrapActors[i]->GetTransform().TransformPosition(WrapPivots[i]), unwrapCheck, ECC_GameTraceChannel4, CollisionParams))
 				{
 					WrapPivots.Pop();
+					WrapActors.Pop();
 					grapplePolyline->PopPoint();
 				}
+				else
+					break;
 			}
 			else
 				break;
@@ -126,53 +177,55 @@ void UGrappleState::SolveWrap()
 	}
 	// Handle any wrapping.
 	// Wrapping is always relative to the final wrap pivot.
-	FVector Start = capsule;
-	FVector End = ((WrapPivots.Num() == 0) ? hook : WrapPivots.Last());
-	int cycles = 0;
+	FVector Start = camLocation;
+	FVector End = ((WrapPivots.Num() == 0) ? hookLocation : WrapActors.Last()->GetTransform().TransformPosition(WrapPivots.Last()));
+	int loops = 0;
 	// Keep checking the cable line until there is a free path to the grapple end.
 	// Wrap as many times as is needed.
 	while (world->LineTraceSingleByChannel(GrappleHitPoint, End, Start, ECC_GameTraceChannel4, CollisionParams))
 	{
-		// Avoid getting trapped in this while loop.
-		cycles++;
-		if (cycles > 10)
-			break;
+		// This is a safety check to avoid a while loop
+		// crash. This might trigger if the grapple gets stuck inside
+		// a volume and can't get out.
+		loops++;
+		if (loops > 50) break;
 		// Initialize variables for bisection.
-		float currentDistance = 0.5F;
-		float cutDistance = 0.5F;
+		float interpolant = 0.5F;
+		float bisection = 0.5F;
 		FHitResult lastHitResult;
 		// Run bisection to iteratively approach the actual edge
 		// of the geometry to wrap around.
 		for (int i = 0; i < WrapCheckIterations; i++)
 		{
+			bisection *= 0.5F;
 			// Move towards the last frame's position that was
 			// known to be non-obscured.
-			cutDistance *= 0.5F;
-			Start = FMath::Lerp(capsule, LastFramePlayerLocation, currentDistance);
+			Start = FMath::Lerp(camLocation, LastFramePlayerLocation, interpolant);
 			// If we are still hitting then continue further towards last frame.
-			if (world->LineTraceSingleByChannel(GrappleHitPoint, End, Start, ECC_GameTraceChannel4, CollisionParams))
+			if (world->LineTraceSingleByChannel(GrappleHitPoint,
+				End, Start, ECC_GameTraceChannel4, CollisionParams))
 			{
-				currentDistance += cutDistance;
+				interpolant += bisection;
+				// Record this result.
 				lastHitResult = GrappleHitPoint;
 			}
 			else
 			{
-				// If we cleared then step back.
-				currentDistance -= cutDistance;
+				// If we cleared then step back
+				// towards the edge.
+				interpolant -= bisection;
 			}
 		}
 		// Use the last found hit, should be pretty close to the edge,
 		// and add some clearence (otherwise future casts will get trapped in the mesh).
-		FVector normal = (LastFramePlayerLocation - capsule).GetSafeNormal();
+		FVector normal = (LastFramePlayerLocation - camLocation).GetSafeNormal();
 		FVector wrapPoint = lastHitResult.Location + normal * 5.F;
-		WrapPivots.Add(wrapPoint);
-		grapplePolyline->SetLastPoint(wrapPoint);
-		grapplePolyline->PushPoint(FVector::ZeroVector);
-		End = WrapPivots.Last();
+		// Push the pivot data and repeat if neccasary.
+		WrapPivots.Add(lastHitResult.GetActor()->GetTransform().InverseTransformPosition(wrapPoint));
+		WrapActors.Add(lastHitResult.GetActor());
+		End = wrapPoint;
 	}
-	// Update the grapple polyline to reflect hook and player movement.
-	grapplePolyline->SetFirstPoint(hook);
-	grapplePolyline->SetLastPoint(grappleGunStart->GetComponentLocation());
 	// Update last stored location.
-	LastFramePlayerLocation = capsule;
+	LastFramePlayerLocation = camLocation;
 }
+#pragma endregion

@@ -31,7 +31,9 @@ public:
 	FHitResult GrappleHitPoint;
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
+	FHitResult LedgeHitPoint;
 	bool bNeedsToStand;
+	bool bPreviousGround;
 	float standUpTimer;
 
 	FVector bounds;
@@ -54,7 +56,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Collider")
 		UPhysicalMaterial* runSlideMat;
 	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* frictionlessMat;
+		UPhysicalMaterial* noFricMat;
 
 	//================General=================//
 
@@ -153,6 +155,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
 		float reelCompleteDistance;
 
+	//===============Ledge=Grab================//
+	//How many units does our player climb each second
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeClimbSpeed;
+	//How far forward to push the player when they lazy climb
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgePushSpeed;
+	//What is the maximum angles (in degrees) our player can be looking at a ledge to climb it
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeLookAngle;
+	//The maximum units up our player can grab (distance from bottom of player)
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeGrabHeight;
+	//How many player radius' to expand the ledge grab range by
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeGrabRangeFactor;
+
 	//===================State=================//
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
@@ -209,5 +228,8 @@ private:
 	void CastGrappleRaycast();
 	bool ShootGrapple();
 #pragma endregion
-
+	// This needs to be stored, otherwise
+	// the grapple reactor is set on hover.
+	// This allows it to only cast once on input.
+	AActor* lastHoveredActor;
 };
