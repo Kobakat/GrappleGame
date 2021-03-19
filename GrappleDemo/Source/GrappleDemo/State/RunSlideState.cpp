@@ -25,7 +25,7 @@ void URunSlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
 	player->collider->SetPhysMaterialOverride(player->runSlideMat);
-	player->collider->AddForce(player->collider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 10k to keep designer values small
+	player->collider->AddForce(player->collider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 1k to keep designer values small
 	
 	bIsCrouching = true;
 	crouchTimer = 0;
@@ -37,7 +37,7 @@ void URunSlideState::StateTick(float deltaTime)
 	HandleCrouchDown(deltaTime);
 	CheckIfSlideComplete();
 	CheckIfGrounded(player->runSlideGroundCheckOverride);
-	HandleJump(player->runSlideJumpForce);
+	HandleJump(player->runSlideJumpForce, false);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
 

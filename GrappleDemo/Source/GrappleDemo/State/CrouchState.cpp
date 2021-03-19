@@ -35,7 +35,7 @@ void UCrouchState::StateTick(float deltaTime)
 	HandleCrouchDown(deltaTime);
 	CheckIfGrounded(player->crouchGroundCheckOverride);
 	CheckIfPlayerIsTryingToStand();
-	HandleJump(player->crouchJumpForce);
+	HandleJump(player->crouchJumpForce, false);
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->crouchMaxSpeed);
@@ -84,11 +84,11 @@ void UCrouchState::CheckIfPlayerIsTryingToStand()
 	}
 }
 
-void UCrouchState::HandleJump(float jumpForce)
+void UCrouchState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 {
 	if (player->bCanPlayerCrouchJump) 
 	{
-		UMovementState::HandleJump(jumpForce);
+		UMovementState::HandleJump(jumpForce, bCanPlayerLedgeGrab);
 	}
 }
 
@@ -114,6 +114,28 @@ void UCrouchState::HandleCrouchDown(float deltaTime)
 		{
 			bIsCrouching = false;		
 		}
+	}
+}
+
+void UCrouchState::PlayerMove(float accel, float airControlFactor)
+{
+	if (!player->moveVector.IsZero())
+	{
+		player->collider->SetPhysMaterialOverride(player->moveMat);
+
+		FVector relativeInputVector = ConvertPlayerInputRelativeToCamera();
+
+		if (!player->bIsGrounded)
+		{
+			relativeInputVector = relativeInputVector * (airControlFactor / 100.f);
+		}
+
+		player->collider->AddForce(relativeInputVector * accel, NAME_None, true);
+	}
+
+	else if (player->moveVector.IsZero() && player->bIsGrounded)
+	{
+		player->collider->SetPhysMaterialOverride(player->stopMat);
 	}
 }
 

@@ -33,7 +33,7 @@ public:
 	bool GetIsPressed();
 
 	virtual void Tick(float DeltaTime) override;
-	virtual void ApplyPullForce(const FVector force) override;
+	virtual void ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance) override;
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "OnSwitched"))
 	void Reset();
 

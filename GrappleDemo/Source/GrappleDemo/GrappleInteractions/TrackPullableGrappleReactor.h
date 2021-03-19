@@ -31,7 +31,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void ApplyPullForce(const FVector force) override;
+	virtual void ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance) override;
 	// Sets whether the actor is current pullable, or locked
 	void SetIsPullable(const bool isPullable);
 };

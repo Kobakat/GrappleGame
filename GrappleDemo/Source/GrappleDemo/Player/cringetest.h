@@ -36,6 +36,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | General")
 		float slideTransitionTime;
 
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
+		float ledgeTurnSpeed;
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
+		float ledgeTiltSpeed;
+
 protected:
 	void BeginPlay() override;
 private:
@@ -70,7 +75,6 @@ private:
 		float activeAmplitude;
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float activeFrequency;
-
 #pragma endregion
 
 	//Shake

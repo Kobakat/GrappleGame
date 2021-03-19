@@ -12,3 +12,12 @@ Saved
 *.suo
 *.xcodeproj
 *.xcworkspace
+GrappleDemo/Content/Art/Meshes/LargeSlide.uasset
+GrappleDemo/Content/Blueprints/Player.uasset
+GrappleDemo/Content/Blueprints/UI/ReticleWidget.uasset
+GrappleDemo/Content/Maps/Levels/AdriansLevel/AdrianLevel.umap
+GrappleDemo/Content/Maps/Levels/AdriansLevel/AdrianLevel_BuiltData.uasset
+GrappleDemo/Content/Maps/Levels/AdriansLevel/Building1/B1Plank_StaticMesh.uasset
+GrappleDemo/Content/Maps/Levels/AdriansLevel/Building2/B2Box1_StaticMesh.uasset
+GrappleDemo/Content/Maps/Levels/AdriansLevel/Building2/Box_Brush_StaticMesh.uasset
+GrappleDemo/Content/PhysicsMaterials/PlayerMove.uasset

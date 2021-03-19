@@ -26,7 +26,7 @@ private:
 
 public:
 	bool GetIsSwitched();
-	virtual void ApplyPullForce(const FVector force) override;
+	virtual void ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance) override;
 	// Blueprints can respond to switch being triggered.
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnSwitched"))
 	void ReceiveOnSwitched(bool switchState);
