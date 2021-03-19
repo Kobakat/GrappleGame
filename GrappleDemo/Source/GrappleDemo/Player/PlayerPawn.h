@@ -31,7 +31,9 @@ public:
 	FHitResult GrappleHitPoint;
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
+	FHitResult LedgeHitPoint;
 	bool bNeedsToStand;
+	bool bPreviousGround;
 	float standUpTimer;
 
 	FVector bounds;
@@ -53,8 +55,6 @@ public:
 		UPhysicalMaterial* stopMat;
 	UPROPERTY(EditAnywhere, Category = "Collider")
 		UPhysicalMaterial* runSlideMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* frictionlessMat;
 
 	//================General=================//
 
@@ -152,6 +152,20 @@ public:
 		float instantGrappleSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
 		float reelCompleteDistance;
+
+	//===============Ledge=Grab================//
+	//How many units does our player climb each second
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeClimbSpeed;
+	//How far forward to push the player when they lazy climb
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgePushSpeed;
+	//What is the maximum angles (in degrees) our player can be looking at a ledge to climb it
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeLookAngle;
+	//The maximum units up our player can grab (distance from bottom of player)
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeGrabHeight;
 
 	//===================State=================//
 

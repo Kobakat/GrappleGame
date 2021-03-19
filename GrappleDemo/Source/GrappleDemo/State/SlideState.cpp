@@ -26,7 +26,6 @@ void USlideState::Initialize(APlayerPawn* pawn)
 void USlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->collider->SetPhysMaterialOverride(player->frictionlessMat);
 	crouchTimer = 0;
 	camTimer = 0;
 	bIsTransitioning = true;
@@ -39,7 +38,7 @@ void USlideState::StateTick(float deltaTime)
 	CheckIfGrounded(player->slideGroundCheckOverride);
 	HandleCrouchDown(deltaTime);
 	HandleCameraTransition(deltaTime);
-	HandleJump(player->slideJumpForce);
+	HandleJump(player->slideJumpForce, false);
 
 	if (!bIsTransitioning)
 	{
@@ -54,7 +53,6 @@ void USlideState::StateTick(float deltaTime)
 
 void USlideState::OnStateExit()
 {
-	player->collider->SetPhysMaterialOverride(player->moveMat);
 	crouchTimer = 0;
 	camTimer = 0;
 	player->bNeedsToStand = true;
@@ -77,8 +75,6 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 
 void USlideState::CheckIfGrounded(float overrideHeight)
 {
-	player->collider->SetPhysMaterialOverride(player->frictionlessMat); //TODO dont sent this every frame, do a better check
-
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 

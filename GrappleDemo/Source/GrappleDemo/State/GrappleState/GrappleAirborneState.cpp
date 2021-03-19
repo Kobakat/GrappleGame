@@ -40,7 +40,8 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	else
 		PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
-	HandleJump(player->walkJumpForce);
+
+	HandleJump(player->walkJumpForce, false);
 	HandleGrappleInput();
 
 	CheckIfGrounded(player->groundCheckDistance);

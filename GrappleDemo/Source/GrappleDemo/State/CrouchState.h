@@ -20,7 +20,8 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 protected:
-	virtual void HandleJump(float jumpForce) override;
+	virtual void HandleJump(float jumpForce, bool bCanPlayerLedgeGrab) override;
+	virtual void PlayerMove(float accel, float airControlFactor) override;
 
 private:
 	static UCrouchState* instance;
