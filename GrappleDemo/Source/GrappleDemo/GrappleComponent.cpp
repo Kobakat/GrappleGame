@@ -23,20 +23,20 @@ float UGrappleComponent::GetCableLength()
 	return currentCableLength;
 }
 
-void UGrappleComponent::ApplyForce(FVector force)
+void UGrappleComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
 {
 	if (IsValid(grappleReactor))
 	{
-		grappleReactor->ApplyPullForce(force);
+		grappleReactor->ApplyPullForce(pullPoint, pullTowards, desiredDistance);
 	}
 }
 
 void UGrappleComponent::Reel(float value)
 {
 
-	if (currentCableLength + value * grappleReelSpeed >= 0.F && currentCableLength + value < grappleMaxDistance)
+	if (currentCableLength + value >= 200.F && currentCableLength + value < grappleMaxDistance)
 	{
-		currentCableLength += value * grappleReelSpeed;
+		currentCableLength += value;
 	}
 	
 }

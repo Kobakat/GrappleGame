@@ -223,5 +223,8 @@ private:
 	void CastGrappleRaycast();
 	bool ShootGrapple();
 #pragma endregion
-
+	// This needs to be stored, otherwise
+	// the grapple reactor is set on hover.
+	// This allows it to only cast once on input.
+	AActor* lastHoveredActor;
 };

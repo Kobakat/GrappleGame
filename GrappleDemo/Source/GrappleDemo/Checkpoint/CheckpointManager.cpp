@@ -2,6 +2,7 @@
 
 
 #include "CheckpointManager.h"
+#include "Engine/World.h"
 #include "Checkpoint.h"
 
 // Sets default values
@@ -17,11 +18,10 @@ void ACheckpointManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-
+	// Sets player pawn
 	this->player = GetWorld()->GetFirstPlayerController()->GetPawn();
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *player->GetName());
 
-
+	// Sets the chechkpoint manager instance for each checkpoint in the array
 	for (ACheckpoint* checkpoint : Checkpoints)
 	{
 		checkpoint->SetCheckpointManager(this);
@@ -36,41 +36,36 @@ void ACheckpointManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*if (Timer)
+	//TODO Show in UI
+	if (bTimer)
 	{
-		LevelTime++;
-	}*/
-
-}
-
-void ACheckpointManager::OutOfBounds()
-{
-	//TODO kill momentum
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
-	//player->SetActorLocation(currentCheckpoint->GetActorLocation());
+		timeElasped = GetWorld()->GetRealTimeSeconds() - startTime;
+		UE_LOG(LogTemp, Warning, TEXT("%f"), timeElasped);
+	}
 }
 
 void ACheckpointManager::SetCurrentCheckpoint(ACheckpoint* checkpoint)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
+	// Sets the last checkpoint the player has hit
 	currentCheckpoint = checkpoint;
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *currentCheckpoint->GetName());
 	CheckLevelEnd();
 }
 
 void ACheckpointManager::CheckLevelStart(ACheckpoint* checkpoint)
 {
-	
-	if (checkpoint == currentCheckpoint)
+	if (checkpoint == Checkpoints[0])
 	{
-		Timer = true;
+		// Sets the game time to when the player leaves the start checkpoint
+		startTime = GetWorld()->GetRealTimeSeconds();
+		bTimer = true;
 	}
 }
 
 void ACheckpointManager::CheckLevelEnd()
 {
+	// Checks if the player has entered the last checkpoint in the array
 	if (currentCheckpoint == Checkpoints.Last())
 	{
-		Timer = false;
+		bTimer = false;
 	}
 }

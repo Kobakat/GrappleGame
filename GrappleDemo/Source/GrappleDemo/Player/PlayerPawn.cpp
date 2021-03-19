@@ -97,6 +97,12 @@ void APlayerPawn::ShootReleasePress()
 {
 	if (ShootGrapple())
 	{
+		// Check for a grapple reactor TODO should be dryer.
+		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
+		if (IsValid(reactor))
+			grappleComponent->grappleReactor = reactor;
+		else
+			grappleComponent->grappleReactor = nullptr;
 		SetState(UGrappleAirborneState::GetInstance());
 	}
 	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
@@ -112,6 +118,12 @@ void APlayerPawn::InstantReelPress()
 {
 	if (ShootGrapple())
 	{
+		// Check for a grapple reactor TODO should be dryer.
+		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
+		if (IsValid(reactor))
+			grappleComponent->grappleReactor = reactor;
+		else
+			grappleComponent->grappleReactor = nullptr;
 		SetState(UGrappleInstantReelState::GetInstance());
 	}
 }
@@ -202,12 +214,7 @@ void APlayerPawn::CastGrappleRaycast()
 		else
 		{
 			grappleCanAttach = true;
-			// Document a grapple reactor if it exists on the actor.
-			AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
-			if (IsValid(reactor))
-				grappleComponent->grappleReactor = reactor;
-			else
-				grappleComponent->grappleReactor = nullptr;
+			lastHoveredActor = GrappleHitPoint.GetActor();
 		}
 	}
 	else

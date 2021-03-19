@@ -35,7 +35,7 @@ public:
 	FVector GetAttachedLocation();
 	float GetCableLength();
 
-	void ApplyForce(FVector force);
+	void ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance);
 	void Reel(float value);
 	// function that takes in vector and attaches endpoint of grapple to that
 	void Attach(FVector start, FVector end, AActor* actor);

@@ -35,19 +35,25 @@ void UGrappleAirborneState::OnStateExit()
 
 void UGrappleAirborneState::StateTick(float deltaTime)
 {
-	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
+	if (player->bIsGrounded)
+		PlayerMove(player->runAcceleration, 100.F);
+	else
+		PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
-	CheckStateChange();
+
 	HandleJump(player->walkJumpForce, false);
 	HandleGrappleInput();
 
-	bool isSolved =	SolveGrappleRestraint();
+	CheckIfGrounded(player->groundCheckDistance);
+	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
+
+	bool isSolved =	SolveRestraint();
 	if (!isSolved)
 	{
 		player->SetState(UWalkState::GetInstance());
 	}
-	CheckIfGrounded(player->groundCheckDistance);
-	ClampPlayerVelocity(player->bIsGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
+
+	CheckStateChange();
 }
 
 #pragma endregion
@@ -65,7 +71,7 @@ void UGrappleAirborneState::CheckStateChange()
 void UGrappleAirborneState::HandleGrappleInput()
 {
 	// Apply the reeling input to the grapple rope.
-	grappleComponent->Reel(player->reelingAxis);
+	grappleComponent->Reel(5.F * player->reelingAxis);
 }
 
 #pragma endregion
