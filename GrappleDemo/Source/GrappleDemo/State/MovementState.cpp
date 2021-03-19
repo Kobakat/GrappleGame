@@ -188,34 +188,36 @@ bool UMovementState::CanPlayerLedgeGrab()
 		//Lets make sure its exactly a ledge
 		if (player->LedgeHitPoint.Component->GetCollisionProfileName() == FName(TEXT("Ledge")))
 		{	
+			//Can our player reach this high?
+			FVector ledgeBounds = player->LedgeHitPoint.Component->Bounds.BoxExtent;
+			ledgeBounds += player->LedgeHitPoint.Actor.Get()->GetActorLocation();
 
-			FVector camLoc = player->camera->GetComponentLocation();
+			if (ledgeBounds.Z - player->GetActorLocation().Z <= player->ledgeGrabHeight)
+			{
+				FVector camLoc = player->camera->GetComponentLocation();
 
-			//Calculate the normal of the way our player is looking (without Z)
-			FVector camForward = player->camera->GetForwardVector();
-			camForward.Z = 0;
-			camForward.Normalize(0.01f);
+				//Calculate the normal of the way our player is looking (without Z)
+				FVector camForward = player->camera->GetForwardVector();
+				camForward.Z = 0;
+				camForward.Normalize(0.01f);
 
-			//Calculate the opposite of the ledge's normal
-			FVector impactNormal = player->LedgeHitPoint.Normal;
-			impactNormal.Z = 0;
-			impactNormal.Normalize(0.01f);
-			impactNormal *= -1;
+				//Calculate the opposite of the ledge's normal
+				FVector impactNormal = player->LedgeHitPoint.ImpactNormal;
+				impactNormal.Z = 0;
+				impactNormal.Normalize(0.01f);
+				impactNormal *= -1;
 
-			//Calculate the Angle between the two vectors
-			const float dot = FVector::DotProduct(camForward, impactNormal);
-			const float angle = FMath::RadiansToDegrees(FMath::Acos(dot));
+				//Calculate the Angle between the two vectors
+				const float dot = FVector::DotProduct(camForward, impactNormal);
+				const float angle = FMath::RadiansToDegrees(FMath::Acos(dot));
 
-			//If the angle is small enough, the player is eligible to climb the ledge
-			const bool lookingAt = angle <= player->ledgeLookAngle;
+				//If the angle is small enough, the player is eligible to climb the ledge
+				const bool lookingAt = angle <= player->ledgeLookAngle;
 
-			if (lookingAt)
-				return true;
-
-			return false;
+				if (lookingAt)
+					return true;
+			}
 		}
-
-		return false;
 	}
 	return false;
 }

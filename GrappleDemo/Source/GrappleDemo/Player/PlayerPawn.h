@@ -154,18 +154,18 @@ public:
 		float reelCompleteDistance;
 
 	//===============Ledge=Grab================//
-	//How many seconds should it take for the player reach the max height of the platform
+	//How many units does our player climb each second
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeVerticalTransitionTime;
-	//How many seconds to move the player further onto the platform so they don't slide off
+		float ledgeClimbSpeed;
+	//How far forward to push the player when they lazy climb
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeHorizontalTransitionTime;
+		float ledgePushSpeed;
 	//What is the maximum angles (in degrees) our player can be looking at a ledge to climb it
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgeLookAngle;
-	//How far forward does the player move onto the ledge once they finish rising
+	//The maximum units up our player can grab (distance from bottom of player)
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgePushDistance;
+		float ledgeGrabHeight;
 
 	//===================State=================//
 
