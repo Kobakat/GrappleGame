@@ -84,7 +84,7 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 
 	if (bHitGround)
 	{
-		if (player->GetActorLocation().Z <= player->GroundHitPoint.ImpactPoint.Z + overrideHeight)
+		if (player->GetActorLocation().Z <= player->GroundHitPoint.ImpactPoint.Z /*+ overrideHeight*/)
 		{
 			FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
 
@@ -92,8 +92,7 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 			{
 				player->bIsGrounded = true;
 
-				if (player->collider->GetPhysicsLinearVelocity().Z < 0.F && 
-					player->bPreviousGround != player->bIsGrounded)
+				if (player->bPreviousGround != player->bIsGrounded)
 				{
 					FVector velocity = player->collider->GetPhysicsLinearVelocity();
 					player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
