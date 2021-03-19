@@ -35,7 +35,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnUnhooked"))
 	void ReceiveOnUnhooked();
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "OnForceApplied"))
-	void ReceiveOnForceApplied(FVector force);
+	void ReceiveOnForceApplied();
 
 public:	
 	// Called every frame
@@ -43,8 +43,9 @@ public:
 	// Call these methods to control the hooked state
 	virtual void Hook(FVector location);
 	virtual void Unhook();
-	// Applys a directional force to this grapple reactor
-	// Sub classes, blueprints will process this
-	virtual void ApplyPullForce(const FVector force);
-
+	// Attempts to solve a pulling force from a global pull point
+	// towards a target pull point. The solver will attempt to
+	// move the reactor such that the local pull point is the
+	// desired distance away from the towards location.
+	virtual void ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance);
 };

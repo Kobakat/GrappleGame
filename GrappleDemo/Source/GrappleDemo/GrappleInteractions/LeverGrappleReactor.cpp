@@ -17,7 +17,7 @@ bool ALeverGrappleReactor::GetIsSwitched()
 	return isSwitched;
 }
 
-void ALeverGrappleReactor::ApplyPullForce(const FVector force)
+void ALeverGrappleReactor::ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance)
 {
 	// Get the current direction the grapple must pull in to flip
 	// the switch state.
@@ -25,14 +25,7 @@ void ALeverGrappleReactor::ApplyPullForce(const FVector force)
 	if (isSwitched)
 		pullDirection = -pullDirection;
 
-	float dotProduct = FVector::DotProduct(force.GetSafeNormal(), pullDirection.GetSafeNormal());
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, .01f, FColor::Green, FString::SanitizeFloat(dotProduct));
-	}
-
-	//UE_LOG(LogTemp, Warning, TEXT("DOT: %f"), dotProduct);
+	float dotProduct = FVector::DotProduct((pullTowards - pullPoint).GetSafeNormal(), pullDirection.GetSafeNormal());
 
 	// If there is enough force applied (along the lever normal)
 	// then flip the switch
