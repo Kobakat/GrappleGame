@@ -57,45 +57,59 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FVector boxBounds = FVector(player->bounds.X, player->bounds.Y, overrideHeight);
-	//shrink so they dont extend beyond the player collider and stay central
-	boxBounds.X *= .75f;
-	boxBounds.Y *= .75f;
-	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
+	float radius = player->bounds.X * .95f;
+
+	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
 
 #if WITH_EDITOR
-	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Red, false, 0.05f);
+
+	DrawDebugSphere(
+		player->GetWorld(),
+		player->GetActorLocation(),
+		radius,
+		10,
+		FColor::Red, 
+		false, 
+		0.05f);
 #endif
 
 	bool bHitGround = player->GetWorld()->SweepSingleByChannel(
 		player->GroundHitPoint,
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+		player->GetActorLocation(),
+		player->GetActorLocation(),
 		FQuat::Identity,
 		ECC_Visibility,
-		box,
+		cap,
 		param);
 
 	if (bHitGround)
 	{
-		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
-
-		if (struckProfile == FName(TEXT("Ground")) || struckProfile == FName(TEXT("Ledge")))
+		if (player->GetActorLocation().Z <= player->GroundHitPoint.ImpactPoint.Z + overrideHeight)
 		{
-			player->bIsGrounded = true;
+			FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
 
-			if (player->bPreviousGround != player->bIsGrounded)
+			if (struckProfile == FName(TEXT("Ground")) || struckProfile == FName(TEXT("Ledge")))
 			{
-				FVector velocity = player->collider->GetPhysicsLinearVelocity();
-				player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
-			}
-				
-		}
+				player->bIsGrounded = true;
 
-		else if (struckProfile == FName(TEXT("Slide")))
-		{
-			player->SetState(USlideState::GetInstance());
-			player->bIsGrounded = true;
+				if (player->bPreviousGround != player->bIsGrounded)
+				{
+					FVector velocity = player->collider->GetPhysicsLinearVelocity();
+					player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
+				}
+				
+			}
+
+			else if (struckProfile == FName(TEXT("Slide")))
+			{
+				player->SetState(USlideState::GetInstance());
+				player->bIsGrounded = true;
+			}
+
+			else
+			{
+				player->bIsGrounded = false;
+			}
 		}
 
 		else
@@ -173,7 +187,13 @@ bool UMovementState::CanPlayerLedgeGrab()
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FCollisionShape box = FCollisionShape::MakeBox(player->bounds);
+	FVector boundingBox = FVector(
+		player->bounds.X * player->ledgeGrabRangeFactor, 
+		player->bounds.Y * player->ledgeGrabRangeFactor, 
+		player->bounds.Z);
+
+	FCollisionShape box = FCollisionShape::MakeBox(boundingBox);
+
 	bool bHitLedge = player->GetWorld()->SweepSingleByChannel(
 		player->LedgeHitPoint,
 		player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,

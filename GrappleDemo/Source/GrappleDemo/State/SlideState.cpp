@@ -31,6 +31,7 @@ void USlideState::OnStateEnter()
 	bIsTransitioning = true;
 	bIsCrouching = true;
 	player->bNeedsToStand = false;
+	player->collider->SetPhysMaterialOverride(player->noFricMat);
 }
 
 void USlideState::StateTick(float deltaTime)
@@ -56,6 +57,7 @@ void USlideState::OnStateExit()
 	crouchTimer = 0;
 	camTimer = 0;
 	player->bNeedsToStand = true;
+	player->collider->SetPhysMaterialOverride(player->noFricMat);
 }
 
 #pragma endregion
@@ -78,14 +80,20 @@ void USlideState::CheckIfGrounded(float overrideHeight)
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FVector boxBounds = FVector(player->bounds.X, player->bounds.Y, overrideHeight);
-	//shrink so they dont extend beyond the player collider and stay central
-	boxBounds.X *= .75f;
-	boxBounds.Y *= .75f;
-	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
+	float radius = player->bounds.X * .95f;
+
+	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
 
 #if WITH_EDITOR
-	DrawDebugBox(player->GetWorld(), player->GetActorLocation() + (FVector::DownVector * overrideHeight) + FVector::UpVector, boxBounds, FColor::Red, false, 0.05f);
+
+	DrawDebugSphere(
+		player->GetWorld(),
+		player->GetActorLocation(),
+		radius,
+		5,
+		FColor::Red,
+		false,
+		0.05f);
 #endif
 
 	bool bHitSlide= player->GetWorld()->SweepSingleByChannel(
@@ -94,7 +102,7 @@ void USlideState::CheckIfGrounded(float overrideHeight)
 		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
 		FQuat::Identity,
 		ECC_Visibility,
-		box,
+		cap,
 		param);
 
 	if (bHitSlide)

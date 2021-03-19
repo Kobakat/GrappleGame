@@ -55,6 +55,8 @@ public:
 		UPhysicalMaterial* stopMat;
 	UPROPERTY(EditAnywhere, Category = "Collider")
 		UPhysicalMaterial* runSlideMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* noFricMat;
 
 	//================General=================//
 
@@ -166,6 +168,9 @@ public:
 	//The maximum units up our player can grab (distance from bottom of player)
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgeGrabHeight;
+	//How many player radius' to expand the ledge grab range by
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeGrabRangeFactor;
 
 	//===================State=================//
 
