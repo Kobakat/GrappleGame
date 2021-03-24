@@ -76,10 +76,6 @@ public:
 		USceneComponent* gun;
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
 		USceneComponent* grappleStart;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClawOrigin;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClaw;
 	UPROPERTY(EditAnywhere, Category = "Grapple")
 		UGrappleComponent* grappleComponent;
 	//=================Walking================//
