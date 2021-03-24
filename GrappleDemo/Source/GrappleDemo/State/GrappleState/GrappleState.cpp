@@ -10,7 +10,6 @@ void UGrappleState::Initialize(APlayerPawn* pawn)
 	grappleComponent = pawn->grappleComponent;
 	grappleGunStart = pawn->grappleStart;
 	grapplePolyline = pawn->GrapplePolyline;
-	grappleClaw = pawn->grappleClaw;
 	// Set the number of raycasts used for the
 	// wrap solving at each wrap pivot.
 	WrapCheckIterations = 10;
@@ -32,7 +31,6 @@ void UGrappleState::OnStateExit()
 	UMovementState::OnStateExit();
 	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
-	grappleClaw->SetVisibility(true);
 }
 #pragma endregion
 #pragma region Solve Restraint
@@ -121,9 +119,6 @@ bool UGrappleState::SolveRestraint()
 			}
 		}
 	}
-	//Place the claw on the surface
-	grappleClaw->SetVisibility(false);
-
 	// Update the grapple rope.
 	TArray<FVector> allPoints;
 	allPoints.SetNum(GlobalPivots.Num() + 2);

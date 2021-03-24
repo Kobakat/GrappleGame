@@ -92,8 +92,7 @@ void UMovementState::CheckIfGrounded(float overrideHeight)
 			{
 				player->bIsGrounded = true;
 
-				if (player->collider->GetPhysicsLinearVelocity().Z < 0.F && 
-					player->bPreviousGround != player->bIsGrounded)
+				if (player->bPreviousGround != player->bIsGrounded)
 				{
 					FVector velocity = player->collider->GetPhysicsLinearVelocity();
 					player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
@@ -148,21 +147,20 @@ void UMovementState::ClampPlayerVelocity(float max)
 
 void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab) 
 {
-	if (player->tryingToJump && player->bIsGrounded)
-	{
-		player->tryingToJump = false;
-		player->bIsGrounded = false;
-		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
-	}
-
-	if (!player->bIsGrounded)
+	if (player->tryingToJump) 
 	{
 		if (bCanPlayerLedgeGrab && CanPlayerLedgeGrab())
 		{
 			player->tryingToJump = false;
 			player->SetState(ULedgeGrabState::GetInstance());
 		}
-	}	
+
+		else if (player->bIsGrounded)
+		{
+			player->tryingToJump = false;
+			player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
+		}
+	}
 }
 
 FVector UMovementState::ConvertPlayerInputRelativeToCamera()
