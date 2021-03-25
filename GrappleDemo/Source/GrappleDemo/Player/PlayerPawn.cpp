@@ -94,8 +94,8 @@ void APlayerPawn::ShootReleasePress()
 {
 	if (grappleComponent->GetCanAttach())
 	{
-		grappleComponent->Attach();
 		SetState(UGrappleAirborneState::GetInstance());
+		grappleComponent->Attach();
 	}
 	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
 	{
@@ -110,8 +110,8 @@ void APlayerPawn::InstantReelPress()
 {
 	if (grappleComponent->GetCanAttach())
 	{
-		grappleComponent->Attach();
 		SetState(UGrappleInstantReelState::GetInstance());
+		grappleComponent->Attach();
 	}
 }
 

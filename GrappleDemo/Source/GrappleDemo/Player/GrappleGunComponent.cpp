@@ -13,6 +13,10 @@ UGrappleGunComponent::UGrappleGunComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	// Set default values
+	FireRange = 3000.F;
+	MinLength = 250.F;
+	MaxLength = 3000.F;
 }
 
 
