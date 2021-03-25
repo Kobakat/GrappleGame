@@ -128,6 +128,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				// We can currently attach
 				CanAttach = true;
 				LastHitActor = Result.GetActor();
+				LastHitLocation = Result.Location;
 			}
 		}
 		else

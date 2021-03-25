@@ -32,7 +32,7 @@ void UGrappleState::OnStateExit()
 	UMovementState::OnStateExit();
 	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
-	grappleClaw->SetVisibility(true);
+	//grappleClaw->SetVisibility(true);
 }
 #pragma endregion
 #pragma region Solve Restraint
@@ -51,7 +51,7 @@ bool UGrappleState::SolveRestraint()
 		? GlobalPivots.Last() : attachedLocation;
 
 	// Using the wrap data, calculate how much rope length is left.
-	float lengthLeft = grappleComponent->GetCableLength();
+	float lengthLeft = grappleComponent->GetLength();
 	// Trace along the rope wrap subtracting distance.
 	if (WrapPivots.Num() > 0)
 		lengthLeft -= FVector::Distance(attachedLocation, GlobalPivots[0]);
@@ -122,16 +122,16 @@ bool UGrappleState::SolveRestraint()
 		}
 	}
 	//Place the claw on the surface
-	grappleClaw->SetVisibility(false);
+	//grappleClaw->SetVisibility(false);
 
 	// Update the grapple rope.
-	TArray<FVector> allPoints;
-	allPoints.SetNum(GlobalPivots.Num() + 2);
-	allPoints[0] = attachedLocation;
+	TArray<FVector> points;
+	points.SetNum(GlobalPivots.Num() + 2);
+	points[0] = attachedLocation;
 	for (int i = 0; i < GlobalPivots.Num(); i++)
-		allPoints[i + 1] = GlobalPivots[i];
-	allPoints[allPoints.Num() - 1] = grappleGunStart->GetComponentLocation();
-	grapplePolyline->SetAllPoints(allPoints);
+		points[i + 1] = GlobalPivots[i];
+	points[points.Num() - 1] = grappleGunStart->GetComponentLocation();
+	grapplePolyline->SetAllPoints(points);
 	return true;
 }
 #pragma endregion

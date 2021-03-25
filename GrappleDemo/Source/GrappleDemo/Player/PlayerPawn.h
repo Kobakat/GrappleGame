@@ -24,6 +24,7 @@ public:
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UGrappleGunComponent* grappleComponent;
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
@@ -79,8 +80,6 @@ public:
 		USceneComponent* grappleClawOrigin;
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
 		USceneComponent* grappleClaw;
-	UPROPERTY(EditAnywhere, Category = "Grapple")
-		UGrappleGunComponent* grappleComponent;
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")

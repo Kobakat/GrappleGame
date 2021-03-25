@@ -22,6 +22,11 @@ void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Grab the grapple gun
+	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
+	grappleComponent->SetCastingFromComponent(camera);
+	grappleComponent->IgnoredActors.Add(this);
+
 	// Ensure the grapple polyline is instantiated.
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
 	if (!childActor->HasBeenCreated())
@@ -45,6 +50,8 @@ void APlayerPawn::Tick(float deltaTime)
 	}
 
 	HandleStandUp(deltaTime);
+
+	grappleCanAttach = grappleComponent->GetCanAttach();
 
 	bPreviousGround = bIsGrounded;
 }
