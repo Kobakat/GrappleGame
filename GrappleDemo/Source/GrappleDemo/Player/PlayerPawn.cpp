@@ -16,8 +16,6 @@ APlayerPawn::APlayerPawn()
 
 	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));
 	camera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
-
-	grappleComponent = CreateDefaultSubobject<UGrappleComponent>(TEXT("Grapple"));
 }
 
 void APlayerPawn::BeginPlay()
@@ -30,16 +28,9 @@ void APlayerPawn::BeginPlay()
 		childActor->CreateChildActor();
 	GrapplePolyline = Cast<APolylineCylinderRenderer>(childActor->GetChildActor());
 
-	grappleComponent->AttachToComponent(grappleStart, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
 	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
-
-	// This is done in begin play because otherwise it
-	// shows up in the editor and acts kinda janky.
-	grappleComponent->NumSegments = 10;
-	grappleComponent->NumSides = 8;
-	grappleComponent->SolverIterations = 4;
 
 	this->bounds = CalculateBounds();
 }
@@ -55,7 +46,6 @@ void APlayerPawn::Tick(float deltaTime)
 
 	HandleStandUp(deltaTime);
 
-	CastGrappleRaycast();
 	bPreviousGround = bIsGrounded;
 }
 
@@ -95,20 +85,15 @@ void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 void APlayerPawn::ShootReleasePress() 
 {
-	if (ShootGrapple())
+	if (grappleComponent->GetCanAttach())
 	{
-		// Check for a grapple reactor TODO should be dryer.
-		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
-		if (IsValid(reactor))
-			grappleComponent->grappleReactor = reactor;
-		else
-			grappleComponent->grappleReactor = nullptr;
+		grappleComponent->Attach();
 		SetState(UGrappleAirborneState::GetInstance());
 	}
 	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
 	{
 		// This detaches the grapple if the player clicks
-		// again and there is nothing within grapple range.
+		// again and there is nothing within grapple range
 		SetState(UWalkState::GetInstance());
 	}
 }
@@ -116,14 +101,9 @@ void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
 
 void APlayerPawn::InstantReelPress()
 {
-	if (ShootGrapple())
+	if (grappleComponent->GetCanAttach())
 	{
-		// Check for a grapple reactor TODO should be dryer.
-		AGrappleReactor* reactor = Cast<AGrappleReactor>(GrappleHitPoint.Actor);
-		if (IsValid(reactor))
-			grappleComponent->grappleReactor = reactor;
-		else
-			grappleComponent->grappleReactor = nullptr;
+		grappleComponent->Attach();
 		SetState(UGrappleInstantReelState::GetInstance());
 	}
 }
@@ -182,54 +162,6 @@ void APlayerPawn::HandleStandUp(float deltaTime)
 			}
 		}	
 	}
-}
-
-void APlayerPawn::CastGrappleRaycast()
-{
-	// Cast from the camera out to the grapple fire range.
-	FVector Start = camera->GetComponentLocation();
-	FVector End = Start + camera->GetForwardVector() * grappleComponent->grappleFireRange;
-	// Ignore collision with player.
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this);
-
-	// Is there a grapple surface within range?
-	if (GetWorld()->LineTraceSingleByChannel(GrappleHitPoint, Start, End, ECC_GameTraceChannel3, CollisionParams))
-	{
-		// Check for a grapple blocker that may be closer.
-		FHitResult blockerHitPoint;
-		bool isBlocked = false;
-		if (GetWorld()->LineTraceSingleByChannel(blockerHitPoint, Start, End, ECC_GameTraceChannel4, CollisionParams))
-		{
-			if ((blockerHitPoint.Location - Start).SizeSquared()
-				< (GrappleHitPoint.Location - Start).SizeSquared())
-			{
-				isBlocked = true;
-			}
-		}
-		// Set the state of attachability based on whether we are
-		// currently blocked.
-		if (isBlocked)
-			grappleCanAttach = false;
-		else
-		{
-			grappleCanAttach = true;
-			lastHoveredActor = GrappleHitPoint.GetActor();
-		}
-	}
-	else
-		grappleCanAttach = false;
-}
-
-bool APlayerPawn::ShootGrapple()
-{
-	if (grappleCanAttach)
-	{
-		// Attaches the cable component to the grappable object
-		grappleComponent->Attach(GrappleHitPoint.ImpactPoint, camera->GetComponentLocation(), GrappleHitPoint.GetActor());
-		return true;
-	}
-	return false;
 }
 
 #pragma endregion

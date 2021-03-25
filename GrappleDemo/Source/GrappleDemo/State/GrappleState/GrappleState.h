@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../MovementState.h"
-#include "../../GrappleComponent.h"
+#include "../../Player/GrappleGunComponent.h"
 #include "../../GrappleRendering/PolylineCylinderRenderer.h"
 #include "GrappleState.generated.h"
 
@@ -18,7 +18,7 @@ private:
 
 protected:
 	// Grapple References.
-	UGrappleComponent* grappleComponent;
+	UGrappleGunComponent* grappleComponent;
 	USceneComponent* grappleGunStart;
 	USceneComponent* grappleClaw;
 	APolylineCylinderRenderer* grapplePolyline;
