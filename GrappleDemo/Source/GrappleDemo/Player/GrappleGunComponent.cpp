@@ -48,6 +48,11 @@ FVector UGrappleGunComponent::GetAttachedLocation()
 		return FVector::ZeroVector;
 }
 
+FVector UGrappleGunComponent::GetGunEnd()
+{
+	return GunEnd->GetComponentLocation();
+}
+
 void UGrappleGunComponent::Attach()
 {
 	// Check to see if there is a grapple reactor
@@ -68,6 +73,7 @@ void UGrappleGunComponent::Attach()
 	Length = FVector::Distance(
 		CastingFromComponent->GetComponentLocation(),
 		LastHitLocation);
+	IsAttached = true;
 }
 
 void UGrappleGunComponent::Detach()
@@ -76,6 +82,9 @@ void UGrappleGunComponent::Detach()
 	AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
 	if (IsValid(reactor))
 		CurrentReactor->Unhook();
+	// Reset the grapple hook back to the gun
+	GrappleHookEnd->SetRelativeLocationAndRotation(FVector::ZeroVector, FQuat::Identity);
+	IsAttached = false;
 }
 
 void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
@@ -95,6 +104,11 @@ void UGrappleGunComponent::Reel(float value)
 void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// Update the grapple end if we are attached
+	if (IsAttached)
+	{
+		GrappleHookEnd->SetWorldLocation(GetAttachedLocation());
+	}
 	// Only cast if the cast from component has been properly initialized
 	if (CastingFromComponent != nullptr)
 	{

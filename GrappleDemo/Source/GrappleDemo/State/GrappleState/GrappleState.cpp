@@ -8,9 +8,7 @@ void UGrappleState::Initialize(APlayerPawn* pawn)
 	UState::Initialize(pawn);
 	// Retrieve the grapple components.
 	grappleComponent = pawn->grappleComponent;
-	grappleGunStart = pawn->grappleStart;
 	grapplePolyline = pawn->GrapplePolyline;
-	grappleClaw = pawn->grappleClaw;
 	// Set the number of raycasts used for the
 	// wrap solving at each wrap pivot.
 	WrapCheckIterations = 10;
@@ -25,14 +23,13 @@ void UGrappleState::OnStateEnter()
 	WrapActors.Empty();
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
-	grapplePolyline->PushPoint(grappleGunStart->GetComponentLocation());
+	grapplePolyline->PushPoint(grappleComponent->GetGunEnd());
 }
 void UGrappleState::OnStateExit()
 {
 	UMovementState::OnStateExit();
 	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
-	//grappleClaw->SetVisibility(true);
 }
 #pragma endregion
 #pragma region Solve Restraint
@@ -121,8 +118,6 @@ bool UGrappleState::SolveRestraint()
 			}
 		}
 	}
-	//Place the claw on the surface
-	//grappleClaw->SetVisibility(false);
 
 	// Update the grapple rope.
 	TArray<FVector> points;
@@ -130,7 +125,7 @@ bool UGrappleState::SolveRestraint()
 	points[0] = attachedLocation;
 	for (int i = 0; i < GlobalPivots.Num(); i++)
 		points[i + 1] = GlobalPivots[i];
-	points[points.Num() - 1] = grappleGunStart->GetComponentLocation();
+	points[points.Num() - 1] = grappleComponent->GetGunEnd();
 	grapplePolyline->SetAllPoints(points);
 	return true;
 }
@@ -141,7 +136,7 @@ void UGrappleState::SolveWrap()
 	// Grab key locations.
 	UWorld* world = grappleComponent->GetWorld();
 	FVector hookLocation = grappleComponent->GetAttachedLocation();
-	FVector gunTipLocation = grappleGunStart->GetComponentLocation();
+	FVector gunTipLocation = grappleComponent->GetGunEnd();
 	FVector camLocation = player->camera->GetComponentLocation();
 	// Create fields for raycasts.
 	FHitResult GrappleHitPoint;

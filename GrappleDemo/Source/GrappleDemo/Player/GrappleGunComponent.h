@@ -21,12 +21,21 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// The hook object that lodges into the hooked location
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	USceneComponent* GrappleHookEnd;
+	// Defines where the grapple hook end returns to
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	USceneComponent* GunEnd;
+
 	// The starting point for the grapple raycast
 	USceneComponent* CastingFromComponent;
 	// The current length of the grapple cable
 	float Length;
 	// Whether the grapple is currently hovered on a grapple surface
 	bool CanAttach;
+	// True while the grapple hook is attached
+	bool IsAttached;
 	// The most recent actor hit by a cast to attach to
 	AActor* LastHitActor;
 	// The location in 3D space of the last cast hit
@@ -59,6 +68,8 @@ public:
 	float GetLength();
 	// Gets the attached location in world space
 	FVector GetAttachedLocation();
+	// Gets the end of the gun barrel where the rope starts
+	FVector GetGunEnd();
 	// Attaches the grapple to the most recent grapple point
 	void Attach();
 	// Detaches from the current grapple point

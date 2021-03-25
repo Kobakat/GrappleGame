@@ -19,8 +19,6 @@ private:
 protected:
 	// Grapple References.
 	UGrappleGunComponent* grappleComponent;
-	USceneComponent* grappleGunStart;
-	USceneComponent* grappleClaw;
 	APolylineCylinderRenderer* grapplePolyline;
 	// Common grapple leash behaviour.
 	bool SolveRestraint();

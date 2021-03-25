@@ -72,14 +72,10 @@ public:
 		float crouchHeightScale;
 	
 	//=================Grapple================//
+
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
 		USceneComponent* gun;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleStart;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClawOrigin;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClaw;
+
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
