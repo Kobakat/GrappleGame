@@ -102,7 +102,7 @@ bool UGrappleState::SolveRestraint()
 				// Get the current player velocity, updating it to reflect
 				// the pulling force of the grapple rope.
 				FVector velocity = player->collider->GetPhysicsLinearVelocity()
-					/*+ tensileDelta / grappleComponent->GetWorld()->DeltaTimeSeconds*/;
+					+ tensileDelta / grappleComponent->GetWorld()->DeltaTimeSeconds;
 				FVector tangentPoint = player->camera->GetComponentLocation();
 
 				// Is the velocity pointing outwards?

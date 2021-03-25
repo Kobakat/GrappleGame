@@ -44,6 +44,7 @@ void APlayerPawn::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+
 	if (this->stateMachine != nullptr) 
 	{
 		stateMachine->Tick(deltaTime);
