@@ -8,7 +8,9 @@
 APolylineCylinderRenderer::APolylineCylinderRenderer()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+
+	SetTickGroup(ETickingGroup::TG_PostPhysics);
 }
 
 void APolylineCylinderRenderer::SetCylinder(int endIndex, FVector start, FVector end)
@@ -134,6 +136,14 @@ bool APolylineCylinderRenderer::PopPoint()
 		if (i > 1)
 			Cylinders[i - 2]->SetHiddenInGame(true);
 		return true;
+	}
+}
+
+void APolylineCylinderRenderer::Tick(float deltaTime)
+{
+	if (currentEnd != nullptr)
+	{
+		SetLastPoint(currentEnd->GetComponentLocation());
 	}
 }
 
