@@ -14,13 +14,15 @@ class GRAPPLEDEMO_API UPlayerCylinder : public UStaticMeshComponent
 	
 
 public:
-	UPROPERTY(EditAnywhere, Category = "Collider")
+	UPlayerCylinder();
+
+	UPROPERTY(EditAnywhere, Category = "Materials")
 		UPhysicalMaterial* moveMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
+	UPROPERTY(EditAnywhere, Category = "Materials")
 		UPhysicalMaterial* stopMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
+	UPROPERTY(EditAnywhere, Category = "Materials")
 		UPhysicalMaterial* runSlideMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
+	UPROPERTY(EditAnywhere, Category = "Materials")
 		UPhysicalMaterial* noFricMat;
 
 	FVector previousVelocity;

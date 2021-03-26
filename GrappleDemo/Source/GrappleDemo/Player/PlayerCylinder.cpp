@@ -3,7 +3,7 @@
 
 UPlayerCylinder::UPlayerCylinder() { PrimaryComponentTick.bCanEverTick = true; }
 
-void UPlayerCylinder::BeginPlay() 
+void UPlayerCylinder::BeginPlay()
 {
 	player = Cast<APlayerPawn>(GetAttachmentRootActor());
 	SetRelativeScale3D(FVector(1, 1, player->standHeightScale));
@@ -74,42 +74,46 @@ void UPlayerCylinder::HandleStandUp(float deltaTime)
 	}
 }
 
-bool UPlayerCylinder::CheckIfGrounded() 
+bool UPlayerCylinder::CheckIfGrounded()
 {
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	const float radius = bounds.X;
-	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
+
+	FCollisionShape box = FCollisionShape::MakeBox(FVector(bounds.X, bounds.Y, 0.1f));
 
 #if WITH_EDITOR
 
-	DrawDebugSphere(
+	DrawDebugBox(
 		player->GetWorld(),
-		player->GetActorLocation(),
-		radius,
-		10,
+		GetComponentLocation(),
+		box.GetExtent(),
 		FColor::Red,
 		false,
 		0.05f);
+
+		
 #endif
 
 	bool bHitGround = player->GetWorld()->SweepMultiByChannel(
 		GroundHits,
-		player->GetActorLocation(),
-		player->GetActorLocation(),
+		GetComponentLocation(),
+		GetComponentLocation(),
 		FQuat::Identity,
-		ECC_Visibility,
-		cap,
+		ECC_GameTraceChannel1,
+		box,
 		param);
 
 	if (bHitGround)
 	{
+		const float colliderZ = GetComponentLocation().Z;
 		//If we hit anything iterate through each hit returned
 		for (FHitResult hit : GroundHits)
 		{
+			
 			//If the hit was level with the bottom of the collider
-			if (hit.ImpactPoint.Z == GetComponentLocation().Z)
+			if (hit.ImpactPoint.Z >= colliderZ - .1f ||
+				hit.ImpactPoint.Z <= colliderZ + .1f)
 			{
 				//Lets see if the normal of that surface is within our defined slope limit
 				const float angle =
@@ -127,10 +131,10 @@ bool UPlayerCylinder::CheckIfGrounded()
 					return true;
 				}
 			}
-		}
-
-		return false;
+		}	
 	}
+
+	return false;
 }
 
 bool UPlayerCylinder::CheckIfLedgeGrabEligible()
@@ -286,7 +290,7 @@ bool UPlayerCylinder::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 	return false;
 }
 
-bool UPlayerCylinder::CheckIfTryingToStand() 
+bool UPlayerCylinder::CheckIfTryingToStand()
 {
 
 		FCollisionQueryParams param;

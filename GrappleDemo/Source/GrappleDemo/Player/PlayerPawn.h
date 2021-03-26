@@ -31,7 +31,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Camera")
 		Ucringetest* camera;
-	UPROPERTY(VisibleAnywhere, Category = "Collider")
+	UPROPERTY(EditAnywhere, Category = "Collider")
 		UPlayerCylinder* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
