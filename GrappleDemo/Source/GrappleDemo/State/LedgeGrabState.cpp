@@ -13,6 +13,12 @@ ULedgeGrabState* ULedgeGrabState::GetInstance()
 	return instance;
 }
 
+FHitResult ULedgeGrabState::ledge;
+void ULedgeGrabState::SetLedge(FHitResult newLedge)
+{
+	ledge = newLedge;
+}
+
 #pragma region State Events
 
 void ULedgeGrabState::Initialize(APlayerPawn* pawn)
@@ -47,8 +53,8 @@ void ULedgeGrabState::InitializePositionValues()
 
 	//Get the height the player is climbing to
 	//TODO this will not work if the ledge moves up and down
-	FVector ledgeBounds = player->LedgeHitPoint.Component->Bounds.BoxExtent;
-	ledgeBounds += player->LedgeHitPoint.Actor.Get()->GetActorLocation();
+	FVector ledgeBounds = ledge.Component->Bounds.BoxExtent;
+	ledgeBounds += ledge.Actor.Get()->GetActorLocation();
 	this->liftHeight = ledgeBounds.Z;
 
 	//Get the direction to push the player
@@ -60,7 +66,7 @@ void ULedgeGrabState::InitializePositionValues()
 void ULedgeGrabState::InitializeCameraValues()
 {
 	FVector camLoc = player->camera->GetComponentLocation();
-	FVector normalLoc = player->LedgeHitPoint.ImpactPoint;
+	FVector normalLoc = ledge.ImpactPoint;
 
 	this->lookCorner = FVector(normalLoc.X, normalLoc.Y, liftHeight);
 	this->lookDirStart = player->camera->GetForwardVector();
@@ -164,7 +170,7 @@ void ULedgeGrabState::TurnCamera(float deltaTime)
 void ULedgeGrabState::TiltCamera(float deltaTime)
 {
 	FVector camForward = player->camera->GetForwardVector();
-	FVector pushNormal = player->LedgeHitPoint.ImpactNormal * -1;
+	FVector pushNormal = ledge.ImpactNormal * -1;
 	FRotator stepRotation = FMath::VInterpNormalRotationTo(camForward, pushNormal, deltaTime, player->camera->ledgeTiltSpeed).Rotation();
 	player->camera->SetRelativeRotation(stepRotation);
 
