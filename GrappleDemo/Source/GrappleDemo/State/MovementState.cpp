@@ -65,10 +65,21 @@ void UMovementState::CheckIfGrounded()
 		player->bPreviousGrounded != player->bGrounded)
 	{
 		FVector velocity = player->collider->GetPhysicsLinearVelocity();
-			player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
+		player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
 	}
+	
+	else
+	{
+		float newZ = 0;
 
-	player->bPreviousGrounded = player->bGrounded;
+		if (player->collider->CheckIfStepUp(newZ))
+		{
+			FVector velocity = player->collider->GetPhysicsLinearVelocity();
+			FVector loc = player->collider->GetRelativeLocation();
+			player->collider->SetRelativeLocation(FVector(loc.X + velocity.X * 0.01f, loc.Y + velocity.Y * 0.01f, newZ + .1f)); //HACK replace with deltaTime step
+			player->collider->SetPhysicsLinearVelocity(player->collider->previousVelocity);
+		}
+	}
 }
 
 void UMovementState::ClampPlayerVelocity(float max)
@@ -108,7 +119,6 @@ void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 	if (player->tryingToJump && player->bGrounded)
 	{
 		player->tryingToJump = false;
-		player->bGrounded = false;
 		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
 
 		if (bCanPlayerLedgeGrab && player->collider->CheckIfLedgeGrabEligible())

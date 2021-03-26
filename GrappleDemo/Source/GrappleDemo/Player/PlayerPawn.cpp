@@ -49,6 +49,8 @@ void APlayerPawn::Tick(float deltaTime)
 	}
 
 	grappleCanAttach = grappleComponent->GetCanAttach();
+	bPreviousGrounded = bGrounded;
+	collider->previousVelocity = collider->GetPhysicsLinearVelocity();
 }
 
 #pragma endregion

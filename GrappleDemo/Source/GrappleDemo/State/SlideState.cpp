@@ -4,6 +4,8 @@
 USlideState::USlideState() { }
 USlideState::~USlideState() { }
 USlideState* USlideState::instance;
+FHitResult USlideState::slide;
+
 USlideState* USlideState::GetInstance()
 {
 	if (instance == nullptr)
@@ -11,6 +13,11 @@ USlideState* USlideState::GetInstance()
 		instance = NewObject<USlideState>();
 	}
 	return instance;
+}
+
+void USlideState::SetSlide(FHitResult newSlide)
+{
+	slide = newSlide;
 }
 
 #pragma region State Events
@@ -38,10 +45,10 @@ void USlideState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	HandleCrouchDown(deltaTime);
-	HandleCameraTransition(deltaTime);
+	//HandleCameraTransition(deltaTime);
 	HandleJump(player->slideJumpForce, false);
 	PlayerMove(player->slideAcceleration, 0);
-	
+	PlayerLook(deltaTime);
 	/*if (!bIsTransitioning)
 	{
 		PlayerMove(player->slideAcceleration, 0);
@@ -77,11 +84,62 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 
 void USlideState::CheckIfGrounded()
 {
-	UMovementState::CheckIfGrounded();
+	FHitResult hitSlide;
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
 
-	if (!player->collider->bOnSlide)
+	FVector boxBounds = FVector(
+		player->bounds.X, 
+		player->bounds.Y, 
+		30.f);
+
+	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
+
+#if WITH_EDITOR
+	DrawDebugBox(
+		player->GetWorld(), 
+		player->GetActorLocation(),
+		boxBounds, 
+		FColor::Red, 
+		false, 
+		0.05f);
+#endif
+
+	bool bHitSlide = player->GetWorld()->SweepSingleByChannel(
+		slide,
+		player->GetActorLocation(),
+		player->GetActorLocation(),
+		FQuat::Identity,
+		ECC_GameTraceChannel1,
+		box,
+		param);
+
+	if (bHitSlide)
+	{
+		FName struckProfile = hitSlide.Component->GetCollisionProfileName();
+
+		if (struckProfile == FName(TEXT("Slide")))
+		{
+			slideNormal = hitSlide.Normal;
+			slideNormal.Z = 0;
+			slideNormal.Normalize(0.001);
+			player->collider->bOnSlide = true;
+			player->bGrounded = true;
+		}
+
+		else
+		{
+			player->SetState(UCrouchState::GetInstance());
+			player->bGrounded = true;
+			player->collider->bOnSlide = false;
+		}
+	}
+
+	else
 	{
 		player->SetState(UCrouchState::GetInstance());
+		player->bGrounded = false;
+		player->collider->bOnSlide = false;
 	}
 }
 

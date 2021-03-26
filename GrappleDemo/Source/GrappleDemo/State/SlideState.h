@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "MovementState.h"
+#include "Engine/Enginetypes.h"
 #include "SlideState.generated.h"
 
 
@@ -22,8 +23,11 @@ public:
 	virtual void Initialize(APlayerPawn* pawn) override;
 	virtual void PlayerMove(float accel, float airControlFactor) override;
 	virtual void CheckIfGrounded() override;
+
+	void SetSlide(FHitResult newSlide);
 private:
 	static USlideState* instance;
+	static FHitResult slide;
 	void HandleCameraTransition(float deltaTime);
 	void HandleCrouchDown(float deltaTime);
 

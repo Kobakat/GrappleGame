@@ -13,7 +13,6 @@ void UPlayerCylinder::BeginPlay()
 void UPlayerCylinder::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	HandleStandUp(deltaTime);
-	previousVelocity = GetPhysicsLinearVelocity();
 }
 
 
@@ -79,8 +78,11 @@ bool UPlayerCylinder::CheckIfGrounded()
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-
-	FCollisionShape box = FCollisionShape::MakeBox(FVector(bounds.X, bounds.Y, 0.1f));
+	const float boxZ = bOnSlide ? 10 : 0.5f;
+	FCollisionShape box = FCollisionShape::MakeBox(FVector(
+		bounds.X * 1.01f,
+		bounds.Y * 1.01f,
+		boxZ));
 
 #if WITH_EDITOR
 
@@ -109,31 +111,37 @@ bool UPlayerCylinder::CheckIfGrounded()
 		const float colliderZ = GetComponentLocation().Z;
 		//If we hit anything iterate through each hit returned
 		for (FHitResult hit : GroundHits)
-		{
-			
+		{	
 			//If the hit was level with the bottom of the collider
-			if (hit.ImpactPoint.Z >= colliderZ - .1f ||
-				hit.ImpactPoint.Z <= colliderZ + .1f)
+			if (hit.ImpactPoint.Z >= colliderZ - .01f ||
+				hit.ImpactPoint.Z <= colliderZ + .01f)
 			{
 				//Lets see if the normal of that surface is within our defined slope limit
 				const float angle =
 					FMath::RadiansToDegrees(
 						FMath::Acos(
 							FVector::DotProduct(FVector::UpVector, hit.ImpactNormal)));
-
+				
 				if (angle <= player->maxSlopeAngle)
 				{
 					if (hit.Component->GetCollisionProfileName() == FName(TEXT("Slide")))
+					{
 						bOnSlide = true;
-					else
-						bOnSlide = false;
+						USlideState::GetInstance()->SetSlide(hit);
+						return true;
+					}
 
-					return true;
-				}
+					else 
+					{
+						bOnSlide = false;
+						return true;
+					}				
+				}				
 			}
 		}	
 	}
 
+	bOnSlide = false;
 	return false;
 }
 
@@ -292,30 +300,49 @@ bool UPlayerCylinder::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 
 bool UPlayerCylinder::CheckIfTryingToStand()
 {
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
 
-		FCollisionQueryParams param;
-		param.AddIgnoredActor(player);
+	FCollisionShape box = FCollisionShape::MakeBox(player->collider->bounds);
 
-		FCollisionShape box = FCollisionShape::MakeBox(player->collider->bounds);
-
-		bool bHitCeiling = player->GetWorld()->SweepSingleByChannel(
-			player->collider->CrouchHitPoint,
-			player->GetActorLocation() + FVector(0, 0, player->collider->bounds.Z) + FVector::UpVector,
-			player->GetActorLocation() + FVector(0, 0, player->collider->bounds.Z) + FVector::UpVector,
-			FQuat::Identity,
-			ECC_Visibility,
-			box,
-			param);
+	bool bHitCeiling = player->GetWorld()->SweepSingleByChannel(
+		player->collider->CrouchHitPoint,
+		player->GetActorLocation() + FVector(0, 0, player->collider->bounds.Z) + FVector::UpVector,
+		player->GetActorLocation() + FVector(0, 0, player->collider->bounds.Z) + FVector::UpVector,
+		FQuat::Identity,
+		ECC_Visibility,
+		box,
+		param);
 
 #if WITH_EDITOR
-		DrawDebugBox(
-			player->GetWorld(), 
-			player->GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector, 
-			bounds,
-			FColor::Purple, 
-			false, 
-			.05f);
+	DrawDebugBox(
+		player->GetWorld(), 
+		player->GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector, 
+		bounds,
+		FColor::Purple, 
+		false, 
+		.05f);
 #endif
 
-		return bHitCeiling;
+	return bHitCeiling;
+}
+
+bool UPlayerCylinder::CheckIfStepUp(float& outHeight) 
+{
+	if (player->bGrounded && !GetPhysicsLinearVelocity().IsNearlyZero(1.f))
+	{
+		for (FHitResult hit : GroundHits)
+		{
+			const float hitHeight = hit.Component->Bounds.BoxExtent.Z + hit.Component->GetComponentLocation().Z;
+			
+			if (hitHeight <= GetComponentLocation().Z + player->stepHeight
+				&& hitHeight >= GetComponentLocation().Z + .01f)
+			{
+				outHeight = hitHeight;
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
