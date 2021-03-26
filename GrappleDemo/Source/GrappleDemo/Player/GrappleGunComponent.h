@@ -56,10 +56,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Grapple Gun")
 	float FireRange;
 	// The minimum cable length
-	UPROPERTY(EditAnywhere, Category = "Grapple Gun")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	float MinLength;
 	// The maximum cable length
-	UPROPERTY(EditAnywhere, Category = "Grapple Gun")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	float MaxLength;
 	// Actors that are ignored in the grapple raycast
 	TArray<AActor*> IgnoredActors;
@@ -69,6 +69,7 @@ public:
 	// Gets whether the grapple gun can currently attach
 	bool GetCanAttach();
 	// Gets the current length of the cable
+	UFUNCTION(BlueprintCallable)
 	float GetLength();
 	// Gets the attached location in world space
 	FVector GetAttachedLocation();
