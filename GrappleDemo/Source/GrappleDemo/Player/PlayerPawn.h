@@ -10,6 +10,7 @@
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
+#include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
 UCLASS()
@@ -23,12 +24,11 @@ public:
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	AGrappleReactor* grappleReactor;
+	UGrappleGunComponent* grappleComponent;
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
 	
-	FHitResult GrappleHitPoint;
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
 	FHitResult LedgeHitPoint;
@@ -72,16 +72,10 @@ public:
 		float crouchHeightScale;
 	
 	//=================Grapple================//
+
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
 		USceneComponent* gun;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleStart;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClawOrigin;
-	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
-		USceneComponent* grappleClaw;
-	UPROPERTY(EditAnywhere, Category = "Grapple")
-		UGrappleComponent* grappleComponent;
+
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
@@ -227,13 +221,4 @@ private:
 	void ShootReleaseRelease();
 	void InstantReelPress();
 #pragma endregion
-
-#pragma region Grapple Functions
-	void CastGrappleRaycast();
-	bool ShootGrapple();
-#pragma endregion
-	// This needs to be stored, otherwise
-	// the grapple reactor is set on hover.
-	// This allows it to only cast once on input.
-	AActor* lastHoveredActor;
 };

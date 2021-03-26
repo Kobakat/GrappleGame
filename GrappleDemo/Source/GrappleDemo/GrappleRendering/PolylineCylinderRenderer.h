@@ -66,6 +66,9 @@ public:
 	// Returns false if the polyline contains zero points.
 	bool PopPoint();
 
+	USceneComponent* currentEnd;
+	virtual void Tick(float deltaTime) override;
+
 	// Sets the radius of the polyline.
 	void SetRadius(float radius);
 	// Sets the maximum point count for this polyline.
