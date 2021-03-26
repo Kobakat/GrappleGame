@@ -7,6 +7,7 @@
 APlayerPawn::APlayerPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
 	bUseControllerRotationYaw = false;

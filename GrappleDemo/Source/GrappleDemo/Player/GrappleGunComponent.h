@@ -25,8 +25,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	USceneComponent* GrappleHookEnd;
 	// Defines where the grapple hook end returns to
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
-	USceneComponent* GunEnd;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	//USceneComponent* GunEnd;
 
 	// The starting point for the grapple raycast
 	USceneComponent* CastingFromComponent;
@@ -48,6 +48,10 @@ protected:
 	AGrappleReactor* CurrentReactor;
 
 public:	
+	// Defines where the grapple hook end returns to
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	USceneComponent* GunEnd;
+
 	// The maximum fire range of the grapple
 	UPROPERTY(EditAnywhere, Category = "Grapple Gun")
 	float FireRange;
