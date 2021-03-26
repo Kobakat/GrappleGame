@@ -21,7 +21,7 @@ public:
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 	virtual void PlayerMove(float accel, float airControlFactor) override;
-	virtual void CheckIfGrounded(float overrideHeight) override;
+	virtual void CheckIfGrounded() override;
 private:
 	static USlideState* instance;
 	void HandleCameraTransition(float deltaTime);

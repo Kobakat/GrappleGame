@@ -30,22 +30,23 @@ void USlideState::OnStateEnter()
 	camTimer = 0;
 	bIsTransitioning = true;
 	bIsCrouching = true;
-	player->bNeedsToStand = false;
-	player->collider->SetPhysMaterialOverride(player->noFricMat);
+	player->collider->bNeedsToStand = false;
+	player->collider->SetPhysMaterialOverride(player->collider->noFricMat);
 }
 
 void USlideState::StateTick(float deltaTime)
 {
-	CheckIfGrounded(player->slideGroundCheckOverride);
+	CheckIfGrounded();
 	HandleCrouchDown(deltaTime);
 	HandleCameraTransition(deltaTime);
 	HandleJump(player->slideJumpForce, false);
-
-	if (!bIsTransitioning)
+	PlayerMove(player->slideAcceleration, 0);
+	
+	/*if (!bIsTransitioning)
 	{
 		PlayerMove(player->slideAcceleration, 0);
 		PlayerLook(deltaTime);
-	}
+	}*/
 
 	ClampPlayerVelocity(player->slideMaxSpeed);
 
@@ -56,8 +57,7 @@ void USlideState::OnStateExit()
 {
 	crouchTimer = 0;
 	camTimer = 0;
-	player->bNeedsToStand = true;
-	player->collider->SetPhysMaterialOverride(player->noFricMat);
+	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
 }
 
 #pragma endregion
@@ -75,59 +75,13 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 	}
 }
 
-void USlideState::CheckIfGrounded(float overrideHeight)
+void USlideState::CheckIfGrounded()
 {
-	FCollisionQueryParams param;
-	param.AddIgnoredActor(player);
+	UMovementState::CheckIfGrounded();
 
-	float radius = player->bounds.X * .95f;
-
-	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
-
-#if WITH_EDITOR
-
-	DrawDebugSphere(
-		player->GetWorld(),
-		player->GetActorLocation(),
-		radius,
-		5,
-		FColor::Red,
-		false,
-		0.05f);
-#endif
-
-	bool bHitSlide= player->GetWorld()->SweepSingleByChannel(
-		player->GroundHitPoint,
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
-		FQuat::Identity,
-		ECC_Visibility,
-		cap,
-		param);
-
-	if (bHitSlide)
-	{
-		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
-
-		if (struckProfile == FName(TEXT("Slide")))
-		{
-			slideNormal = player->GroundHitPoint.Normal;
-			slideNormal.Z = 0;
-			slideNormal.Normalize(0.001);
-			player->bIsGrounded = true;
-		}
-		
-		else
-		{
-			player->SetState(UCrouchState::GetInstance());
-			player->bIsGrounded = true;
-		}
-	}
-
-	else
+	if (!player->collider->bOnSlide)
 	{
 		player->SetState(UCrouchState::GetInstance());
-		player->bIsGrounded = false;
 	}
 }
 
@@ -157,7 +111,7 @@ void USlideState::HandleCrouchDown(float deltaTime)
 
 void USlideState::HandleCameraTransition(float deltaTime)
 {
-	if (bIsTransitioning)
+	/*if (bIsTransitioning)
 	{
 		float frac = camTimer / player->camera->slideTransitionTime;
 		FRotator newCamRotator = FMath::Lerp(player->camera->GetRelativeRotation(), slideNormal.Rotation(), frac);
@@ -167,7 +121,7 @@ void USlideState::HandleCameraTransition(float deltaTime)
 		
 		if (frac >= 1)
 			bIsTransitioning = false;
-	}
+	}*/
 }
 
 #pragma endregion

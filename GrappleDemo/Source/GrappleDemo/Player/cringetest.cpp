@@ -68,7 +68,7 @@ void Ucringetest::UpdateShakeState()
 {
 	if (player->state == UWalkState::GetInstance() || player->state == URunState::GetInstance())
 	{
-		if (player->bIsGrounded && !player->moveVector.IsNearlyZero(0.05f))
+		if (player->bGrounded && !player->moveVector.IsNearlyZero(0.05f))
 		{
 			//We should only apply shake when the player is both grounded and moving
 			if (shakeState != Shaking)

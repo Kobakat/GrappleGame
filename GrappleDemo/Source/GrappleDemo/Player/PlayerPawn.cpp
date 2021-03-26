@@ -12,11 +12,11 @@ APlayerPawn::APlayerPawn()
 
 	bUseControllerRotationYaw = false;
 
-	collider = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Collider"));
+	collider = CreateDefaultSubobject<UPlayerCylinder>(TEXT("Collider"));
 	collider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));
-	camera->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	camera->AttachToComponent(collider, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 }
 
 void APlayerPawn::BeginPlay()
@@ -36,9 +36,6 @@ void APlayerPawn::BeginPlay()
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
-	this->collider->SetRelativeScale3D(FVector(1, 1, standHeightScale));
-
-	this->bounds = CalculateBounds();
 }
 
 void APlayerPawn::Tick(float deltaTime)
@@ -51,11 +48,7 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
-	HandleStandUp(deltaTime);
-
 	grappleCanAttach = grappleComponent->GetCanAttach();
-
-	bPreviousGround = bIsGrounded;
 }
 
 #pragma endregion
@@ -125,58 +118,5 @@ void APlayerPawn::SetState(UState* newState)
 {
 	stateMachine->SetState(newState);
 }
-
-void APlayerPawn::HandleStandUp(float deltaTime)
-{
-	if (bNeedsToStand)
-	{
-		FCollisionQueryParams param;
-		param.AddIgnoredActor(this);
-
-		FCollisionShape box = FCollisionShape::MakeBox(bounds);
-
-		bool bHitCeiling = GetWorld()->SweepSingleByChannel(
-			CrouchHitPoint,
-			GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector,
-			GetActorLocation() + FVector(0, 0, bounds.Z) + FVector::UpVector,
-			FQuat::Identity,
-			ECC_Visibility,
-			box,
-			param);
-
-		
-
-		if (bHitCeiling) 
-		{
-			SetState(UCrouchState::GetInstance());
-		}
-
-		else 
-		{
-			const float currentScale = collider->GetRelativeScale3D().Z;
-			gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
-			if (currentScale != standHeightScale)
-			{
-				standUpTimer += deltaTime;
-				const float frac = FMath::Clamp(standUpTimer / crouchTransitionTime, 0.f, 1.f);
-				const float newScale = FMath::Lerp(currentScale, standHeightScale, frac);
-
-				collider->SetRelativeScale3D(FVector(1, 1, newScale));
-			}
-
-			else
-			{
-				bNeedsToStand = false;
-				standUpTimer = 0;
-			}
-		}	
-	}
-}
-
 #pragma endregion
-
-FVector APlayerPawn::CalculateBounds() 
-{
-	return collider->GetStaticMesh()->GetBounds().BoxExtent;
-}
 

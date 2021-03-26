@@ -3,13 +3,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "DrawDebugHelpers.h"
-#include "Engine/StaticMesh.h"
 #include "cringetest.h"
 #include "Components/InputComponent.h"
-#include "Components/StaticMeshComponent.h"
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
+#include "PlayerCylinder.h"
 #include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
@@ -41,22 +40,11 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Player Camera")
 		Ucringetest* camera;
 	UPROPERTY(EditAnywhere, Category = "Collider")
-		UStaticMeshComponent* collider;
+		UPlayerCylinder* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
 
 #pragma region Designer Props
-
-	//================Collider================//
-	
-	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* moveMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* stopMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* runSlideMat;
-	UPROPERTY(EditAnywhere, Category = "Collider")
-		UPhysicalMaterial* noFricMat;
 
 	//================General=================//
 
@@ -64,13 +52,14 @@ public:
 		float airborneMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
-	UPROPERTY(VisibleAnywhere, Category = "Player Stats | General")
-		float groundCheckDistance = 5;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float standHeightScale;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float crouchHeightScale;
-	
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float stepHeight;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
+		float maxSlopeAngle;
 	//=================Grapple================//
 
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
@@ -175,7 +164,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		FString stateName;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
-		bool bIsGrounded;
+		bool bGrounded;
+	bool bPreviousGrounded;
 
 	//===============Grapple=Wrap==============//
 
@@ -202,9 +192,7 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	void HandleStandUp(float deltaTime);
-	FVector CalculateBounds();
-
+	
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
