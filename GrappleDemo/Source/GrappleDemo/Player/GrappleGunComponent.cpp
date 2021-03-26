@@ -104,52 +104,63 @@ void UGrappleGunComponent::Reel(float value)
 	Length = FMath::Clamp(Length + value, MinLength, MaxLength);
 }
 
+void UGrappleGunComponent::SetIsRendered(bool rendered)
+{
+	isRendered = rendered;
+	if (!isRendered)
+		CanAttach = false;
+}
+
 // Called every frame
 void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	// Update the grapple end if we are attached
-	if (IsAttached)
+	// Only run raycasting code if the gun is rendered/active
+	if (isRendered)
 	{
-		GrappleHookEnd->SetWorldLocation(GetAttachedLocation());
-	}
-	// Only cast if the cast from component has been properly initialized
-	if (CastingFromComponent != nullptr)
-	{
-		// Create a cast along the line of the grapple
-		FVector Start = CastingFromComponent->GetComponentLocation();
-		FVector End = Start + CastingFromComponent->GetForwardVector() * FireRange;
-		// Ignore collision with other player colliders
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActors(IgnoredActors);
-		// Create space for the cast result
-		FHitResult Result;
-
-		// Is there a grapple surface within range
-		if (GetWorld()->LineTraceSingleByChannel(
-			Result, Start, End, ECC_GameTraceChannel3, Params))
+		// Update the grapple end if we are attached
+		if (IsAttached)
 		{
-			// Check for a grapple blocker that may be closer
-			FHitResult BlockerResult;
+			GrappleHookEnd->SetWorldLocation(GetAttachedLocation());
+		}
+		// Only cast if the cast from component has been properly initialized
+		if (CastingFromComponent != nullptr)
+		{
+			// Create a cast along the line of the grapple
+			FVector Start = CastingFromComponent->GetComponentLocation();
+			FVector End = Start + CastingFromComponent->GetForwardVector() * FireRange;
+			// Ignore collision with other player colliders
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActors(IgnoredActors);
+			// Create space for the cast result
+			FHitResult Result;
+
+			// Is there a grapple surface within range
 			if (GetWorld()->LineTraceSingleByChannel(
-				BlockerResult, Start, End, ECC_GameTraceChannel4, Params)
-				&&
-				// Is the blocking object closer
-				(BlockerResult.Location - Start).SizeSquared()
-				< (Result.Location - Start).SizeSquared())
+				Result, Start, End, ECC_GameTraceChannel3, Params))
 			{
-				// There is a closer object blocking the grapple
-				CanAttach = false;
+				// Check for a grapple blocker that may be closer
+				FHitResult BlockerResult;
+				if (GetWorld()->LineTraceSingleByChannel(
+					BlockerResult, Start, End, ECC_GameTraceChannel4, Params)
+					&&
+					// Is the blocking object closer
+					(BlockerResult.Location - Start).SizeSquared()
+					< (Result.Location - Start).SizeSquared())
+				{
+					// There is a closer object blocking the grapple
+					CanAttach = false;
+				}
+				else
+				{
+					// We can currently attach
+					CanAttach = true;
+					LastHitActor = Result.GetActor();
+					LastHitLocation = Result.Location;
+				}
 			}
 			else
-			{
-				// We can currently attach
-				CanAttach = true;
-				LastHitActor = Result.GetActor();
-				LastHitLocation = Result.Location;
-			}
+				CanAttach = false;
 		}
-		else
-			CanAttach = false;
 	}
 }

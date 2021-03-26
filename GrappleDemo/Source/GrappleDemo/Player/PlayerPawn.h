@@ -35,7 +35,7 @@ public:
 
 	FVector bounds;
 
-	UPROPERTY(VisibleAnywhere, Category = "Player Camera")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Camera")
 		Ucringetest* camera;
 	UPROPERTY(VisibleAnywhere, Category = "Collider")
 		UPlayerCylinder* collider;
@@ -171,10 +171,20 @@ public:
 
 	FVector startLocation;
 
+	// Gets whether the player can currently grapple
+	UFUNCTION(BlueprintCallable)
+	bool GetHasGrapple();
+	// Sets whether the player can currently grapple
+	UFUNCTION(BlueprintCallable)
+	void SetHasGrapple(bool HasGrapple);
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
+
+	UPROPERTY(EditAnywhere, Category = "Initial Player State")
+	bool hasGrapple;
 	
 #pragma region Input Functions
 	void MoveInputX(float value);

@@ -106,7 +106,7 @@ void USlideState::CheckIfGrounded()
 #endif
 
 	bool bHitSlide = player->GetWorld()->SweepSingleByChannel(
-		slide,
+		hitSlide,
 		player->GetActorLocation(),
 		player->GetActorLocation(),
 		FQuat::Identity,
