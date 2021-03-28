@@ -24,19 +24,19 @@ void URunSlideState::Initialize(APlayerPawn* pawn)
 void URunSlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->collider->SetPhysMaterialOverride(player->collider->runSlideMat);
+	player->collider->SetPhysMaterialOverride(player->runSlideMat);
 	player->collider->AddForce(player->collider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 1k to keep designer values small
 	
 	bIsCrouching = true;
 	crouchTimer = 0;
-	player->collider->bNeedsToStand = false;
+	player->bNeedsToStand = false;
 }
 
 void URunSlideState::StateTick(float deltaTime)
 {
 	HandleCrouchDown(deltaTime);
 	CheckIfSlideComplete();
-	CheckIfGrounded();
+	CheckIfGrounded(player->runSlideGroundCheckOverride);
 	HandleJump(player->runSlideJumpForce, false);
 	PlayerLook(deltaTime);
 	ClampPlayerVelocity(player->runSlideMaxSpeed);
@@ -46,7 +46,7 @@ void URunSlideState::StateTick(float deltaTime)
 
 void URunSlideState::OnStateExit()
 {
-	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
+	player->collider->SetPhysMaterialOverride(player->moveMat);
 	bIsCrouching = false;
 	crouchTimer = 0;
 }
@@ -59,7 +59,7 @@ void URunSlideState::CheckIfSlideComplete()
 	if (!bIsCrouching)
 	{
 		//Passing to crouch so we don't have to reimplement the logic for standing up in enclosed spaces rules
-		if (!player->bGrounded || player->collider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
+		if (!player->bIsGrounded || player->collider->GetPhysicsLinearVelocity().Size() <= player->runSlideExitVelocity)
 		{
 			player->SetState(UCrouchState::GetInstance());
 		}

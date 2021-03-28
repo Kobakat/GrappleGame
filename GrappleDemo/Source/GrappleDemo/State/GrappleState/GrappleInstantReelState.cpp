@@ -57,7 +57,7 @@ void UGrappleInstantReelState::CheckStateChange()
 void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {
 	grappleComponent->Reel(-player->instantGrappleSpeed * 5.F * deltaTime);
-	if (grappleComponent->GetLength() < player->reelCompleteDistance)
+	if (grappleComponent->GetCableLength() < player->reelCompleteDistance)
 		player->SetState(UGrappleAirborneState::GetInstance());
 }
 

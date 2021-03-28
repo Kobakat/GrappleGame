@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GrappleState.h"
+#include "../../GrappleComponent.h"
 #include "GrappleAirborneState.generated.h"
 
 UCLASS()

@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "MovementState.h"
-#include "Engine/EngineTypes.h"
 #include "LedgeGrabState.generated.h"
 
 UENUM()
@@ -37,11 +36,8 @@ public:
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 
-	void SetLedge(FHitResult newLedge);
-
 private:
 	static ULedgeGrabState* instance;
-	static FHitResult ledge;
 
 	void InitializePositionValues();
 	void InitializeCameraValues();

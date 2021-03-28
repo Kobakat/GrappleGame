@@ -25,7 +25,7 @@ void UCrouchState::Initialize(APlayerPawn* pawn)
 void UCrouchState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->collider->bNeedsToStand = false;
+	player->bNeedsToStand = false;
 	bIsCrouching = true;
 	crouchTimer = 0;
 }
@@ -33,7 +33,7 @@ void UCrouchState::OnStateEnter()
 void UCrouchState::StateTick(float deltaTime)
 {
 	HandleCrouchDown(deltaTime);
-	CheckIfGrounded();
+	CheckIfGrounded(player->crouchGroundCheckOverride);
 	CheckIfPlayerIsTryingToStand();
 	HandleJump(player->crouchJumpForce, false);
 	PlayerMove(player->crouchAcceleration, player->crouchAirControlPercentage);
@@ -46,8 +46,8 @@ void UCrouchState::StateTick(float deltaTime)
 void UCrouchState::OnStateExit()
 {
 	crouchTimer = 0;
-	player->collider->bNeedsToStand = true;
-	player->collider->standUpTimer = 0;
+	player->bNeedsToStand = true;
+	player->standUpTimer = 0;
 }
 
 #pragma endregion
@@ -56,9 +56,31 @@ void UCrouchState::OnStateExit()
 
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
-	if (!player->collider->CheckIfTryingToStand() && !player->tryingToCrouch)
+	if (!player->tryingToCrouch && !bIsCrouching) 
 	{
-		player->SetState(UWalkState::GetInstance());
+		FCollisionQueryParams param;
+		param.AddIgnoredActor(player);
+
+		FCollisionShape box = FCollisionShape::MakeBox(player->bounds);
+
+		bool bHitCeiling = player->GetWorld()->SweepSingleByChannel(
+			player->CrouchHitPoint, 
+			player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+			player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+			FQuat::Identity, 
+			ECC_Visibility, 
+			box,
+			param);
+
+#if WITH_EDITOR
+		DrawDebugBox(player->GetWorld(), player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector, player->bounds, FColor::Purple, false, .05f);
+#endif
+
+		//if we don't hit anything they're good to stand up
+		if (!bHitCeiling) 
+		{
+			player->SetState(UWalkState::GetInstance());
+		}
 	}
 }
 
@@ -99,11 +121,11 @@ void UCrouchState::PlayerMove(float accel, float airControlFactor)
 {
 	if (!player->moveVector.IsZero())
 	{
-		player->collider->SetPhysMaterialOverride(player->collider->moveMat);
+		player->collider->SetPhysMaterialOverride(player->moveMat);
 
 		FVector relativeInputVector = ConvertPlayerInputRelativeToCamera();
 
-		if (!player->bGrounded)
+		if (!player->bIsGrounded)
 		{
 			relativeInputVector = relativeInputVector * (airControlFactor / 100.f);
 		}
@@ -111,9 +133,9 @@ void UCrouchState::PlayerMove(float accel, float airControlFactor)
 		player->collider->AddForce(relativeInputVector * accel, NAME_None, true);
 	}
 
-	else if (player->moveVector.IsZero() && player->bGrounded)
+	else if (player->moveVector.IsZero() && player->bIsGrounded)
 	{
-		player->collider->SetPhysMaterialOverride(player->collider->stopMat);
+		player->collider->SetPhysMaterialOverride(player->stopMat);
 	}
 }
 

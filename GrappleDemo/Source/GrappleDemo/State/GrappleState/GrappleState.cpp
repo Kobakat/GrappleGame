@@ -8,6 +8,7 @@ void UGrappleState::Initialize(APlayerPawn* pawn)
 	UState::Initialize(pawn);
 	// Retrieve the grapple components.
 	grappleComponent = pawn->grappleComponent;
+	grappleGunStart = pawn->grappleStart;
 	grapplePolyline = pawn->GrapplePolyline;
 	// Set the number of raycasts used for the
 	// wrap solving at each wrap pivot.
@@ -23,17 +24,12 @@ void UGrappleState::OnStateEnter()
 	WrapActors.Empty();
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
-	grapplePolyline->PushPoint(grappleComponent->GetGunEnd());
-	// Tie the transform for the gun end to
-	// the post physics tick
-	grapplePolyline->currentEnd = grappleComponent->GunEnd;
+	grapplePolyline->PushPoint(grappleGunStart->GetComponentLocation());
 }
 void UGrappleState::OnStateExit()
 {
 	UMovementState::OnStateExit();
-	// Detach the grapple hook
-	grappleComponent->Detach();
-	// Clear out the polyline renderer
+	// Clear out the polyline renderer.
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 }
 #pragma endregion
@@ -53,7 +49,7 @@ bool UGrappleState::SolveRestraint()
 		? GlobalPivots.Last() : attachedLocation;
 
 	// Using the wrap data, calculate how much rope length is left.
-	float lengthLeft = grappleComponent->GetLength();
+	float lengthLeft = grappleComponent->GetCableLength();
 	// Trace along the rope wrap subtracting distance.
 	if (WrapPivots.Num() > 0)
 		lengthLeft -= FVector::Distance(attachedLocation, GlobalPivots[0]);
@@ -123,15 +119,14 @@ bool UGrappleState::SolveRestraint()
 			}
 		}
 	}
-
 	// Update the grapple rope.
-	TArray<FVector> points;
-	points.SetNum(GlobalPivots.Num() + 2);
-	points[0] = attachedLocation;
+	TArray<FVector> allPoints;
+	allPoints.SetNum(GlobalPivots.Num() + 2);
+	allPoints[0] = attachedLocation;
 	for (int i = 0; i < GlobalPivots.Num(); i++)
-		points[i + 1] = GlobalPivots[i];
-	//points[points.Num() - 1] = grappleComponent->GetGunEnd();
-	grapplePolyline->SetAllPoints(points);
+		allPoints[i + 1] = GlobalPivots[i];
+	allPoints[allPoints.Num() - 1] = grappleGunStart->GetComponentLocation();
+	grapplePolyline->SetAllPoints(allPoints);
 	return true;
 }
 #pragma endregion
@@ -141,7 +136,7 @@ void UGrappleState::SolveWrap()
 	// Grab key locations.
 	UWorld* world = grappleComponent->GetWorld();
 	FVector hookLocation = grappleComponent->GetAttachedLocation();
-	FVector gunTipLocation = grappleComponent->GetGunEnd();
+	FVector gunTipLocation = grappleGunStart->GetComponentLocation();
 	FVector camLocation = player->camera->GetComponentLocation();
 	// Create fields for raycasts.
 	FHitResult GrappleHitPoint;

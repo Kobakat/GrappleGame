@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../MovementState.h"
-#include "../../Player/GrappleGunComponent.h"
+#include "../../GrappleComponent.h"
 #include "../../GrappleRendering/PolylineCylinderRenderer.h"
 #include "GrappleState.generated.h"
 
@@ -18,7 +18,8 @@ private:
 
 protected:
 	// Grapple References.
-	UGrappleGunComponent* grappleComponent;
+	UGrappleComponent* grappleComponent;
+	USceneComponent* grappleGunStart;
 	APolylineCylinderRenderer* grapplePolyline;
 	// Common grapple leash behaviour.
 	bool SolveRestraint();

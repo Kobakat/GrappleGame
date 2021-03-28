@@ -13,22 +13,20 @@ void UMovementState::PlayerMove(float accel, float airControlFactor)
 {
 	if (!player->moveVector.IsZero())
 	{
-		relativeMovementVector = ConvertPlayerInputRelativeToCamera();
+		FVector relativeInputVector = ConvertPlayerInputRelativeToCamera();
 
-		if (player->bGrounded) 
+		if (!player->bIsGrounded) 
 		{
-			player->collider->AddForce(relativeMovementVector * accel, NAME_None, true);
+			relativeInputVector = relativeInputVector * (airControlFactor / 100.f);
 		}
 
-		else 
-		{		
-			player->collider->AddForce(relativeMovementVector * (airControlFactor / 100.f) * accel, NAME_None, true);
-		}
+		//multiplying by 100 so the designer values aren't so massive
+		player->collider->AddForce(relativeInputVector * accel, NAME_None, true); //Set to false if you want player mass to matter
 	}
 
 	else if (
 		player->moveVector.IsZero() 
-		&& player->bGrounded
+		&& player->bIsGrounded
 		&& player->state != UCrouchState::GetInstance()
 		&& player->state != UGrappleAirborneState::GetInstance()
 		&& player->state != UGrappleInstantReelState::GetInstance()
@@ -54,31 +52,75 @@ void UMovementState::PlayerLook(float deltaTime)
 	}
 }
 
-void UMovementState::CheckIfGrounded()
+void UMovementState::CheckIfGrounded(float overrideHeight)
 {
-	player->bGrounded = player->collider->CheckIfGrounded();
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
 
-	if (player->collider->bOnSlide)
-		player->SetState(USlideState::GetInstance());
+	float radius = player->bounds.X * .95f;
 
-	if (player->collider->GetPhysicsLinearVelocity().Z < 0.F &&
-		player->bPreviousGrounded != player->bGrounded)
+	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
+
+#if WITH_EDITOR
+
+	DrawDebugSphere(
+		player->GetWorld(),
+		player->GetActorLocation(),
+		radius,
+		10,
+		FColor::Red, 
+		false, 
+		0.05f);
+#endif
+
+	bool bHitGround = player->GetWorld()->SweepSingleByChannel(
+		player->GroundHitPoint,
+		player->GetActorLocation(),
+		player->GetActorLocation(),
+		FQuat::Identity,
+		ECC_Visibility,
+		cap,
+		param);
+
+	if (bHitGround)
 	{
-		FVector velocity = player->collider->GetPhysicsLinearVelocity();
-		player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
+		if (player->GetActorLocation().Z <= player->GroundHitPoint.ImpactPoint.Z + overrideHeight)
+		{
+			FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+
+			if (struckProfile == FName(TEXT("Ground")) || struckProfile == FName(TEXT("Ledge")))
+			{
+				player->bIsGrounded = true;
+
+				if (player->bPreviousGround != player->bIsGrounded)
+				{
+					FVector velocity = player->collider->GetPhysicsLinearVelocity();
+					player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
+				}
+				
+			}
+
+			else if (struckProfile == FName(TEXT("Slide")))
+			{
+				player->SetState(USlideState::GetInstance());
+				player->bIsGrounded = true;
+			}
+
+			else
+			{
+				player->bIsGrounded = false;
+			}
+		}
+
+		else
+		{
+			player->bIsGrounded = false;
+		}
 	}
-	
+
 	else
 	{
-		float newZ = 0;
-
-		if (player->collider->CheckIfStepUp(newZ))
-		{
-			FVector velocity = player->collider->GetPhysicsLinearVelocity();
-			FVector loc = player->collider->GetRelativeLocation();
-			player->collider->SetRelativeLocation(FVector(loc.X + velocity.X * 0.01f, loc.Y + velocity.Y * 0.01f, newZ + .1f)); //HACK replace with deltaTime step
-			player->collider->SetPhysicsLinearVelocity(player->collider->previousVelocity);
-		}
+		player->bIsGrounded = false;
 	}
 }
 
@@ -88,7 +130,7 @@ void UMovementState::ClampPlayerVelocity(float max)
 	movementVelocity.Z = 0;
 
 	//If the player is airborne we probably don't want to clamp speed
-	if (player->bGrounded)
+	if (player->bIsGrounded)
 		movementVelocity = movementVelocity.GetClampedToMaxSize(max);
 	else
 		movementVelocity = movementVelocity.GetClampedToMaxSize(player->airborneMaxSpeed);
@@ -105,27 +147,20 @@ void UMovementState::ClampPlayerVelocity(float max)
 
 void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab) 
 {
-	if (!player->bGrounded)
+	if (player->tryingToJump) 
 	{
-		FVector relativeMoveVector = ConvertPlayerInputRelativeToCamera();
-
-		if (bCanPlayerLedgeGrab && player->collider->CheckIfLedgeGrabEligible(relativeMovementVector))
+		if (bCanPlayerLedgeGrab && CanPlayerLedgeGrab())
 		{
 			player->tryingToJump = false;
 			player->SetState(ULedgeGrabState::GetInstance());
 		}
-	}
 
-	if (player->tryingToJump && player->bGrounded)
-	{
-		player->tryingToJump = false;
-		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
-
-		if (bCanPlayerLedgeGrab && player->collider->CheckIfLedgeGrabEligible())
+		else if (player->bIsGrounded)
 		{
-			player->SetState(ULedgeGrabState::GetInstance());
+			player->tryingToJump = false;
+			player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
 		}
-	}	
+	}
 }
 
 FVector UMovementState::ConvertPlayerInputRelativeToCamera()
@@ -143,6 +178,69 @@ FVector UMovementState::ConvertPlayerInputRelativeToCamera()
 	relativeVector.Normalize(0.0001);
 
 	return relativeVector;
+}
+
+bool UMovementState::CanPlayerLedgeGrab() 
+{
+	//Start by sweeping our player region for a ledge
+
+	FCollisionQueryParams param;
+	param.AddIgnoredActor(player);
+
+	FVector boundingBox = FVector(
+		player->bounds.X * player->ledgeGrabRangeFactor, 
+		player->bounds.Y * player->ledgeGrabRangeFactor, 
+		player->bounds.Z);
+
+	FCollisionShape box = FCollisionShape::MakeBox(boundingBox);
+
+	bool bHitLedge = player->GetWorld()->SweepSingleByChannel(
+		player->LedgeHitPoint,
+		player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+		player->GetActorLocation() + FVector(0, 0, player->bounds.Z) + FVector::UpVector,
+		FQuat::Identity,
+		ECC_GameTraceChannel6,
+		box,
+		param);
+
+	//If we hit something in this layer
+	if (bHitLedge)
+	{
+		//Lets make sure its exactly a ledge
+		if (player->LedgeHitPoint.Component->GetCollisionProfileName() == FName(TEXT("Ledge")))
+		{	
+			//Can our player reach this high?
+			FVector ledgeBounds = player->LedgeHitPoint.Component->Bounds.BoxExtent;
+			ledgeBounds += player->LedgeHitPoint.Actor.Get()->GetActorLocation();
+
+			if (ledgeBounds.Z - player->GetActorLocation().Z <= player->ledgeGrabHeight)
+			{
+				FVector camLoc = player->camera->GetComponentLocation();
+
+				//Calculate the normal of the way our player is looking (without Z)
+				FVector camForward = player->camera->GetForwardVector();
+				camForward.Z = 0;
+				camForward.Normalize(0.01f);
+
+				//Calculate the opposite of the ledge's normal
+				FVector impactNormal = player->LedgeHitPoint.ImpactNormal;
+				impactNormal.Z = 0;
+				impactNormal.Normalize(0.01f);
+				impactNormal *= -1;
+
+				//Calculate the Angle between the two vectors
+				const float dot = FVector::DotProduct(camForward, impactNormal);
+				const float angle = FMath::RadiansToDegrees(FMath::Acos(dot));
+
+				//If the angle is small enough, the player is eligible to climb the ledge
+				const bool lookingAt = angle <= player->ledgeLookAngle;
+
+				if (lookingAt)
+					return true;
+			}
+		}
+	}
+	return false;
 }
 
 void UMovementState::CheckStateChangeGrapple()

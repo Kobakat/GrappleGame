@@ -24,14 +24,14 @@ void UIdleState::Initialize(APlayerPawn* pawn)
 void UIdleState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->collider->SetPhysMaterialOverride(player->collider->stopMat);
+	player->collider->SetPhysMaterialOverride(player->stopMat);
 }
 
 void UIdleState::StateTick(float deltaTime)
 {
 	CheckForVelocityChange();
 	CheckIfPlayerIsTryingToCrouch();
-	CheckIfGrounded();
+	CheckIfGrounded(player->groundCheckDistance);
 	HandleJump(player->walkJumpForce, true);
 	PlayerLook(deltaTime);	
 	UMovementState::CheckStateChangeGrapple();
@@ -39,7 +39,7 @@ void UIdleState::StateTick(float deltaTime)
 
 void UIdleState::OnStateExit() 
 {
-	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
+	player->collider->SetPhysMaterialOverride(player->moveMat);
 }
 
 #pragma endregion

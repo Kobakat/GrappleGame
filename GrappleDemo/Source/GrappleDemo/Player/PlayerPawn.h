@@ -3,13 +3,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/StaticMesh.h"
 #include "cringetest.h"
 #include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
-#include "PlayerCylinder.h"
-#include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
 UCLASS()
@@ -19,30 +19,44 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
+	
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UGrappleGunComponent* grappleComponent;
+	AGrappleReactor* grappleReactor;
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
 	
+	FHitResult GrappleHitPoint;
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
 	FHitResult LedgeHitPoint;
+	bool bNeedsToStand;
 	bool bPreviousGround;
 	float standUpTimer;
 
 	FVector bounds;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Camera")
+	UPROPERTY(VisibleAnywhere, Category = "Player Camera")
 		Ucringetest* camera;
-	UPROPERTY(VisibleAnywhere, Category = "Collider")
-		UPlayerCylinder* collider;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UStaticMeshComponent* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
 
 #pragma region Designer Props
+
+	//================Collider================//
+	
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* moveMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* stopMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* runSlideMat;
+	UPROPERTY(EditAnywhere, Category = "Collider")
+		UPhysicalMaterial* noFricMat;
 
 	//================General=================//
 
@@ -50,19 +64,20 @@ public:
 		float airborneMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | General")
+		float groundCheckDistance = 5;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float standHeightScale;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float crouchHeightScale;
-	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
-		float stepHeight;
-	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
-		float maxSlopeAngle;
+	
 	//=================Grapple================//
-
 	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
 		USceneComponent* gun;
-
+	UPROPERTY(BlueprintReadWrite, Category = "Grapple")
+		USceneComponent* grappleStart;
+	UPROPERTY(EditAnywhere, Category = "Grapple")
+		UGrappleComponent* grappleComponent;
 	//=================Walking================//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Walking")
@@ -100,7 +115,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
 
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Crouching")
+		float crouchGroundCheckOverride = 5;
+
+
 	//===============Running=Slide==============//
+
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
 		float runSlideMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
@@ -110,6 +131,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
 		float runSlideExitVelocity;
 
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Running Slide")
+		float runSlideGroundCheckOverride = 5;
+
+
 	//===================Slide=================//
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideAcceleration;
@@ -117,6 +143,10 @@ public:
 		float slideMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideJumpForce;
+
+	//How many extra units do we cast the ground checking ray?
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Sliding")
+		float slideGroundCheckOverride = 30;
 
 	//==============Instant=Reel===============//
 
@@ -147,8 +177,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
 		FString stateName;
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats | State")
-		bool bGrounded;
-	bool bPreviousGrounded;
+		bool bIsGrounded;
 
 	//===============Grapple=Wrap==============//
 
@@ -171,21 +200,13 @@ public:
 
 	FVector startLocation;
 
-	// Gets whether the player can currently grapple
-	UFUNCTION(BlueprintCallable)
-	bool GetHasGrapple();
-	// Sets whether the player can currently grapple
-	UFUNCTION(BlueprintCallable)
-	void SetHasGrapple(bool HasGrapple);
-
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	void HandleStandUp(float deltaTime);
+	FVector CalculateBounds();
 
-	UPROPERTY(EditAnywhere, Category = "Initial Player State")
-	bool hasGrapple;
-	
 #pragma region Input Functions
 	void MoveInputX(float value);
 	void MoveInputY(float value);
@@ -202,4 +223,13 @@ private:
 	void ShootReleaseRelease();
 	void InstantReelPress();
 #pragma endregion
+
+#pragma region Grapple Functions
+	void CastGrappleRaycast();
+	bool ShootGrapple();
+#pragma endregion
+	// This needs to be stored, otherwise
+	// the grapple reactor is set on hover.
+	// This allows it to only cast once on input.
+	AActor* lastHoveredActor;
 };
