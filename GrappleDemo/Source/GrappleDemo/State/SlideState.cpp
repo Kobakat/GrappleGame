@@ -4,6 +4,8 @@
 USlideState::USlideState() { }
 USlideState::~USlideState() { }
 USlideState* USlideState::instance;
+FHitResult USlideState::slide;
+
 USlideState* USlideState::GetInstance()
 {
 	if (instance == nullptr)
@@ -11,6 +13,11 @@ USlideState* USlideState::GetInstance()
 		instance = NewObject<USlideState>();
 	}
 	return instance;
+}
+
+void USlideState::SetSlide(FHitResult newSlide)
+{
+	slide = newSlide;
 }
 
 #pragma region State Events
@@ -30,22 +37,23 @@ void USlideState::OnStateEnter()
 	camTimer = 0;
 	bIsTransitioning = true;
 	bIsCrouching = true;
-	player->bNeedsToStand = false;
-	player->collider->SetPhysMaterialOverride(player->noFricMat);
+	player->collider->bNeedsToStand = false;
+	player->collider->SetPhysMaterialOverride(player->collider->noFricMat);
 }
 
 void USlideState::StateTick(float deltaTime)
 {
-	CheckIfGrounded(player->slideGroundCheckOverride);
+	CheckIfGrounded();
 	HandleCrouchDown(deltaTime);
-	HandleCameraTransition(deltaTime);
+	//HandleCameraTransition(deltaTime);
 	HandleJump(player->slideJumpForce, false);
-
-	if (!bIsTransitioning)
+	PlayerMove(player->slideAcceleration, 0);
+	PlayerLook(deltaTime);
+	/*if (!bIsTransitioning)
 	{
 		PlayerMove(player->slideAcceleration, 0);
 		PlayerLook(deltaTime);
-	}
+	}*/
 
 	ClampPlayerVelocity(player->slideMaxSpeed);
 
@@ -56,8 +64,7 @@ void USlideState::OnStateExit()
 {
 	crouchTimer = 0;
 	camTimer = 0;
-	player->bNeedsToStand = true;
-	player->collider->SetPhysMaterialOverride(player->noFricMat);
+	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
 }
 
 #pragma endregion
@@ -75,59 +82,64 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 	}
 }
 
-void USlideState::CheckIfGrounded(float overrideHeight)
+void USlideState::CheckIfGrounded()
 {
+	FHitResult hitSlide;
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	float radius = player->bounds.X * .95f;
+	FVector boxBounds = FVector(
+		player->bounds.X, 
+		player->bounds.Y, 
+		30.f);
 
-	FCollisionShape cap = FCollisionShape::MakeSphere(radius);
+	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
 
 #if WITH_EDITOR
-
-	DrawDebugSphere(
-		player->GetWorld(),
+	DrawDebugBox(
+		player->GetWorld(), 
 		player->GetActorLocation(),
-		radius,
-		5,
-		FColor::Red,
-		false,
+		boxBounds, 
+		FColor::Red, 
+		false, 
 		0.05f);
 #endif
 
-	bool bHitSlide= player->GetWorld()->SweepSingleByChannel(
-		player->GroundHitPoint,
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
-		player->GetActorLocation() + (FVector::DownVector * overrideHeight),
+	bool bHitSlide = player->GetWorld()->SweepSingleByChannel(
+		hitSlide,
+		player->GetActorLocation(),
+		player->GetActorLocation(),
 		FQuat::Identity,
-		ECC_Visibility,
-		cap,
+		ECC_GameTraceChannel1,
+		box,
 		param);
 
 	if (bHitSlide)
 	{
-		FName struckProfile = player->GroundHitPoint.Component->GetCollisionProfileName();
+		FName struckProfile = hitSlide.Component->GetCollisionProfileName();
 
 		if (struckProfile == FName(TEXT("Slide")))
 		{
-			slideNormal = player->GroundHitPoint.Normal;
+			slideNormal = hitSlide.Normal;
 			slideNormal.Z = 0;
 			slideNormal.Normalize(0.001);
-			player->bIsGrounded = true;
+			player->collider->bOnSlide = true;
+			player->bGrounded = true;
 		}
-		
+
 		else
 		{
 			player->SetState(UCrouchState::GetInstance());
-			player->bIsGrounded = true;
+			player->bGrounded = true;
+			player->collider->bOnSlide = false;
 		}
 	}
 
 	else
 	{
 		player->SetState(UCrouchState::GetInstance());
-		player->bIsGrounded = false;
+		player->bGrounded = false;
+		player->collider->bOnSlide = false;
 	}
 }
 
@@ -157,7 +169,7 @@ void USlideState::HandleCrouchDown(float deltaTime)
 
 void USlideState::HandleCameraTransition(float deltaTime)
 {
-	if (bIsTransitioning)
+	/*if (bIsTransitioning)
 	{
 		float frac = camTimer / player->camera->slideTransitionTime;
 		FRotator newCamRotator = FMath::Lerp(player->camera->GetRelativeRotation(), slideNormal.Rotation(), frac);
@@ -167,7 +179,7 @@ void USlideState::HandleCameraTransition(float deltaTime)
 		
 		if (frac >= 1)
 			bIsTransitioning = false;
-	}
+	}*/
 }
 
 #pragma endregion

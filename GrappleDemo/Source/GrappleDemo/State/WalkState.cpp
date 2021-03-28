@@ -28,7 +28,7 @@ void UWalkState::OnStateEnter()
 
 void UWalkState::StateTick(float deltaTime)
 {
-	CheckIfGrounded(player->groundCheckDistance);
+	CheckIfGrounded();
 	CheckIfPlayerIsTryingToRun();
 	CheckIfPlayerIsTryingToCrouch();
 	HandleJump(player->walkJumpForce, true);
