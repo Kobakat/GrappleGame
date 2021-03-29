@@ -84,6 +84,15 @@ bool UPlayerCylinder::CheckIfGrounded()
 		bounds.Y * 1.01f,
 		boxZ));
 
+	bool bHitGround = player->GetWorld()->SweepMultiByChannel(
+		GroundHits,
+		GetComponentLocation() + FVector::UpVector,
+		GetComponentLocation(),
+		FQuat::Identity,
+		ECC_GameTraceChannel1,
+		box,
+		param);
+
 #if WITH_EDITOR
 
 	DrawDebugBox(
@@ -93,18 +102,7 @@ bool UPlayerCylinder::CheckIfGrounded()
 		FColor::Red,
 		false,
 		0.05f);
-
-		
 #endif
-
-	bool bHitGround = player->GetWorld()->SweepMultiByChannel(
-		GroundHits,
-		GetComponentLocation(),
-		GetComponentLocation(),
-		FQuat::Identity,
-		ECC_GameTraceChannel1,
-		box,
-		param);
 
 	if (bHitGround)
 	{
@@ -112,15 +110,32 @@ bool UPlayerCylinder::CheckIfGrounded()
 		//If we hit anything iterate through each hit returned
 		for (FHitResult hit : GroundHits)
 		{	
+			DrawDebugLine(
+				player->GetWorld(),
+				hit.Location,
+				hit.Location + hit.Normal * 50.0,
+				FColor::Red,
+				false,
+				0.05f
+			);
+
+			DrawDebugLine(
+				player->GetWorld(),
+				hit.ImpactPoint,
+				hit.ImpactPoint + hit.ImpactNormal * 50.0,
+				FColor::Blue,
+				false,
+				0.05f
+			);
 			//If the hit was level with the bottom of the collider
-			if (hit.ImpactPoint.Z >= colliderZ - .01f ||
-				hit.ImpactPoint.Z <= colliderZ + .01f)
+			if (hit.Location.Z >= colliderZ - .01f ||
+				hit.Location.Z <= colliderZ + .01f)
 			{
 				//Lets see if the normal of that surface is within our defined slope limit
 				const float angle =
 					FMath::RadiansToDegrees(
 						FMath::Acos(
-							FVector::DotProduct(FVector::UpVector, hit.ImpactNormal)));
+							FVector::DotProduct(FVector::UpVector, hit.Normal)));
 				
 				if (angle <= player->maxSlopeAngle)
 				{
