@@ -42,6 +42,7 @@ public:
 	bool CheckIfTryingToStand();
 	bool CheckIfLedgeGrabEligible();
 	bool CheckIfLedgeGrabEligible(FVector playerMoveVector);
+	bool CheckIfStepUp(float& outHeight);
 
 protected:
 	void BeginPlay() override;

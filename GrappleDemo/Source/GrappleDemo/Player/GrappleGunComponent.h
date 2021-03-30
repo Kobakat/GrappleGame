@@ -27,6 +27,8 @@ protected:
 	// Defines where the grapple hook end returns to
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	//USceneComponent* GunEnd;
+	// The current state for whether the gun is rendered
+	bool isRendered;
 
 	// The starting point for the grapple raycast
 	USceneComponent* CastingFromComponent;
@@ -85,6 +87,9 @@ public:
 	void ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance);
 	// Reels the grapple cable in or out by scene units
 	void Reel(float value);
+	// Sets whether the grapple gun is renderer and
+	// will perform casts against the environment
+	void SetIsRendered(bool isRendered);
 
 	// Called every frame to check grapple opportunities
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

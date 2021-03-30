@@ -19,7 +19,6 @@ class GRAPPLEDEMO_API APlayerPawn : public APawn
 
 public:
 	APlayerPawn();
-	
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -31,15 +30,14 @@ public:
 	FHitResult CrouchHitPoint;
 	FHitResult GroundHitPoint;
 	FHitResult LedgeHitPoint;
-	bool bNeedsToStand;
 	bool bPreviousGround;
 	float standUpTimer;
 
 	FVector bounds;
 
-	UPROPERTY(VisibleAnywhere, Category = "Player Camera")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Camera")
 		Ucringetest* camera;
-	UPROPERTY(EditAnywhere, Category = "Collider")
+	UPROPERTY(VisibleAnywhere, Category = "Collider")
 		UPlayerCylinder* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
@@ -102,13 +100,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Crouching")
 		bool bCanPlayerCrouchJump;
 
-	//How many extra units do we cast the ground checking ray?
-	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Crouching")
-		float crouchGroundCheckOverride = 5;
-
-
 	//===============Running=Slide==============//
-
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
 		float runSlideMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
@@ -118,11 +110,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Running Slide")
 		float runSlideExitVelocity;
 
-	//How many extra units do we cast the ground checking ray?
-	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Running Slide")
-		float runSlideGroundCheckOverride = 5;
-
-
 	//===================Slide=================//
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideAcceleration;
@@ -130,10 +117,6 @@ public:
 		float slideMaxSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Sliding")
 		float slideJumpForce;
-
-	//How many extra units do we cast the ground checking ray?
-	UPROPERTY(VisibleAnywhere, Category = "Player Stats | Sliding")
-		float slideGroundCheckOverride = 30;
 
 	//==============Instant=Reel===============//
 
@@ -188,10 +171,20 @@ public:
 
 	FVector startLocation;
 
+	// Gets whether the player can currently grapple
+	UFUNCTION(BlueprintCallable)
+	bool GetHasGrapple();
+	// Sets whether the player can currently grapple
+	UFUNCTION(BlueprintCallable)
+	void SetHasGrapple(bool HasGrapple);
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
+
+	UPROPERTY(EditAnywhere, Category = "Initial Player State")
+	bool hasGrapple;
 	
 #pragma region Input Functions
 	void MoveInputX(float value);

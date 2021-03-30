@@ -56,7 +56,7 @@ void UCrouchState::OnStateExit()
 
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
-	if (player->collider->CheckIfTryingToStand())
+	if (!player->collider->CheckIfTryingToStand() && !player->tryingToCrouch)
 	{
 		player->SetState(UWalkState::GetInstance());
 	}

@@ -19,6 +19,22 @@ APlayerPawn::APlayerPawn()
 	camera->AttachToComponent(collider, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 }
 
+bool APlayerPawn::GetHasGrapple()
+{
+	return hasGrapple;
+}
+
+void APlayerPawn::SetHasGrapple(bool HasGrapple)
+{
+	hasGrapple = HasGrapple;
+	// Hide or reveal the gun mesh
+	gun->SetHiddenInGame(!hasGrapple, true);
+	// Update the rendered state of the grapple
+	// This will also prevent grapple states
+	// from being entered
+	grappleComponent->SetIsRendered(hasGrapple);
+}
+
 void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,6 +43,7 @@ void APlayerPawn::BeginPlay()
 	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
 	grappleComponent->SetCastingFromComponent(camera);
 	grappleComponent->IgnoredActors.Add(this);
+	SetHasGrapple(hasGrapple);
 
 	// Ensure the grapple polyline is instantiated.
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
@@ -49,6 +66,8 @@ void APlayerPawn::Tick(float deltaTime)
 	}
 
 	grappleCanAttach = grappleComponent->GetCanAttach();
+	bPreviousGrounded = bGrounded;
+	collider->previousVelocity = collider->GetPhysicsLinearVelocity();
 }
 
 #pragma endregion
