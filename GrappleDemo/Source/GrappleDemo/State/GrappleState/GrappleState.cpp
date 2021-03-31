@@ -24,9 +24,6 @@ void UGrappleState::OnStateEnter()
 	grapplePolyline->SetAllPoints(TArray<FVector>());
 	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
 	grapplePolyline->PushPoint(grappleComponent->GetGunEnd());
-	// Tie the transform for the gun end to
-	// the post physics tick
-	grapplePolyline->currentEnd = grappleComponent->GunEnd;
 }
 void UGrappleState::OnStateExit()
 {
@@ -130,7 +127,8 @@ bool UGrappleState::SolveRestraint()
 	points[0] = attachedLocation;
 	for (int i = 0; i < GlobalPivots.Num(); i++)
 		points[i + 1] = GlobalPivots[i];
-	//points[points.Num() - 1] = grappleComponent->GetGunEnd();
+	points[points.Num() - 1] = grappleComponent->GetGunEnd()
+		+ player->collider->GetPhysicsLinearVelocity() * player->GetWorld()->DeltaTimeSeconds;
 	grapplePolyline->SetAllPoints(points);
 	return true;
 }
