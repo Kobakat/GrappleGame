@@ -1,7 +1,8 @@
 #include "PlayerCapsule.h"
 #include "PlayerPawn.h"
 
-UPlayerCapsule::UPlayerCapsule() { PrimaryComponentTick.bCanEverTick = true; }
+UPlayerCapsule::UPlayerCapsule() { PrimaryComponentTick.bCanEverTick = false; }
+void UPlayerCapsule::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) { }
 
 void UPlayerCapsule::BeginPlay()
 {
@@ -10,11 +11,6 @@ void UPlayerCapsule::BeginPlay()
 	player = Cast<APlayerPawn>(GetAttachmentRootActor());
 	bounds = CalculateBounds();
 	halfHeight = GetScaledCapsuleHalfHeight();
-}
-
-void UPlayerCapsule::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{	
-	HandleStandUp(deltaTime);
 }
 
 FVector UPlayerCapsule::CalculateBounds()
@@ -49,12 +45,20 @@ void UPlayerCapsule::HandleStandUp(float deltaTime)
 		{
 			if (halfHeight != player->standHeight)
 			{
+				//Subtract time
 				standUpTimer -= deltaTime;
+
+				//Calculate a smooth step interpolant
 				float frac = FMath::Clamp(standUpTimer / player->crouchTransitionTime, 0.f, 1.f);
 				frac = frac * frac * (3.f - 2.f * frac);
+				
+				//Interoplate the collider/camera height
 				const float newHeight = FMath::Lerp(player->standHeight, player->crouchHeight, frac);
-
+				player->camera->baseHeight = FMath::Lerp(60, 30, frac); //HACK delete hard coded cam values
+				
+				//Set new values
 				SetCapsuleHalfHeight(newHeight);
+				player->camera->SetRelativeLocation(FVector::UpVector * player->camera->baseHeight);
 					
 				const FVector capsuleLoc = player->collider->GetComponentLocation();
 				const FVector base = FVector(

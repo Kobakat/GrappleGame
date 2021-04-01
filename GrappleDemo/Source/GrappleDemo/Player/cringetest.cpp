@@ -5,7 +5,7 @@ Ucringetest::Ucringetest() { PrimaryComponentTick.bCanEverTick = true; }
 void Ucringetest::BeginPlay()
 {
 	this->player = Cast<APlayerPawn>(GetOwner());
-	this->initialHeight = GetRelativeLocation().Z;
+	this->baseHeight = GetRelativeLocation().Z;
 }
 
 void Ucringetest::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -160,6 +160,6 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
 		}
 
-		this->SetRelativeLocation(FVector(0, 0, initialHeight + shakeHeight));
+		this->SetRelativeLocation(FVector(0, 0, baseHeight + shakeHeight));
 	}
 }

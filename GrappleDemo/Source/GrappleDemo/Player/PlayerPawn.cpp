@@ -65,6 +65,7 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
+	collider->HandleStandUp(deltaTime);
 	grappleCanAttach = grappleComponent->GetCanAttach();
 	bPreviousGrounded = bGrounded;
 	collider->previousVelocity = collider->GetPhysicsLinearVelocity();

@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
 		float ledgeTiltSpeed;
 
+	float baseHeight;
+
 protected:
 	void BeginPlay() override;
 private:
@@ -81,7 +83,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Camera Stats | State")
 		TEnumAsByte<ECameraShakeState> shakeState;
 
-	float initialHeight;
 	float shakeInTimer;
 	float shakeOutTimer;
 	float shakeOffset;

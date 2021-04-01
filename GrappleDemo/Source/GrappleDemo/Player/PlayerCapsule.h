@@ -37,19 +37,20 @@ public:
 
 	bool bNeedsToStand;
 	float standUpTimer;
-	
-	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	float GetCrouchTime(float targetScale);
+
+	void HandleStandUp(float deltaTime);
+	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;	
 	bool CheckIfGrounded();
 	bool CheckIfTryingToStand();
 	bool CheckIfLedgeGrabEligible();
 	bool CheckIfLedgeGrabEligible(FVector playerMoveVector);
 	bool CheckIfStepUp(float& outHeight);
+	float GetCrouchTime(float targetScale);
 
 protected:
 	void BeginPlay() override;
 private:
 	APlayerPawn* player;
 	FVector CalculateBounds();
-	void HandleStandUp(float deltaTime);	
+	
 };

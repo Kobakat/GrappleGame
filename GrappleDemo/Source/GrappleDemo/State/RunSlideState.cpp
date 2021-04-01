@@ -75,9 +75,14 @@ void URunSlideState::HandleCrouchDown(float deltaTime)
 			crouchTimer -= deltaTime;
 
 			const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-			const float newHeight = FMath::Lerp(player->crouchHeight, player->standHeight, frac);
 
+			//Interoplate the collider/camera height
+			const float newHeight = FMath::Lerp(player->crouchHeight, player->standHeight, frac);
+			player->camera->baseHeight = FMath::Lerp(30, 60, frac); //HACK delete hard coded cam values
+
+			//Set new values
 			player->collider->SetCapsuleHalfHeight(newHeight);
+			player->camera->SetRelativeLocation(FVector::UpVector * player->camera->baseHeight);
 
 			const FVector capsuleLoc = player->collider->GetComponentLocation();
 			const FVector base = FVector(
