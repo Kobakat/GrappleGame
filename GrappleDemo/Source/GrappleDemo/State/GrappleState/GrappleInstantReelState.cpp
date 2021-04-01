@@ -21,28 +21,24 @@ void UGrappleInstantReelState::Initialize(APlayerPawn* pawn)
 void UGrappleInstantReelState::OnStateEnter()
 {
 	UGrappleState::OnStateEnter();
+	player->collider->SetEnableGravity(false);
 	player->stateName = this->stateName;
 }
 void UGrappleInstantReelState::OnStateExit()
 {
 	UGrappleState::OnStateExit();
+	player->collider->SetEnableGravity(true);
 }
 
 void UGrappleInstantReelState::StateTick(float deltaTime)
 {
-	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
 	if (!grappleComponent->GetIsAnimating())
 	{
+		player->collider->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		SolveRestraint();
 		UpdateGrappleRope(deltaTime);
-		bool isSolved = SolveRestraint();
-		if (!isSolved)
-		{
-			player->SetState(UWalkState::GetInstance());
-		}
 	}
-	else
-		SolveWrap();
 
 	CheckStateChange();
 	UMovementState::CheckStateChangeGrapple();
