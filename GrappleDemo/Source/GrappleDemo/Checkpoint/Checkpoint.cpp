@@ -29,6 +29,11 @@ void ACheckpoint::Tick(float DeltaTime)
 void ACheckpoint::SetCheckpoint()
 {
 	checkpointManager->SetCurrentCheckpoint(this);
+
+	// Sets tooltips for UI
+	checkpointManager->leftUIText = this->leftUIText;
+	checkpointManager->centerUIText = this->centerUIText;
+	checkpointManager->rightUIText = this->rightUIText;
 }
 
 void ACheckpoint::CheckLevelStart()
