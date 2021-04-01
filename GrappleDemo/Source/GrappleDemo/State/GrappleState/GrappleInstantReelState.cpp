@@ -32,12 +32,17 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 {
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
-	UpdateGrappleRope(deltaTime);
-	bool isSolved = SolveRestraint();
-	if (!isSolved)
+	if (!grappleComponent->GetIsAnimating())
 	{
-		player->SetState(UWalkState::GetInstance());
+		UpdateGrappleRope(deltaTime);
+		bool isSolved = SolveRestraint();
+		if (!isSolved)
+		{
+			player->SetState(UWalkState::GetInstance());
+		}
 	}
+	else
+		SolveWrap();
 
 	CheckStateChange();
 	UMovementState::CheckStateChangeGrapple();
