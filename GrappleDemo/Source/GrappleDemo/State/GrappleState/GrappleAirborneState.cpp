@@ -68,9 +68,8 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 void UGrappleAirborneState::CheckStateChange()
 {
 	// If the grapple or jump button is pressed then release
-	// the grapple and return to walk state.
-	if (player->tryingToGrapple ||
-		(player->tryingToJump && !player->bGrounded))
+	// the grapple and return to walk state
+	if ((player->tryingToJump && !player->bGrounded))
 		player->SetState(UWalkState::GetInstance());
 }
 void UGrappleAirborneState::HandleGrappleInput()
