@@ -8,9 +8,7 @@
 APolylineCylinderRenderer::APolylineCylinderRenderer()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	SetTickGroup(ETickingGroup::TG_PostPhysics);
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void APolylineCylinderRenderer::SetCylinder(int endIndex, FVector start, FVector end)
@@ -44,6 +42,20 @@ void APolylineCylinderRenderer::BeginPlay()
 	// This will hide all instantiated components.
 	SetAllPoints(TArray<FVector>());
 	SetRadius(Diameter * 0.5F);
+}
+
+TArray<FVector> APolylineCylinderRenderer::GetPoints()
+{
+	return Points;
+}
+
+float APolylineCylinderRenderer::GetTotalLength()
+{
+	float lengthAccumulator = 0.F;
+	if (Points.Num() > 1)
+		for (int i = 1; i < Points.Num(); i++)
+			lengthAccumulator += FVector::Distance(Points[i], Points[i - 1]);
+	return lengthAccumulator;
 }
 
 void APolylineCylinderRenderer::SetAllPoints(const TArray<FVector>& points)
@@ -136,14 +148,6 @@ bool APolylineCylinderRenderer::PopPoint()
 		if (i > 1)
 			Cylinders[i - 2]->SetHiddenInGame(true);
 		return true;
-	}
-}
-
-void APolylineCylinderRenderer::Tick(float deltaTime)
-{
-	if (currentEnd != nullptr)
-	{
-		SetLastPoint(currentEnd->GetComponentLocation());
 	}
 }
 

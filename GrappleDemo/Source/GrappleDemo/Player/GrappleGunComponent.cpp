@@ -2,7 +2,6 @@
 
 
 #include "GrappleGunComponent.h"
-#include "Components/SceneComponent.h"
 #include "CollisionQueryParams.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
@@ -17,6 +16,7 @@ UGrappleGunComponent::UGrappleGunComponent()
 	FireRange = 3000.F;
 	MinLength = 250.F;
 	MaxLength = 3000.F;
+	ShotSpeed = 3500.F;
 }
 
 
@@ -35,6 +35,11 @@ void UGrappleGunComponent::SetCastingFromComponent(USceneComponent * CastingFrom
 bool UGrappleGunComponent::GetCanAttach()
 {
 	return CanAttach;
+}
+
+bool UGrappleGunComponent::GetIsAnimating()
+{
+	return IsRetracting || IsShooting;
 }
 
 float UGrappleGunComponent::GetLength()
@@ -73,11 +78,18 @@ void UGrappleGunComponent::Attach()
 	// Get the local location of the grapple hit
 	LocalAttachedLocation = CurrentHookedActor->GetActorTransform()
 		.InverseTransformPosition(LastHitLocation);
-	// Set the initial length
-	Length = FVector::Distance(
-		CastingFromComponent->GetComponentLocation(),
-		LastHitLocation);
-	IsAttached = true;
+	// Set the initial shooting state
+	TArray<FVector> points;
+	points.Add(CastingFromComponent->GetComponentLocation());
+	points.Add(CastingFromComponent->GetComponentLocation());
+	Polyline->SetAllPoints(points);
+	Length = 0.F;
+	IsShooting = true;
+	IsRetracting = false;
+	IsAttached = false;
+	// Notify audio logic
+	OnGrappleShot();
+	OnGrappleStartedTraveling();
 }
 
 void UGrappleGunComponent::Detach()
@@ -86,9 +98,10 @@ void UGrappleGunComponent::Detach()
 	AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
 	if (IsValid(reactor))
 		CurrentReactor->Unhook();
-	// Reset the grapple hook back to the gun
-	GrappleHookEnd->SetRelativeLocationAndRotation(FVector::ZeroVector, FQuat::Identity);
+	IsRetracting = true;
 	IsAttached = false;
+	// Notify audio logic
+	OnGrappleStartedTraveling();
 }
 
 void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
@@ -115,14 +128,75 @@ void UGrappleGunComponent::SetIsRendered(bool rendered)
 void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	// Only run raycasting code if the gun is rendered/active
+	// Only run logic if the component is rendered
 	if (isRendered)
 	{
-		// Update the grapple end if we are attached
-		if (IsAttached)
+		// Handle animation state
+		if (IsShooting)
 		{
-			GrappleHookEnd->SetWorldLocation(GetAttachedLocation());
+			Polyline->SetLastPoint(GetGunEnd() + GetOwner()->GetVelocity() * GetWorld()->DeltaTimeSeconds);
+			// How much further to attach?
+			FVector current = Polyline->GetPoints()[0];
+			FVector target = GetAttachedLocation();
+			float deltaDistance = DeltaTime * ShotSpeed;
+			if (deltaDistance > FVector::Distance(current, target))
+			{
+				// Finish the shoot animation
+				// This will pass control to the grapple state
+				Polyline->SetFirstPoint(target);
+				IsShooting = false;
+				IsAttached = true;
+				// Notify audio logic
+				OnGrappleHit();
+				OnGrappleStoppedTraveling();
+				// Set the initial length for the state to work with
+				Length = FVector::Distance(
+					CastingFromComponent->GetComponentLocation(), target);
+			}
+			else
+			{
+				// Move towards the hit target
+				Polyline->SetFirstPoint(
+					current + (target - current).GetUnsafeNormal() * deltaDistance);
+			}
 		}
+		else if (IsRetracting)
+		{
+			Polyline->SetLastPoint(GetGunEnd() + GetOwner()->GetVelocity() * GetWorld()->DeltaTimeSeconds);
+			// Unwind the polyline
+			float deltaDistance = DeltaTime * ShotSpeed;
+
+			TArray<FVector> points = Polyline->GetPoints();
+			while (deltaDistance > 0.F)
+			{
+				float segmentDistance = FVector::Distance(points[0], points[1]);
+				if (deltaDistance > segmentDistance)
+				{
+					points.RemoveAt(0);
+					deltaDistance -= segmentDistance;
+					if (points.Num() == 1)
+					{
+						IsRetracting = false;
+						Polyline->SetAllPoints(TArray<FVector>());
+						// Notify audio logic
+						OnGrappleStoppedTraveling();
+						break;
+					}
+				}
+				else
+				{
+					points[0] += (points[1] - points[0]).GetUnsafeNormal() * deltaDistance;
+					deltaDistance = 0.F;
+				}
+			}
+			if (IsRetracting)
+				Polyline->SetAllPoints(points);
+		}
+		// Update the grapple end
+		if (Polyline->GetPoints().Num() > 0)
+			GrappleHookEnd->SetWorldLocation(Polyline->GetPoints()[0]);
+		else
+			GrappleHookEnd->SetRelativeLocationAndRotation(FVector::ZeroVector, FQuat::Identity);
 		// Only cast if the cast from component has been properly initialized
 		if (CastingFromComponent != nullptr)
 		{
