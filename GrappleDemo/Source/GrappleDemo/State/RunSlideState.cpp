@@ -28,8 +28,7 @@ void URunSlideState::OnStateEnter()
 	player->collider->AddForce(player->collider->GetPhysicsLinearVelocity().GetClampedToMaxSize(1) * player->runSlideImpulse * 1000); //multiply by 1k to keep designer values small
 	
 	bIsCrouching = true;
-	crouchTimer = 0;
-	player->collider->bNeedsToStand = false;
+	crouchTimer = player->collider->GetCrouchTime(player->crouchHeight);
 }
 
 void URunSlideState::StateTick(float deltaTime)
@@ -70,17 +69,26 @@ void URunSlideState::HandleCrouchDown(float deltaTime)
 {
 	if (bIsCrouching)
 	{
-		const float currentScale = player->collider->GetRelativeScale3D().Z;
-		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
 		//Only handle crouch if the player isn't already crouched down
-		if (currentScale != player->crouchHeightScale)
+		if (player->collider->halfHeight != player->crouchHeight)
 		{
-			crouchTimer += deltaTime;
+			crouchTimer -= deltaTime;
 
 			const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-			const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+			const float newHeight = FMath::Lerp(player->crouchHeight, player->standHeight, frac);
 
-			player->collider->SetRelativeScale3D(FVector(1, 1, newScale));
+			player->collider->SetCapsuleHalfHeight(newHeight);
+
+			const FVector capsuleLoc = player->collider->GetComponentLocation();
+			const FVector base = FVector(
+				capsuleLoc.X,
+				capsuleLoc.Y,
+				capsuleLoc.Z - player->collider->halfHeight);
+
+			player->collider->halfHeight = player->collider->GetScaledCapsuleHalfHeight();
+
+			const FVector newLoc = base + (FVector::UpVector * player->collider->halfHeight);
+			player->collider->SetRelativeLocation(newLoc);
 		}
 
 		else

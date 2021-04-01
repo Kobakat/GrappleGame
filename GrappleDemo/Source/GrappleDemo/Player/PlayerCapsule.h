@@ -1,43 +1,45 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/StaticMesh.h"
-#include "Components/StaticMeshComponent.h"
-#include "PlayerCylinder.generated.h"
+#include "Components/CapsuleComponent.h"
+#include "PlayerCapsule.generated.h"
 
 class APlayerPawn;
 
 UCLASS()
-class GRAPPLEDEMO_API UPlayerCylinder : public UStaticMeshComponent
+class GRAPPLEDEMO_API UPlayerCapsule : public UCapsuleComponent
 {
 	GENERATED_BODY()
-	
+
 
 public:
-	UPlayerCylinder();
+	UPlayerCapsule();
 
-	UPROPERTY(EditAnywhere, Category = "Materials")
+	UPROPERTY(EditAnywhere, Category = "Physic Materials")
 		UPhysicalMaterial* moveMat;
-	UPROPERTY(EditAnywhere, Category = "Materials")
+	UPROPERTY(EditAnywhere, Category = "Physic Materials")
 		UPhysicalMaterial* stopMat;
-	UPROPERTY(EditAnywhere, Category = "Materials")
+	UPROPERTY(EditAnywhere, Category = "Physic Materials")
 		UPhysicalMaterial* runSlideMat;
-	UPROPERTY(EditAnywhere, Category = "Materials")
+	UPROPERTY(EditAnywhere, Category = "Physic Materials")
 		UPhysicalMaterial* noFricMat;
 
+	float halfHeight;
 	FVector previousVelocity;
-
 	FVector bounds;
-	FHitResult CrouchHitPoint;
+
+	TArray<FHitResult> CrouchHits;
 	TArray<FHitResult> GroundHits;
 	TArray<FHitResult> LedgeHits;
+	FHitResult LedgeTop;
 
 	bool bOnSlide;
 
 	bool bNeedsToStand;
 	float standUpTimer;
-
+	
 	void TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	float GetCrouchTime(float targetScale);
 	bool CheckIfGrounded();
 	bool CheckIfTryingToStand();
 	bool CheckIfLedgeGrabEligible();
@@ -48,8 +50,6 @@ protected:
 	void BeginPlay() override;
 private:
 	APlayerPawn* player;
-	void HandleStandUp(float deltaTime);
 	FVector CalculateBounds();
-
-
+	void HandleStandUp(float deltaTime);	
 };

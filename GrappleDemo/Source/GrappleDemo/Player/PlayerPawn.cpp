@@ -12,7 +12,7 @@ APlayerPawn::APlayerPawn()
 
 	bUseControllerRotationYaw = false;
 
-	collider = CreateDefaultSubobject<UPlayerCylinder>(TEXT("Collider"));
+	collider = CreateDefaultSubobject<UPlayerCapsule>(TEXT("Collider"));
 	collider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));

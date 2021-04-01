@@ -62,7 +62,7 @@ void UMovementState::CheckIfGrounded()
 		player->SetState(USlideState::GetInstance());
 
 	if (player->collider->GetPhysicsLinearVelocity().Z < 0.F &&
-		player->bPreviousGrounded != player->bGrounded)
+		player->bGrounded)
 	{
 		FVector velocity = player->collider->GetPhysicsLinearVelocity();
 		player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
