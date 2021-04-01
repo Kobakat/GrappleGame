@@ -88,8 +88,8 @@ void UGrappleGunComponent::Attach()
 	IsRetracting = false;
 	IsAttached = false;
 	// Notify audio logic
-	OnGrappleShot();
-	OnGrappleStartedTraveling();
+	OnGrappleShot.Broadcast();
+	OnGrappleStartedTraveling.Broadcast();
 }
 
 void UGrappleGunComponent::Detach()
@@ -101,7 +101,7 @@ void UGrappleGunComponent::Detach()
 	IsRetracting = true;
 	IsAttached = false;
 	// Notify audio logic
-	OnGrappleStartedTraveling();
+	OnGrappleStartedTraveling.Broadcast();
 }
 
 void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
@@ -147,8 +147,8 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				IsShooting = false;
 				IsAttached = true;
 				// Notify audio logic
-				OnGrappleHit();
-				OnGrappleStoppedTraveling();
+				OnGrappleHit.Broadcast();
+				OnGrappleStoppedTraveling.Broadcast();
 				// Set the initial length for the state to work with
 				Length = FVector::Distance(
 					CastingFromComponent->GetComponentLocation(), target);
@@ -179,7 +179,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 						IsRetracting = false;
 						Polyline->SetAllPoints(TArray<FVector>());
 						// Notify audio logic
-						OnGrappleStoppedTraveling();
+						OnGrappleStoppedTraveling.Broadcast();
 						break;
 					}
 				}
