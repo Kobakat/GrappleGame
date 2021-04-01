@@ -44,6 +44,20 @@ void APolylineCylinderRenderer::BeginPlay()
 	SetRadius(Diameter * 0.5F);
 }
 
+TArray<FVector> APolylineCylinderRenderer::GetPoints()
+{
+	return Points;
+}
+
+float APolylineCylinderRenderer::GetTotalLength()
+{
+	float lengthAccumulator = 0.F;
+	if (Points.Num() > 1)
+		for (int i = 1; i < Points.Num(); i++)
+			lengthAccumulator += FVector::Distance(Points[i], Points[i - 1]);
+	return lengthAccumulator;
+}
+
 void APolylineCylinderRenderer::SetAllPoints(const TArray<FVector>& points)
 {
 	Points = points;

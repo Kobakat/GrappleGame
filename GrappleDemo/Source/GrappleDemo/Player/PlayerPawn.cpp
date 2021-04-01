@@ -39,17 +39,19 @@ void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Grab the grapple gun
-	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
-	grappleComponent->SetCastingFromComponent(camera);
-	grappleComponent->IgnoredActors.Add(this);
-	SetHasGrapple(hasGrapple);
-
 	// Ensure the grapple polyline is instantiated.
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
 	if (!childActor->HasBeenCreated())
 		childActor->CreateChildActor();
 	GrapplePolyline = Cast<APolylineCylinderRenderer>(childActor->GetChildActor());
+
+	// Grab the grapple gun
+	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
+	grappleComponent->SetCastingFromComponent(camera);
+	grappleComponent->IgnoredActors.Add(this);
+	grappleComponent->Polyline = GrapplePolyline;
+	SetHasGrapple(hasGrapple);
+
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);

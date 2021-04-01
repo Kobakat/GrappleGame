@@ -21,17 +21,12 @@ void UGrappleState::OnStateEnter()
 	// Reset parameters for wrapping.
 	WrapPivots.Empty();
 	WrapActors.Empty();
-	grapplePolyline->SetAllPoints(TArray<FVector>());
-	grapplePolyline->PushPoint(grappleComponent->GetAttachedLocation());
-	grapplePolyline->PushPoint(grappleComponent->GetGunEnd());
 }
 void UGrappleState::OnStateExit()
 {
 	UMovementState::OnStateExit();
 	// Detach the grapple hook
 	grappleComponent->Detach();
-	// Clear out the polyline renderer
-	grapplePolyline->SetAllPoints(TArray<FVector>());
 }
 #pragma endregion
 #pragma region Solve Restraint

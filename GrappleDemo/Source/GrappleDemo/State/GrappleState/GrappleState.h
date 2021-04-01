@@ -13,15 +13,14 @@ class GRAPPLEDEMO_API UGrappleState : public UMovementState
 {
 	GENERATED_BODY()
 	
-private:
-	void SolveWrap();
-
 protected:
 	// Grapple References.
 	UGrappleGunComponent* grappleComponent;
 	APolylineCylinderRenderer* grapplePolyline;
 	// Common grapple leash behaviour.
 	bool SolveRestraint();
+	// Solves only the wrap part of the behaviour.
+	void SolveWrap();
 
 	TArray<FVector> WrapPivots;
 	TArray<AActor*> WrapActors;

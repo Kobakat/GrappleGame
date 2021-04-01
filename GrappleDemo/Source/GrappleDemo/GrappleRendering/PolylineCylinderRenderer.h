@@ -53,21 +53,25 @@ protected:
 	UMaterial* SphereMaterial;
 
 public:	
-	// Sets all points of the polyline, recalculating everything.
+	// Gets the collection of points in the polyline
+	TArray<FVector> GetPoints();
+	// Calculates the total length of the polyline
+	float GetTotalLength();
+	// Sets all points of the polyline, recalculating everything
 	void SetAllPoints(const TArray<FVector>& points);
-	// Sets the first point of the polyline.
+	// Sets the first point of the polyline
 	void SetFirstPoint(FVector point);
-	// Sets the last point of the polyline.
+	// Sets the last point of the polyline
 	void SetLastPoint(FVector point);
-	// Adds a new point onto the end of the polyline.
-	// Returns false if the polyline is at its limit and cannot add the point.
+	// Adds a new point onto the end of the polyline
+	// Returns false if the polyline is at its limit and cannot add the point
 	bool PushPoint(FVector point);
-	// Removes the last point from the polyline.
-	// Returns false if the polyline contains zero points.
+	// Removes the last point from the polyline
+	// Returns false if the polyline contains zero points
 	bool PopPoint();
 
-	// Sets the radius of the polyline.
+	// Sets the radius of the polyline
 	void SetRadius(float radius);
-	// Sets the maximum point count for this polyline.
+	// Sets the maximum point count for this polyline
 	void SetMaxPointCount(int count);
 };

@@ -47,11 +47,16 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	CheckIfGrounded();
 	ClampPlayerVelocity(player->bGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 
-	bool isSolved =	SolveRestraint();
-	if (!isSolved)
+	if (!grappleComponent->GetIsAnimating())
 	{
-		player->SetState(UWalkState::GetInstance());
+		bool isSolved = SolveRestraint();
+		if (!isSolved)
+		{
+			player->SetState(UWalkState::GetInstance());
+		}
 	}
+	else
+		SolveWrap();
 
 	CheckStateChange();
 }
