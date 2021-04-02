@@ -53,6 +53,8 @@ private:
 	void UpdateShakeState();
 	void UpdateShake(const float deltaTime, const float amplitude, const float freq);
 
+	float GetFOVChangeTime(float targetFOV);
+
 #pragma region Designer Props
 	//This FOV is used while walking, crouching, and idling
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")

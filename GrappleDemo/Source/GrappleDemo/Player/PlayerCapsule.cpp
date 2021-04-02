@@ -385,7 +385,9 @@ bool UPlayerCapsule::CheckIfStepUp(float& outHeight)
 
 float UPlayerCapsule::GetCrouchTime(float targetScale)
 {
-	const float divisor = FMath::Min(halfHeight, targetScale);
-	const float frac = FMath::Abs(halfHeight - targetScale) / divisor;		
+	const float maxDistance = player->standHeight - player->crouchHeight;
+	const float distance = FMath::Abs(halfHeight - targetScale);
+	const float frac = distance / maxDistance;
+
 	return frac * player->crouchTransitionTime;
 }
