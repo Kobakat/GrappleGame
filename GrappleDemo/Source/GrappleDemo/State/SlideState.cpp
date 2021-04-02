@@ -34,10 +34,10 @@ void USlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
 	crouchTimer = player->collider->GetCrouchTime(player->crouchHeight);
-	camTimer = 0;
-	bIsTransitioning = true;
-	bIsCrouching = true;
 	player->collider->SetPhysMaterialOverride(player->collider->noFricMat);
+	player->collider->SetPhysicsLinearVelocity(player->collider->previousVelocity);
+	bIsTransitioning = true;
+	bIsCrouching = true;	
 }
 
 void USlideState::StateTick(float deltaTime)
@@ -47,17 +47,12 @@ void USlideState::StateTick(float deltaTime)
 	HandleJump(player->slideJumpForce, false);
 	PlayerMove(player->slideAcceleration, 0);
 	PlayerLook(deltaTime);
-
-
 	ClampPlayerVelocity(player->slideMaxSpeed);
-
 	UMovementState::CheckStateChangeGrapple();
 }
 
 void USlideState::OnStateExit()
 {
-	crouchTimer = 0;
-	camTimer = 0;
 	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
 }
 
@@ -84,7 +79,7 @@ void USlideState::CheckIfGrounded()
 	const float radius = player->collider->bounds.X * .99f;
 	const FVector capsuleLoc = player->collider->GetComponentLocation();
 	const FVector sweepStart = FVector(capsuleLoc.X, capsuleLoc.Y, capsuleLoc.Z - player->collider->halfHeight + player->collider->bounds.X) + FVector::UpVector;
-	const FVector sweepEnd = FVector(capsuleLoc.X, capsuleLoc.Y, capsuleLoc.Z - player->collider->halfHeight) + FVector::DownVector;
+	const FVector sweepEnd = FVector(capsuleLoc.X, capsuleLoc.Y, capsuleLoc.Z - (player->collider->halfHeight * 2.f));
 	const FCollisionShape sphere = FCollisionShape::MakeSphere(radius);
 
 	const bool bHitSlide = player->GetWorld()->SweepMultiByChannel(

@@ -116,20 +116,17 @@ bool UPlayerCapsule::CheckIfGrounded()
 						FMath::Acos(
 							FVector::DotProduct(FVector::UpVector, hit.Normal)));
 
-				if (angle <= player->maxSlopeAngle)
+				if (hit.Component->GetCollisionProfileName() == FName(TEXT("Slide")) && GroundHits.Num() == 1)
 				{
-					if (hit.Component->GetCollisionProfileName() == FName(TEXT("Slide")) && GroundHits.Num() == 1)
-					{
-						bOnSlide = true;
-						USlideState::GetInstance()->SetSlide(hit);
-						return true;
-					}
+					bOnSlide = true;
+					USlideState::GetInstance()->SetSlide(hit);
+					return true;
+				}
 
-					else
-					{
-						bOnSlide = false;
-						return true;
-					}
+				else if (angle <= player->maxSlopeAngle)
+				{
+					bOnSlide = false;
+					return true;
 				}
 			}
 		}
