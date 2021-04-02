@@ -39,17 +39,19 @@ void APlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Grab the grapple gun
-	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
-	grappleComponent->SetCastingFromComponent(camera);
-	grappleComponent->IgnoredActors.Add(this);
-	SetHasGrapple(hasGrapple);
-
 	// Ensure the grapple polyline is instantiated.
 	UChildActorComponent* childActor = FindComponentByClass<UChildActorComponent>();
 	if (!childActor->HasBeenCreated())
 		childActor->CreateChildActor();
 	GrapplePolyline = Cast<APolylineCylinderRenderer>(childActor->GetChildActor());
+
+	// Grab the grapple gun
+	grappleComponent = FindComponentByClass<UGrappleGunComponent>();
+	grappleComponent->SetCastingFromComponent(camera);
+	grappleComponent->IgnoredActors.Add(this);
+	grappleComponent->Polyline = GrapplePolyline;
+	SetHasGrapple(hasGrapple);
+
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
@@ -112,7 +114,8 @@ void APlayerPawn::ShootReleasePress()
 		SetState(UGrappleAirborneState::GetInstance());
 		grappleComponent->Attach();
 	}
-	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
+	else if (stateMachine->state == UGrappleAirborneState::GetInstance()
+		|| stateMachine->state == UGrappleInstantReelState::GetInstance())
 	{
 		// This detaches the grapple if the player clicks
 		// again and there is nothing within grapple range
@@ -127,6 +130,13 @@ void APlayerPawn::InstantReelPress()
 	{
 		SetState(UGrappleInstantReelState::GetInstance());
 		grappleComponent->Attach();
+	}
+	else if (stateMachine->state == UGrappleAirborneState::GetInstance()
+		|| stateMachine->state == UGrappleInstantReelState::GetInstance())
+	{
+		// This detaches the grapple if the player clicks
+		// again and there is nothing within grapple range
+		SetState(UWalkState::GetInstance());
 	}
 }
 

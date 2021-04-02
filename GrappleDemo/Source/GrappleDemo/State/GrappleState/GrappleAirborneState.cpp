@@ -47,11 +47,16 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 	CheckIfGrounded();
 	ClampPlayerVelocity(player->bGrounded ? player->walkMaxSpeed : player->airborneMaxSpeed);
 
-	bool isSolved =	SolveRestraint();
-	if (!isSolved)
+	if (!grappleComponent->GetIsAnimating())
 	{
-		player->SetState(UWalkState::GetInstance());
+		bool isSolved = SolveRestraint();
+		if (!isSolved)
+		{
+			player->SetState(UWalkState::GetInstance());
+		}
 	}
+	else
+		SolveWrap();
 
 	CheckStateChange();
 }
@@ -63,9 +68,8 @@ void UGrappleAirborneState::StateTick(float deltaTime)
 void UGrappleAirborneState::CheckStateChange()
 {
 	// If the grapple or jump button is pressed then release
-	// the grapple and return to walk state.
-	if (player->tryingToGrapple ||
-		(player->tryingToJump && !player->bGrounded))
+	// the grapple and return to walk state
+	if ((player->tryingToJump && !player->bGrounded))
 		player->SetState(UWalkState::GetInstance());
 }
 void UGrappleAirborneState::HandleGrappleInput()
