@@ -3,13 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
+#include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "GrappleGunComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSoundUpdated);
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class GRAPPLEDEMO_API UGrappleGunComponent : public UActorComponent
+UCLASS(ClassGroup = "Grapple", meta = (BlueprintSpawnableComponent))
+class GRAPPLEDEMO_API UGrappleGunComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
@@ -20,13 +22,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
 
 	// The hook object that lodges into the hooked location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	USceneComponent* GrappleHookEnd;
-	// Defines where the grapple hook end returns to
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
-	//USceneComponent* GunEnd;
 	// The current state for whether the gun is rendered
 	bool isRendered;
 
@@ -34,6 +34,10 @@ protected:
 	USceneComponent* CastingFromComponent;
 	// The current length of the grapple cable
 	float Length;
+	// True when the hook is shooting towards the target
+	float IsShooting;
+	// True when the hook is retracting to the gun
+	float IsRetracting;
 	// Whether the grapple is currently hovered on a grapple surface
 	bool CanAttach;
 	// True while the grapple hook is attached
@@ -49,7 +53,21 @@ protected:
 	// Stores the current reactor the cable is hooked to
 	AGrappleReactor* CurrentReactor;
 
-public:	
+	// Called once when the grapple hook is shot from the gun
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnGrappleShot;
+	// Called once when the grapple hook hits a surface
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnGrappleHit;
+	// Called every tick while the hook is shooting
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnGrappleStartedTraveling;
+	// Called every tick while the hook is returning
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnGrappleStoppedTraveling;
+
+public:
+
 	// Defines where the grapple hook end returns to
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	USceneComponent* GunEnd;
@@ -63,13 +81,20 @@ public:
 	// The maximum cable length
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	float MaxLength;
+	// Controls how fast the shot animates
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	float ShotSpeed;
 	// Actors that are ignored in the grapple raycast
 	TArray<AActor*> IgnoredActors;
+	// The polyline used to render the cable
+	APolylineCylinderRenderer* Polyline;
 
 	// Sets the scene component that the cast starts from (should be a camera)
 	void SetCastingFromComponent(USceneComponent* CastingFrom);
 	// Gets whether the grapple gun can currently attach
 	bool GetCanAttach();
+	// Gets whether the grapple gun is a transition animation state
+	bool GetIsAnimating();
 	// Gets the current length of the cable
 	UFUNCTION(BlueprintCallable)
 	float GetLength();
@@ -77,9 +102,9 @@ public:
 	FVector GetAttachedLocation();
 	// Gets the end of the gun barrel where the rope starts
 	FVector GetGunEnd();
-	// Attaches the grapple to the most recent grapple point
+	// Signals the start of the shoot animation to attach to a point
 	void Attach();
-	// Detaches from the current grapple point
+	// Signals the start of the retract animatio to detach from a point
 	void Detach();
 	// Applys a force along the grapple cable
 	// Trys to pull the grappled object such that the distance

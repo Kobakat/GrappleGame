@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
 		float ledgeTiltSpeed;
 
+	float baseHeight;
+
 protected:
 	void BeginPlay() override;
 private:
@@ -50,6 +52,8 @@ private:
 	void UpdateFOV(const float deltaTime);
 	void UpdateShakeState();
 	void UpdateShake(const float deltaTime, const float amplitude, const float freq);
+
+	float GetFOVChangeTime(float targetFOV);
 
 #pragma region Designer Props
 	//This FOV is used while walking, crouching, and idling
@@ -81,7 +85,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Camera Stats | State")
 		TEnumAsByte<ECameraShakeState> shakeState;
 
-	float initialHeight;
 	float shakeInTimer;
 	float shakeOutTimer;
 	float shakeOffset;

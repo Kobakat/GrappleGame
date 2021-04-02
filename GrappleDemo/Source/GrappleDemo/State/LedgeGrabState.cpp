@@ -45,17 +45,15 @@ void ULedgeGrabState::StateTick(float deltaTime)
 void ULedgeGrabState::OnStateExit()
 {
 	bClimbComplete = false;
+	player->collider->SetEnableGravity(true);
 }
 
 void ULedgeGrabState::InitializePositionValues()
 {
 	this->startLoc = player->GetActorLocation();
 
-	//Get the height the player is climbing to
-	//TODO this will not work if the ledge moves up and down
-	FVector ledgeBounds = ledge.Component->Bounds.BoxExtent;
-	ledgeBounds += ledge.Actor.Get()->GetActorLocation();
-	this->liftHeight = ledgeBounds.Z;
+	//HACK hard coded half height to ensure standing up from a crouch doesn't break anything
+	this->liftHeight = player->collider->LedgeTop.ImpactPoint.Z + 90.f;
 
 	//Get the direction to push the player
 	this->pushDir = player->camera->GetForwardVector();
@@ -117,8 +115,6 @@ void ULedgeGrabState::LiftPlayerUp(float deltaTime)
 }
 void ULedgeGrabState::PushPlayerForward()
 {
-	player->collider->SetEnableGravity(true);
-	
 	switch (pushType)
 	{
 	case LPT_Lazy:

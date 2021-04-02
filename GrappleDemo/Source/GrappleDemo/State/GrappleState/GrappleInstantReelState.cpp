@@ -32,12 +32,17 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 {
 	PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
 	PlayerLook(deltaTime);
-	UpdateGrappleRope(deltaTime);
-	bool isSolved = SolveRestraint();
-	if (!isSolved)
+	if (!grappleComponent->GetIsAnimating())
 	{
-		player->SetState(UWalkState::GetInstance());
+		UpdateGrappleRope(deltaTime);
+		bool isSolved = SolveRestraint();
+		if (!isSolved)
+		{
+			player->SetState(UWalkState::GetInstance());
+		}
 	}
+	else
+		SolveWrap();
 
 	CheckStateChange();
 	UMovementState::CheckStateChangeGrapple();
@@ -49,10 +54,12 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 
 void UGrappleInstantReelState::CheckStateChange()
 {
-	// If the grapple or jump button is pressed then release
-	// the grapple and return to walk state.
-	if (player->tryingToInstantReel || player->tryingToJump)
+	// Release the grapple if the player jumps
+	if (player->tryingToJump)
 		player->SetState(UWalkState::GetInstance());
+	if (!grappleComponent->GetIsAnimating())
+		if (grappleComponent->GetLength() <= grappleComponent->MinLength)
+			player->SetState(UGrappleAirborneState::GetInstance());
 }
 void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {
