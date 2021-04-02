@@ -33,37 +33,26 @@ void USlideState::Initialize(APlayerPawn* pawn)
 void USlideState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	crouchTimer = 0;
-	camTimer = 0;
-	bIsTransitioning = true;
-	bIsCrouching = true;
-	player->collider->bNeedsToStand = false;
+	crouchTimer = player->collider->GetCrouchTime(player->crouchHeight);
 	player->collider->SetPhysMaterialOverride(player->collider->noFricMat);
+	player->collider->SetPhysicsLinearVelocity(player->collider->previousVelocity);
+	bIsTransitioning = true;
+	bIsCrouching = true;	
 }
 
 void USlideState::StateTick(float deltaTime)
 {
 	CheckIfGrounded();
 	HandleCrouchDown(deltaTime);
-	//HandleCameraTransition(deltaTime);
 	HandleJump(player->slideJumpForce, false);
 	PlayerMove(player->slideAcceleration, 0);
 	PlayerLook(deltaTime);
-	/*if (!bIsTransitioning)
-	{
-		PlayerMove(player->slideAcceleration, 0);
-		PlayerLook(deltaTime);
-	}*/
-
 	ClampPlayerVelocity(player->slideMaxSpeed);
-
 	UMovementState::CheckStateChangeGrapple();
 }
 
 void USlideState::OnStateExit()
 {
-	crouchTimer = 0;
-	camTimer = 0;
 	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
 }
 
@@ -84,80 +73,88 @@ void USlideState::PlayerMove(float accel, float airControlFactor)
 
 void USlideState::CheckIfGrounded()
 {
-	FHitResult hitSlide;
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FVector boxBounds = FVector(
-		player->bounds.X, 
-		player->bounds.Y, 
-		30.f);
+	const float radius = player->collider->bounds.X * .99f;
+	const FVector capsuleLoc = player->collider->GetComponentLocation();
+	const FVector sweepStart = FVector(capsuleLoc.X, capsuleLoc.Y, capsuleLoc.Z - player->collider->halfHeight + player->collider->bounds.X) + FVector::UpVector;
+	const FVector sweepEnd = FVector(capsuleLoc.X, capsuleLoc.Y, capsuleLoc.Z - (player->collider->halfHeight * 2.f));
+	const FCollisionShape sphere = FCollisionShape::MakeSphere(radius);
 
-	FCollisionShape box = FCollisionShape::MakeBox(boxBounds);
-
-#if WITH_EDITOR
-	DrawDebugBox(
-		player->GetWorld(), 
-		player->GetActorLocation(),
-		boxBounds, 
-		FColor::Red, 
-		false, 
-		0.05f);
-#endif
-
-	bool bHitSlide = player->GetWorld()->SweepSingleByChannel(
-		hitSlide,
-		player->GetActorLocation(),
-		player->GetActorLocation(),
+	const bool bHitSlide = player->GetWorld()->SweepMultiByChannel(
+		player->collider->GroundHits,
+		sweepStart,
+		sweepEnd,
 		FQuat::Identity,
 		ECC_GameTraceChannel1,
-		box,
+		sphere,
 		param);
 
 	if (bHitSlide)
 	{
-		FName struckProfile = hitSlide.Component->GetCollisionProfileName();
+		bool onSlide = false;
 
-		if (struckProfile == FName(TEXT("Slide")))
+		for (FHitResult hit : player->collider->GroundHits)
 		{
-			slideNormal = hitSlide.Normal;
-			slideNormal.Z = 0;
-			slideNormal.Normalize(0.001);
-			player->collider->bOnSlide = true;
-			player->bGrounded = true;
-		}
+			FName struckProfile = hit.Component->GetCollisionProfileName();
 
-		else
-		{
-			player->SetState(UCrouchState::GetInstance());
-			player->bGrounded = true;
-			player->collider->bOnSlide = false;
+			if (struckProfile == FName(TEXT("Slide")))
+			{
+				slideNormal = hit.ImpactNormal;
+				slideNormal.Z = 0;
+				slideNormal.Normalize(0.001);
+				player->collider->bOnSlide = true;
+				player->bGrounded = true;
+				return;
+			}
+
+			else
+			{
+				//HACK do a better check for a normal that is orthogonal to the Z plane
+				if (hit.ImpactNormal.Z > .8f)
+				{					
+					break;
+				}		
+			}
 		}
 	}
 
-	else
-	{
-		player->SetState(UCrouchState::GetInstance());
-		player->bGrounded = false;
-		player->collider->bOnSlide = false;
-	}
+	player->SetState(UCrouchState::GetInstance());
+	player->bGrounded = true;
+	player->collider->bOnSlide = false;	
 }
 
 void USlideState::HandleCrouchDown(float deltaTime)
 {
 	if (bIsCrouching)
 	{
-		float currentScale = player->collider->GetRelativeScale3D().Z;
-		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
 		//Only handle crouch if the player isn't already crouched down
-		if (currentScale > player->crouchHeightScale)
+		if (player->collider->halfHeight != player->crouchHeight)
 		{
-			crouchTimer += deltaTime;
+			crouchTimer -= deltaTime;
 
 			float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-			float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+			frac = frac * frac * (3.f - 2.f * frac);
 
-			player->collider->SetRelativeScale3D(FVector(1, 1, newScale));
+			//Interoplate the collider/camera height
+			const float newHeight = FMath::Lerp(player->crouchHeight, player->standHeight, frac);
+			player->camera->baseHeight = FMath::Lerp(30, 60, frac); //HACK delete hard coded cam values
+
+			//Set new values
+			player->collider->SetCapsuleHalfHeight(newHeight);
+			player->camera->SetRelativeLocation(FVector::UpVector * player->camera->baseHeight);
+
+			const FVector capsuleLoc = player->collider->GetComponentLocation();
+			const FVector base = FVector(
+				capsuleLoc.X,
+				capsuleLoc.Y,
+				capsuleLoc.Z - player->collider->halfHeight);
+
+			player->collider->halfHeight = player->collider->GetScaledCapsuleHalfHeight();
+
+			const FVector newLoc = base + (FVector::UpVector * player->collider->halfHeight);
+			player->collider->SetRelativeLocation(newLoc);
 		}
 
 		else

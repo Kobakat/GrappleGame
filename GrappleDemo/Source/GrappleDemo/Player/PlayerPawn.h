@@ -8,7 +8,7 @@
 #include "../State/StateMachine.h"
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
-#include "PlayerCylinder.h"
+#include "PlayerCapsule.h"
 #include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
@@ -26,10 +26,7 @@ public:
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
-	
-	FHitResult CrouchHitPoint;
-	FHitResult GroundHitPoint;
-	FHitResult LedgeHitPoint;
+
 	bool bPreviousGround;
 	float standUpTimer;
 
@@ -38,7 +35,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Camera")
 		Ucringetest* camera;
 	UPROPERTY(VisibleAnywhere, Category = "Collider")
-		UPlayerCylinder* collider;
+		UPlayerCapsule* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
 
@@ -51,9 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float maxFallSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
-		float standHeightScale;
+		float standHeight;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
-		float crouchHeightScale;
+		float crouchHeight;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
 		float stepHeight;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | General")
@@ -137,7 +134,10 @@ public:
 		float ledgeLookAngle;
 	//The maximum units up our player can grab (distance from bottom of player)
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeGrabHeight;
+		float ledgeMaxGrabHeight;
+	//The minimum units up our player can grab (distance from bottom of player)
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeMinGrabHeight;
 	//How many player radius' to expand the ledge grab range by
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgeGrabRangeFactor;

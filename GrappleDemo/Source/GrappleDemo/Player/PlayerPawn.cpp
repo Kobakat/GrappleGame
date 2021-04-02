@@ -12,7 +12,7 @@ APlayerPawn::APlayerPawn()
 
 	bUseControllerRotationYaw = false;
 
-	collider = CreateDefaultSubobject<UPlayerCylinder>(TEXT("Collider"));
+	collider = CreateDefaultSubobject<UPlayerCapsule>(TEXT("Collider"));
 	collider->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 
 	camera = CreateDefaultSubobject<Ucringetest>(TEXT("Player Camera"));
@@ -67,6 +67,7 @@ void APlayerPawn::Tick(float deltaTime)
 		stateMachine->Tick(deltaTime);
 	}
 
+	collider->HandleStandUp(deltaTime);
 	grappleCanAttach = grappleComponent->GetCanAttach();
 	bPreviousGrounded = bGrounded;
 	collider->previousVelocity = collider->GetPhysicsLinearVelocity();

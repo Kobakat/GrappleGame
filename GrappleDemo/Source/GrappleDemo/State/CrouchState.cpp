@@ -25,9 +25,8 @@ void UCrouchState::Initialize(APlayerPawn* pawn)
 void UCrouchState::OnStateEnter()
 {
 	player->stateName = this->stateName;
-	player->collider->bNeedsToStand = false;
 	bIsCrouching = true;
-	crouchTimer = 0;
+	crouchTimer = player->collider->GetCrouchTime(player->crouchHeight);
 }
 
 void UCrouchState::StateTick(float deltaTime)
@@ -45,9 +44,8 @@ void UCrouchState::StateTick(float deltaTime)
 
 void UCrouchState::OnStateExit()
 {
-	crouchTimer = 0;
 	player->collider->bNeedsToStand = true;
-	player->collider->standUpTimer = 0;
+	player->collider->standUpTimer = player->collider->GetCrouchTime(player->standHeight);
 }
 
 #pragma endregion
@@ -56,7 +54,7 @@ void UCrouchState::OnStateExit()
 
 void UCrouchState::CheckIfPlayerIsTryingToStand() 
 {
-	if (!player->collider->CheckIfTryingToStand() && !player->tryingToCrouch)
+	if (!bIsCrouching && !player->tryingToCrouch && !player->collider->CheckIfTryingToStand() )
 	{
 		player->SetState(UWalkState::GetInstance());
 	}
@@ -73,19 +71,33 @@ void UCrouchState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 void UCrouchState::HandleCrouchDown(float deltaTime)
 {
 	if (bIsCrouching)
-	{
-		const float currentScale = player->collider->GetRelativeScale3D().Z;
-	
-		player->gun->SetRelativeScale3D(FVector(1, 1, 1.f / currentScale));
+	{	
 		//Only handle crouch if the player isn't already crouched down
-		if (currentScale > player->crouchHeightScale) 
+		if (player->collider->halfHeight != player->crouchHeight) 
 		{
-			crouchTimer += deltaTime;
+			crouchTimer -= deltaTime;
 
-			const float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
-			const float newScale = FMath::Lerp(currentScale, player->crouchHeightScale, frac);
+			float frac = FMath::Clamp((crouchTimer / player->crouchTransitionTime), 0.f, 1.f);
+			frac = frac * frac * (3.f - 2.f * frac);
 
-			player->collider->SetRelativeScale3D(FVector(1,1, newScale));
+			//Interoplate the collider/camera height
+			const float newHeight = FMath::Lerp(player->crouchHeight, player->standHeight, frac);
+			player->camera->baseHeight = FMath::Lerp(30, 60, frac); //HACK delete hard coded cam values
+
+			//Set new values
+			player->collider->SetCapsuleHalfHeight(newHeight);
+			player->camera->SetRelativeLocation(FVector::UpVector * player->camera->baseHeight);
+
+			const FVector capsuleLoc = player->collider->GetComponentLocation();
+			const FVector base = FVector(
+				capsuleLoc.X, 
+				capsuleLoc.Y,
+				capsuleLoc.Z - player->collider->halfHeight);
+
+			player->collider->halfHeight = player->collider->GetScaledCapsuleHalfHeight();
+
+			const FVector newLoc = base + (FVector::UpVector * player->collider->halfHeight);
+			player->collider->SetRelativeLocation(newLoc);
 		}
 
 		else 
