@@ -53,7 +53,7 @@ void UWalkState::CheckIfPlayerIsTryingToRun()
 }
 
 void UWalkState::CheckIfPlayerIsTryingToCrouch() {
-	if (player->tryingToCrouch) 
+	if (player->tryingToCrouch && !player->collider->bNeedsToStand) 
 	{
 		player->SetState(UCrouchState::GetInstance());
 	}

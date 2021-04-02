@@ -55,7 +55,7 @@ void URunState::CheckIfPlayerStopsRunning()
 
 void URunState::CheckifPlayerWantsToSlide() 
 {
-	if (player->tryingToCrouch && player->bGrounded) 
+	if (player->tryingToCrouch && player->bGrounded && !player->collider->bNeedsToStand)
 	{
 		player->SetState(URunSlideState::GetInstance());
 	}

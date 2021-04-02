@@ -56,7 +56,7 @@ void UIdleState::CheckForVelocityChange()
 
 void UIdleState::CheckIfPlayerIsTryingToCrouch() 
 {
-	if (player->tryingToCrouch)
+	if (player->tryingToCrouch && !player->collider->bNeedsToStand)
 	{
 		player->SetState(UCrouchState::GetInstance());
 	}

@@ -5,7 +5,10 @@ Ucringetest::Ucringetest() { PrimaryComponentTick.bCanEverTick = true; }
 void Ucringetest::BeginPlay()
 {
 	this->player = Cast<APlayerPawn>(GetOwner());
-	this->initialHeight = GetRelativeLocation().Z;
+	this->baseHeight = GetRelativeLocation().Z;
+
+	this->prevFOVState = Passive;
+	this->fovState = Passive;
 }
 
 void Ucringetest::TickComponent(float deltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -30,7 +33,8 @@ void Ucringetest::UpdateFOVState()
 	if (this->prevFOVState != this->fovState)
 	{
 		fovTransition = true;
-		fovTimer = 0;
+		const float targetFOV = this->fovState == Active ? FOVActive : FOVPassive; // hacky
+		fovTimer = GetFOVChangeTime(targetFOV);
 	}
 		
 }
@@ -39,29 +43,39 @@ void Ucringetest::UpdateFOV(const float deltaTime)
 {
 	if (fovTransition)
 	{
-		const float frac = fovTimer / FOVTransitionTime;
+		fovTimer -= deltaTime;
+
+		float frac = FMath::Clamp((fovTimer / FOVTransitionTime), 0.f, 1.f);
+		frac = frac * frac * (3.f - 2.f * frac);
+
 		float newFOV;
 
 		switch (this->fovState)
 		{
 		case Passive:
-			newFOV = FMath::Lerp(this->FieldOfView, FOVPassive, frac);
+			newFOV = FMath::Lerp(FOVPassive, FOVActive, frac);
 			this->FieldOfView = newFOV;
 			break;
 		case Active:
-			newFOV = FMath::Lerp(this->FieldOfView, FOVActive, frac);
+			newFOV = FMath::Lerp(FOVActive, FOVPassive, frac);
 			this->FieldOfView = newFOV;
 			break;
 		}
 
-		fovTimer += deltaTime;
-
-		if (frac >= 1)
+		if (frac <= 0)
 		{
 			fovTransition = false;
-			fovTimer = 0;
 		}
 	}
+}
+
+float Ucringetest::GetFOVChangeTime(float targetFov)
+{
+	const float maxFOVDistance = FOVActive - FOVPassive;
+	const float FOVDistance = FMath::Abs(this->FieldOfView - targetFov);
+	const float frac = FOVDistance / maxFOVDistance;
+
+	return frac * FOVTransitionTime;
 }
 
 void Ucringetest::UpdateShakeState()
@@ -160,6 +174,6 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
 		}
 
-		this->SetRelativeLocation(FVector(0, 0, initialHeight + shakeHeight));
+		this->SetRelativeLocation(FVector(0, 0, baseHeight + shakeHeight));
 	}
 }
