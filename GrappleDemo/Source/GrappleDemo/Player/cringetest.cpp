@@ -16,7 +16,7 @@ void Ucringetest::TickComponent(float deltaTime, enum ELevelTick TickType, FActo
 	UpdateFOVState();
 	UpdateFOV(deltaTime);
 	UpdateShakeState();
-	UpdateShake(deltaTime, shakeAmp, shakeFreq);
+	UpdateShake(deltaTime, shakeAmp, shakeFreq, shakeSideAmp);
 }
 
 void Ucringetest::UpdateFOVState()
@@ -100,6 +100,7 @@ void Ucringetest::UpdateShakeState()
 			blendingIn = false;
 			blendingOut = true;
 			shakeStartOffset = shakeHeight;
+			shakeSideStartOffset = shakeSide;
 		}
 	}
 
@@ -108,22 +109,25 @@ void Ucringetest::UpdateShakeState()
 		blendingIn = false;
 		blendingOut = true;
 		shakeStartOffset = shakeHeight;
+		shakeSideStartOffset = shakeSide;
 	}
 
 	if (player->state == UWalkState::GetInstance())
 	{
 		shakeAmp = passiveAmplitude;
 		shakeFreq = passiveFrequency;
+		shakeSideAmp = passiveRockAmplitude;
 	}
 
 	else if (player->state == URunState::GetInstance())
 	{
 		shakeAmp = activeAmplitude;
-		shakeFreq = activeAmplitude;
+		shakeFreq = activeFrequency;
+		shakeSideAmp = activeRockAmplitude;
 	}
 }
 
-void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, const float freq)
+void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, const float freq, const float sideAmp)
 {
 	if (shakeState == Shaking)
 	{
@@ -137,7 +141,7 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 		{
 			//Blend in complete
 			blendingIn = false;
-			shakeInTimer = 0;
+			shakeInTimer = shakeBlendInTime;
 		}
 
 		if (blendingOut && shakeOutTimer < shakeBlendInTime)
@@ -149,6 +153,7 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 			frac = FMath::Clamp(frac, 0.f, 1.f);
 
 			shakeHeight = FMath::Lerp(shakeStartOffset, 0.f, frac);
+			shakeSide = FMath::Lerp(shakeSideStartOffset, 0.f, frac);
 		}
 
 		else if (shakeOutTimer >= shakeBlendInTime)
@@ -161,19 +166,26 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 
 		else
 		{
-			//Calculate the blend strength
-			const float in = shakeInTimer / shakeBlendInTime;
+			const float blendStrength = blendingIn ? (shakeInTimer / shakeBlendInTime) : 1.f;
+			
+			shakeOffset += (deltaTime * freq);
 
-			float blendStrength = 1.f;
-
-			if (blendingIn)
-				blendStrength = in;
-
-			shakeOffset += (deltaTime * blendStrength * freq);
-
-			shakeHeight = FMath::Sin(shakeOffset) * amplitude;
+			shakeHeight = -FMath::Sin(shakeOffset) * amplitude * blendStrength;
+			shakeSide = -FMath::Sin((shakeOffset * 0.5f) + (PI * .25f)) * sideAmp * blendStrength;
 		}
+	
+		this->SetRelativeLocation(
+			FVector(
+				0,
+				0,
+				baseHeight + shakeHeight));
 
-		this->SetRelativeLocation(FVector(0, 0, baseHeight + shakeHeight));
+		this->SetRelativeRotation(
+			FRotator(
+				GetRelativeRotation().Pitch, 
+				GetRelativeRotation().Yaw,
+				shakeSide
+				));
+
 	}
 }

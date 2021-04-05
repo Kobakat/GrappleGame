@@ -51,7 +51,7 @@ private:
 	void UpdateFOVState();
 	void UpdateFOV(const float deltaTime);
 	void UpdateShakeState();
-	void UpdateShake(const float deltaTime, const float amplitude, const float freq);
+	void UpdateShake(const float deltaTime, const float amplitude, const float freq, const float sideAmp);
 
 	float GetFOVChangeTime(float targetFOV);
 
@@ -71,12 +71,22 @@ private:
 	//Duration of the blend-out, where the oscillation scales from 1 to 0.
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float shakeBlendOutTime;
+	//Max distance from the orgin the camera moves when the player walks
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float passiveAmplitude;
+	//Max rotation from the orgin the camera tilts when the player walks
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
+		float passiveRockAmplitude;
+	//How quickly the camera moves when the player walks
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float passiveFrequency;
+	//Max distance from the orgin the camera moves when the player runs
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float activeAmplitude;
+	//Max rotation from the orgin the camera tilts when the player runs
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
+		float activeRockAmplitude;
+	//How quickly the camera moves when the player runs
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Shake", meta = (ClampMin = "0.0"))
 		float activeFrequency;
 #pragma endregion
@@ -89,9 +99,12 @@ private:
 	float shakeOutTimer;
 	float shakeOffset;
 	float shakeAmp;
+	float shakeSideAmp;
 	float shakeFreq;
 	float shakeStartOffset;
+	float shakeSideStartOffset;
 	float shakeHeight;
+	float shakeSide;
 	bool blendingIn;
 	bool blendingOut;
 
