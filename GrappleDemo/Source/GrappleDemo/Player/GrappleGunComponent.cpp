@@ -150,6 +150,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				OnGrappleHit.Broadcast();
 				OnGrappleStoppedTraveling.Broadcast();
 				// Set the initial length for the state to work with
+				LastFrameLength = 
 				Length = FVector::Distance(
 					CastingFromComponent->GetComponentLocation(), target);
 			}
@@ -191,6 +192,58 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 			}
 			if (IsRetracting)
 				Polyline->SetAllPoints(points);
+		}
+		else
+		{
+			float deltaReel = Length - LastFrameLength;
+			LastFrameLength = Length;
+			if (isReeling)
+			{
+				// We have switched directions
+				if (deltaReel > 0.F)
+				{
+					isReeling = false;
+					isUnreeling = true;
+					OnStoppedReelingIn.Broadcast();
+					OnStartedReelingOut.Broadcast();
+				}
+				// We have stopped reeling
+				else if (deltaReel == 0.F)
+				{
+					isReeling = false;
+					OnStoppedReelingIn.Broadcast();
+				}
+			}
+			else if (isUnreeling)
+			{
+				// We have switched directions
+				if (deltaReel < 0.F)
+				{
+					isReeling = true;
+					isUnreeling = false;
+					OnStoppedReelingOut.Broadcast();
+					OnStartedReelingIn.Broadcast();
+				}
+				// We have stopped reeling
+				else if (deltaReel == 0.F)
+				{
+					isUnreeling = false;
+					OnStoppedReelingOut.Broadcast();
+				}
+			}
+			else
+			{
+				if (deltaReel > 0.F)
+				{
+					isUnreeling = true;
+					OnStartedReelingOut.Broadcast();
+				}
+				else if (deltaReel < 0.F)
+				{
+					isReeling = true;
+					OnStartedReelingIn.Broadcast();
+				}
+			}
 		}
 		// Update the grapple end
 		if (Polyline->GetPoints().Num() > 0)

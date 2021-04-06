@@ -114,12 +114,17 @@ void APlayerPawn::ShootReleasePress()
 		SetState(UGrappleAirborneState::GetInstance());
 		grappleComponent->Attach();
 	}
-	else if (stateMachine->state == UGrappleAirborneState::GetInstance()
-		|| stateMachine->state == UGrappleInstantReelState::GetInstance())
+	else if (stateMachine->state == UGrappleAirborneState::GetInstance())
 	{
 		// This detaches the grapple if the player clicks
 		// again and there is nothing within grapple range
 		SetState(UWalkState::GetInstance());
+	}
+	else if (stateMachine->state == UGrappleInstantReelState::GetInstance())
+	{
+		// This detaches the grapple if the player clicks
+		// again and there is nothing within grapple range
+		SetState(UGrappleAirborneState::GetInstance());
 	}
 }
 void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
