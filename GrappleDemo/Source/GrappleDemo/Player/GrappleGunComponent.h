@@ -53,6 +53,10 @@ protected:
 	// Stores the current reactor the cable is hooked to
 	AGrappleReactor* CurrentReactor;
 
+	// Tracks the state of reeling for audio purposes
+	float LastFrameLength;
+	bool isReeling;
+	bool isUnreeling;
 	// Called once when the grapple hook is shot from the gun
 	UPROPERTY(BlueprintAssignable)
 	FSoundUpdated OnGrappleShot;
@@ -65,6 +69,18 @@ protected:
 	// Called every tick while the hook is returning
 	UPROPERTY(BlueprintAssignable)
 	FSoundUpdated OnGrappleStoppedTraveling;
+	// Called once when the grapple begins reeling in
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnStartedReelingIn;
+	// Called once when the grapple stops reeling in
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnStoppedReelingIn;
+	// Called once when the grapple begins reeling out
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnStartedReelingOut;
+	// Called once when the grapple stops reeling out
+	UPROPERTY(BlueprintAssignable)
+	FSoundUpdated OnStoppedReelingOut;
 
 public:
 
