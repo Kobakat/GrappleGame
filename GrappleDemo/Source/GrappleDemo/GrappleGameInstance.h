@@ -6,6 +6,12 @@
 #include "Engine/GameInstance.h"
 #include "SaveData/AudioPreferenceData.h"
 #include "SaveData/AudioPreferenceSave.h"
+#include "SaveData/LevelProgress.h"
+#include "SaveData/LevelCompletionData.h"
+#include "SaveData/LevelCompletionSave.h"
+#include "SaveData/CollectionMissionData.h"
+#include "SaveData/CollectionMissionSave.h"
+#include "GameStage.h"
 #include "GrappleGameInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAudioPreferencesChanged, const FAudioPreferenceData, NewPreferences);
@@ -19,6 +25,8 @@ private:
 	// These have to be UPROPS otherwise they get GC'd.
 	UPROPERTY()
 	UAudioPreferenceSave* audioPreferencesSave;
+	UPROPERTY()
+	TMap<TEnumAsByte<EGameStage>, FLevelProgress> completionData;
 
 public:
 	// Commits all save data to disk.
@@ -38,9 +46,20 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FAudioPreferencesChanged OnPreferencesChanged;
 
+	// Querys the level progress for a given level name.
+	UFUNCTION(BlueprintCallable)
+	FLevelProgress GetLevelProgress(const EGameStage level);
+	// Sets the level progress for a given level name.
+	UFUNCTION(BlueprintCallable)
+	void SetLevelProgress(const FLevelProgress progress, const EGameStage level);
+	// Resets level progress for a specific stage.
+	UFUNCTION(BlueprintCallable)
+	void ClearLevelProgress(const EGameStage level);
 
 private:
 	void LoadAudioPreferences();
+	void LoadLevelProgress(const EGameStage level);
 	void ResetData(FAudioPreferenceData& data);
-
+	void ResetData(FLevelProgress& data, const EGameStage level);
+	FString GameStageToString(const TEnumAsByte<EGameStage> gameStage);
 };

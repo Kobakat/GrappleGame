@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Player/PlayerPawn.h"
+#include "../GameStage.h"
 #include "CheckpointManager.generated.h"
 
 class ACheckpoint;
@@ -38,6 +39,9 @@ public:
 	FText centerUIText;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
 	FText rightUIText;
+
+	UPROPERTY(EditAnywhere, Category = "Save Context")
+	TEnumAsByte<EGameStage> Level;
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);

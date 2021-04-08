@@ -10,7 +10,6 @@ struct FAudioPreferenceData
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
 	float Master;
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")

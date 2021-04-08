@@ -13,6 +13,7 @@ class GRAPPLEDEMO_API UAudioPreferenceSave : public USaveGame
 	GENERATED_BODY()
 	
 public:
+	// The underlying save data for audio preferences.
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
 	FAudioPreferenceData AudioPreferences;
 };
