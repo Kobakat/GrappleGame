@@ -4,6 +4,9 @@
 #include "Camera/CameraComponent.h"
 #include "cringetest.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStepAudio);
+
 class APlayerPawn;
 
 UENUM()
@@ -36,8 +39,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | General")
 		float slideTransitionTime;
 
+	//How low the camera dips when the player steps up onto a ledge below their waist
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
-		float ledgeTurnSpeed;
+		float underWaistDip;
+	//How low the camera dips when the player climbs onto a ledge above their waist
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
+		float aboveWaistDip;
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
 		float ledgeTiltSpeed;
 
@@ -54,6 +61,11 @@ private:
 	void UpdateShake(const float deltaTime, const float amplitude, const float freq, const float sideAmp);
 
 	float GetFOVChangeTime(float targetFOV);
+
+	UPROPERTY(BlueprintAssignable)
+		FStepAudio OnWalkStep;
+	UPROPERTY(BlueprintAssignable)
+		FStepAudio OnRunStep;
 
 #pragma region Designer Props
 	//This FOV is used while walking, crouching, and idling
@@ -105,8 +117,10 @@ private:
 	float shakeSideStartOffset;
 	float shakeHeight;
 	float shakeSide;
+	float prevHeight;
 	bool blendingIn;
 	bool blendingOut;
+	bool bHitTrough;
 
 	//FOV
 	UPROPERTY(VisibleAnywhere, Category = "Camera Stats | State")

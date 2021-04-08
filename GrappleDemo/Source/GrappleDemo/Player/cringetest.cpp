@@ -17,6 +17,7 @@ void Ucringetest::TickComponent(float deltaTime, enum ELevelTick TickType, FActo
 	UpdateFOV(deltaTime);
 	UpdateShakeState();
 	UpdateShake(deltaTime, shakeAmp, shakeFreq, shakeSideAmp);
+
 }
 
 void Ucringetest::UpdateFOVState()
@@ -187,5 +188,24 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 				shakeSide
 				));
 
+		const float height = GetRelativeLocation().Z;
+		
+		if (height < prevHeight && bHitTrough)
+		{
+			bHitTrough = false;
+		}
+
+		else if (height > prevHeight && !bHitTrough)
+		{
+			bHitTrough = true;
+
+			if (amplitude == passiveAmplitude)
+				OnWalkStep.Broadcast();
+			else
+				OnRunStep.Broadcast();
+		}
+
+		
+		prevHeight = height;
 	}
 }

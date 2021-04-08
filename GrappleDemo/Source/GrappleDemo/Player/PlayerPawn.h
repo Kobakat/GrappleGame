@@ -123,9 +123,19 @@ public:
 		float reelCompleteDistance;
 
 	//===============Ledge=Grab================//
-	//How many units does our player climb each second
+
+	//How long to climb a ledge below player waist
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeClimbSpeed;
+		float ledgeUnderWaistTime;
+	//How long to climb a ledge above player waist
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeAboveWaistTime;
+	//How long to climb a ledge above player head
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeAboveHeadTime;
+	//How long to climb a ledge when the player grabbed it from an airborne state
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
+		float ledgeAirborneTime;
 	//How far forward to push the player when they lazy climb
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgePushSpeed;

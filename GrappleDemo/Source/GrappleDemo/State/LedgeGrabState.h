@@ -14,11 +14,12 @@ enum ELedgePushType
 };
 
 UENUM()
-enum ELedgeCameraState
+enum ELedgeClimbType
 {
-	LCS_Turning, //The player camera is turning to look at the ledge corner
-	LCS_Tilting, //The camera has crest the corner and is now tilting to be parallel to the ground
-	LCS_Done //The camera won't do anything
+	LCT_UnderWaist,
+	LCT_AboveWaist,		
+	LCT_AboveHead,
+	LCT_Airborne,
 };
 
 UCLASS()
@@ -43,30 +44,27 @@ private:
 	static ULedgeGrabState* instance;
 	static FHitResult ledge;
 
-	void InitializePositionValues();
-	void InitializeCameraValues();
-
-	void DeterminePlayerAction(float deltaTime);
-	void DetermineCameraAction(float deltaTime);
-
-	void LiftPlayerUp(float deltaTime);
+	void InitializeLedgeValues();
+	float LiftPlayerUp(float deltaTime);
 	void PushPlayerForward();
+	
+	void DeterminePlayerAction(float deltaTime);
+	void UnderWaistAction(float deltaTime);
+	void AboveWaistAction(float deltaTime);
+	void AboveHeadAction(float deltaTime);
+	void AirborneAction(float deltaTime);
 
-	void TurnCamera(float deltaTime);
-	void TiltCamera(float deltaTime);
+	//Tick Position
+	TEnumAsByte<ELedgeClimbType> climbType;
 
-	//Player positioning
+	//Exit positioning
 	TEnumAsByte<ELedgePushType> pushType;
 	FVector pushDir;
 	FVector startLoc;
 
-	//Camera Animation
-	TEnumAsByte<ELedgeCameraState> cameraState;
-	FVector lookDirStart;
-	FVector lookDirFinal;
-	FVector lookCorner;
-
 	//Common
 	float liftHeight;
-	bool bClimbComplete;
+	float climbDistance;
+	float climbDuration;
+	float climbTimer;
 };
