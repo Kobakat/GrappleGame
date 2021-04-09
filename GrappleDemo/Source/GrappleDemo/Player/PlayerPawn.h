@@ -11,9 +11,6 @@
 #include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLandAudio, float, landSpeed);
-
 UCLASS()
 class GRAPPLEDEMO_API APlayerPawn : public APawn
 {
@@ -40,13 +37,6 @@ public:
 		UPlayerCapsule* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
-
-	UPROPERTY(BlueprintAssignable)
-		FJumpAudio OnJump;
-	UPROPERTY(BlueprintAssignable)
-		FLandAudio OnLand;
-
-	float lastFallingSpeed;
 
 #pragma region Designer Props
 
@@ -134,8 +124,7 @@ public:
 		float reelCompleteDistance;
 
 	//===============Ledge=Grab================//
-
-	//How many units a second the player climbs
+	//How many units does our player climb each second
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgeClimbSpeed;
 	//How far forward to push the player when they lazy climb
