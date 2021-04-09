@@ -184,7 +184,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 				{
 					FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
+					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal * bounds.X;
 					FVector rayStart = rayEnd + maxLedgeHeight;
 
 					const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
@@ -279,7 +279,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 					{
 						FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
+						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal * bounds.X;
 						FVector rayStart = rayEnd + maxLedgeHeight;
 
 						const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
