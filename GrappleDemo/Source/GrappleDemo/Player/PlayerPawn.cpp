@@ -1,6 +1,5 @@
 #include "PlayerPawn.h"
 #include "Components/ChildActorComponent.h"
-#include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
 

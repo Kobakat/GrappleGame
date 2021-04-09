@@ -4,6 +4,8 @@
 #include "GrappleReactor.h"
 #include "CollisionQueryParams.h"
 #include "Math/TransformNonVectorized.h"
+#include "../Player/PlayerPawn.h"
+#include "../Player/GrappleGunComponent.h"
 
 // Sets default values
 AGrappleReactor::AGrappleReactor()
@@ -30,10 +32,12 @@ void AGrappleReactor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGrappleReactor::Hook(FVector location)
+void AGrappleReactor::Hook(FVector location, APlayerPawn* player, UGrappleGunComponent* grappleGun)
 {
 	localHookPosition = GetActorTransform().InverseTransformPosition(location);
 	isHookedOnto = true;
+	hookedPlayer = player;
+	hookedGun = grappleGun;
 	ReceiveOnHooked();
 }
 

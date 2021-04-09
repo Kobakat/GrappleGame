@@ -3,6 +3,9 @@
 
 #include "ButtonGrappleReactor.h"
 #include "Engine/World.h"
+#include "../State/WalkState.h"
+#include "../Player/PlayerPawn.h"
+#include "../Player/GrappleGunComponent.h"
 
 AButtonGrappleReactor::AButtonGrappleReactor()
 {
@@ -12,6 +15,25 @@ AButtonGrappleReactor::AButtonGrappleReactor()
 bool AButtonGrappleReactor::GetIsPressed()
 {
 	return isPressed;
+}
+
+void AButtonGrappleReactor::Hook(FVector location, APlayerPawn* player, UGrappleGunComponent* grappleGun)
+{
+	// Unhook the grapple if requested.
+	if (AutoDetachGrapple)
+	{
+		grappleGun->Detach();
+		player->SetState(UWalkState::GetInstance());
+		// Check to see if the button should be triggered.
+		if (!isPressed)
+		{
+			isPressed = true;
+			startTime = GetWorld()->TimeSeconds;
+			ReceiveOnActivated();
+		}
+	}
+	else
+		Super::Hook(location, player, grappleGun);
 }
 
 void AButtonGrappleReactor::Tick(float DeltaTime)

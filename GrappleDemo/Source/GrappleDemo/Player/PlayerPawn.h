@@ -6,7 +6,6 @@
 #include "cringetest.h"
 #include "Components/InputComponent.h"
 #include "../State/StateMachine.h"
-#include "../GrappleInteractions/GrappleReactor.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "PlayerCapsule.h"
 #include "GrappleGunComponent.h"
