@@ -9,6 +9,7 @@
 #include "GrappleGunComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSoundUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGrappleHitUpdated, FVector, hitLocation);
 
 UCLASS(ClassGroup = "Grapple", meta = (BlueprintSpawnableComponent))
 class GRAPPLEDEMO_API UGrappleGunComponent : public USceneComponent
@@ -62,7 +63,7 @@ protected:
 	FSoundUpdated OnGrappleShot;
 	// Called once when the grapple hook hits a surface
 	UPROPERTY(BlueprintAssignable)
-	FSoundUpdated OnGrappleHit;
+	FGrappleHitUpdated OnGrappleHit;
 	// Called every tick while the hook is shooting
 	UPROPERTY(BlueprintAssignable)
 	FSoundUpdated OnGrappleStartedTraveling;
