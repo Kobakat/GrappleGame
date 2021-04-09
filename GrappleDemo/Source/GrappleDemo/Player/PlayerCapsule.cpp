@@ -184,7 +184,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 				{
 					FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
+					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z) + impactNormal;
 					FVector rayStart = rayEnd + maxLedgeHeight;
 
 					const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
@@ -205,7 +205,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 					//If they can we just need to make sure that the ray doesn't start penetrating and exits the surface anywhere
 					if (!blockHit
 						&& ledgeHit
-						&& (LedgeTop.ImpactPoint.Z >= (GetComponentLocation().Z - halfHeight) + player->ledgeMinGrabHeight))
+						&& ((LedgeTop.ImpactPoint.Z - GetComponentLocation().Z) >= player->ledgeMinGrabHeight))
 					{
 						ULedgeGrabState::GetInstance()->SetLedge(hit);
 						return true;
@@ -279,7 +279,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 					{
 						FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
+						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z) + impactNormal;
 						FVector rayStart = rayEnd + maxLedgeHeight;
 
 						const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
@@ -300,7 +300,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 						//If they can we just need to make sure that the ray doesn't start penetrating and exits the surface anywhere
 						if (!blockHit
 							&& ledgeHit
-							&& (LedgeTop.ImpactPoint.Z >= (GetComponentLocation().Z - halfHeight) + player->ledgeMinGrabHeight))
+							&& ((LedgeTop.ImpactPoint.Z - GetComponentLocation().Z) >= player->ledgeMinGrabHeight))
 						{
 							ULedgeGrabState::GetInstance()->SetLedge(hit);
 							return true;

@@ -16,6 +16,7 @@ public:
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
+
 	virtual void Initialize(APlayerPawn* pawn) override;
 
 protected:
@@ -28,5 +29,4 @@ protected:
 	virtual void CheckStateChangeGrapple();
 
 	FVector relativeMovementVector;
-	float lastFallingSpeed;
 };
