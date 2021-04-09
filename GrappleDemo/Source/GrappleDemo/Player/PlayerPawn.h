@@ -12,6 +12,9 @@
 #include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLandAudio, float, landSpeed);
+
 UCLASS()
 class GRAPPLEDEMO_API APlayerPawn : public APawn
 {
@@ -38,6 +41,13 @@ public:
 		UPlayerCapsule* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
+
+	UPROPERTY(BlueprintAssignable)
+		FJumpAudio OnJump;
+	UPROPERTY(BlueprintAssignable)
+		FLandAudio OnLand;
+
+	float lastFallingSpeed;
 
 #pragma region Designer Props
 
