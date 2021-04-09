@@ -5,6 +5,7 @@
 #include "CollisionQueryParams.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
+#include "../Player/PlayerPawn.h"
 
 // Sets default values for this component's properties
 UGrappleGunComponent::UGrappleGunComponent()
@@ -69,10 +70,7 @@ void UGrappleGunComponent::Attach()
 	CurrentHookedActor = LastHitActor;
 	AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
 	if (IsValid(reactor))
-	{
 		CurrentReactor = reactor;
-		CurrentReactor->Hook(LastHitLocation);
-	}
 	else
 		CurrentReactor = nullptr;
 	// Get the local location of the grapple hit
@@ -146,6 +144,9 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				Polyline->SetFirstPoint(target);
 				IsShooting = false;
 				IsAttached = true;
+				// Notify reactor that it has been hit
+				if (IsValid(CurrentReactor))
+					CurrentReactor->Hook(LastHitLocation, Cast<APlayerPawn>(GetOwner()), this);
 				// Notify audio logic
 				OnGrappleHit.Broadcast(target);
 				OnGrappleStoppedTraveling.Broadcast();
