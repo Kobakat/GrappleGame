@@ -125,7 +125,8 @@ public:
 		float reelCompleteDistance;
 
 	//===============Ledge=Grab================//
-	//How many units does our player climb each second
+
+	//How many units a second the player climbs
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgeClimbSpeed;
 	//How far forward to push the player when they lazy climb

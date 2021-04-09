@@ -5,6 +5,9 @@
 #include "State.h"
 #include "MovementState.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLandAudio, float, landSpeed);
+
 UCLASS()
 class GRAPPLEDEMO_API UMovementState : public UState
 {
@@ -16,8 +19,12 @@ public:
 	virtual void OnStateEnter() override;
 	virtual void StateTick(float deltaTime) override;
 	virtual void OnStateExit() override;
-
 	virtual void Initialize(APlayerPawn* pawn) override;
+
+	UPROPERTY(BlueprintCallable)
+		FJumpAudio OnJump;
+	UPROPERTY(BlueprintCallable)
+		FLandAudio OnLand;
 
 protected:
 	virtual void PlayerMove(float accel, float airControlFactor);

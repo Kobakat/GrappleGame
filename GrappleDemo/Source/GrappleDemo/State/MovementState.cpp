@@ -68,6 +68,11 @@ void UMovementState::CheckIfGrounded()
 		FVector velocity = player->collider->GetPhysicsLinearVelocity();
 		player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
 	}
+
+	if (player->bGrounded && !player->bPreviousGrounded)
+	{
+		OnLand.Broadcast(player->collider->previousVelocity.Z);
+	}
 	
 	else
 	{
@@ -121,7 +126,7 @@ void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 	{
 		player->tryingToJump = false;
 		player->collider->SetPhysicsLinearVelocity(player->collider->GetPhysicsLinearVelocity() + (FVector::UpVector * jumpForce));
-
+		OnJump.Broadcast();
 		if (bCanPlayerLedgeGrab && player->collider->CheckIfLedgeGrabEligible())
 		{
 			player->SetState(ULedgeGrabState::GetInstance());
