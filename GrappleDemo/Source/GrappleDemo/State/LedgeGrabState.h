@@ -45,14 +45,16 @@ private:
 	static FHitResult ledge;
 
 	void InitializeLedgeValues();
-	float LiftPlayerUp(float deltaTime);
-	void PushPlayerForward();
+	void LiftPlayerUp(float deltaTime);
+	void PushPlayerForward(float deltaTime);
 	
 	void DeterminePlayerAction(float deltaTime);
 	void UnderWaistAction(float deltaTime);
 	void AboveWaistAction(float deltaTime);
 	void AboveHeadAction(float deltaTime);
 	void AirborneAction(float deltaTime);
+
+	void BobCamera(float deltaTime);
 
 	//Tick Position
 	TEnumAsByte<ELedgeClimbType> climbType;
@@ -62,9 +64,15 @@ private:
 	FVector pushDir;
 	FVector startLoc;
 
+	//Camera Rotation
+	FVector lookPoint;
+	FVector goalRot;
+	bool bNeedsToTurn;
+	bool bNeedsToBob;
+	bool bNeedsToPush;
+	float bobTimer;
+	float pushTimer;
 	//Common
 	float liftHeight;
 	float climbDistance;
-	float climbDuration;
-	float climbTimer;
 };

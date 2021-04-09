@@ -124,18 +124,9 @@ public:
 
 	//===============Ledge=Grab================//
 
-	//How long to climb a ledge below player waist
+	//How many units a second the player climbs
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeUnderWaistTime;
-	//How long to climb a ledge above player waist
-	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeAboveWaistTime;
-	//How long to climb a ledge above player head
-	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeAboveHeadTime;
-	//How long to climb a ledge when the player grabbed it from an airborne state
-	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
-		float ledgeAirborneTime;
+		float ledgeClimbSpeed;
 	//How far forward to push the player when they lazy climb
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Ledge Grab")
 		float ledgePushSpeed;

@@ -39,14 +39,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | General")
 		float slideTransitionTime;
 
-	//How low the camera dips when the player steps up onto a ledge below their waist
+	//How quickly the camera turns during the ledge grab state
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
-		float underWaistDip;
-	//How low the camera dips when the player climbs onto a ledge above their waist
+		float ledgeTurnSpeed;
+	//How quickly the camera dips when climbing a ledge above the player's head
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
-		float aboveWaistDip;
+		float ledgeDipSpeed;
+	//How far the camera dips when climbing a ledge above the player's head
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
-		float ledgeTiltSpeed;
+		float ledgeDipAmplitude;
 
 	float baseHeight;
 
