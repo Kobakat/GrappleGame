@@ -147,7 +147,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				IsShooting = false;
 				IsAttached = true;
 				// Notify audio logic
-				OnGrappleHit.Broadcast();
+				OnGrappleHit.Broadcast(target);
 				OnGrappleStoppedTraveling.Broadcast();
 				// Set the initial length for the state to work with
 				LastFrameLength = 
