@@ -4,6 +4,7 @@
 #include "CheckpointManager.h"
 #include "Engine/World.h"
 #include "Checkpoint.h"
+#include "../GrappleGameInstance.h"
 
 // Sets default values
 ACheckpointManager::ACheckpointManager()
@@ -67,5 +68,14 @@ void ACheckpointManager::CheckLevelEnd()
 	if (currentCheckpoint == Checkpoints.Last())
 	{
 		bTimer = false;
+
+		UGrappleGameInstance* gameInstance = Cast<UGrappleGameInstance>(GetGameInstance());
+		FLevelProgress progress = gameInstance->GetLevelProgress(Level);
+		timeElasped = GetWorld()->GetRealTimeSeconds() - startTime;
+		if (progress.CompletionData.BestTime > timeElasped)
+			progress.CompletionData.BestTime = timeElasped;
+		progress.CompletionData.StageCompleted = true;
+		gameInstance->SetLevelProgress(progress, Level);
+		gameInstance->Save();
 	}
 }
