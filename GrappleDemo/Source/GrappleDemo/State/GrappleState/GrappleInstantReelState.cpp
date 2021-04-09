@@ -21,13 +21,15 @@ void UGrappleInstantReelState::Initialize(APlayerPawn* pawn)
 void UGrappleInstantReelState::OnStateEnter()
 {
 	UGrappleState::OnStateEnter();
-	player->collider->SetEnableGravity(false);
+	if (player->isHookshotStyle)
+		player->collider->SetEnableGravity(false);
 	player->stateName = this->stateName;
 }
 void UGrappleInstantReelState::OnStateExit()
 {
 	UGrappleState::OnStateExit();
-	player->collider->SetEnableGravity(true);
+	if (player->isHookshotStyle)
+		player->collider->SetEnableGravity(true);
 }
 
 void UGrappleInstantReelState::StateTick(float deltaTime)
@@ -35,7 +37,15 @@ void UGrappleInstantReelState::StateTick(float deltaTime)
 	PlayerLook(deltaTime);
 	if (!grappleComponent->GetIsAnimating())
 	{
-		player->collider->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		if (player->isHookshotStyle)
+			player->collider->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		else
+		{
+			if (player->bGrounded)
+				PlayerMove(player->runAcceleration, 100.F);
+			else
+				PlayerMove(player->walkAcceleration, player->walkAirControlPercentage);
+		}
 		SolveRestraint();
 		UpdateGrappleRope(deltaTime);
 	}

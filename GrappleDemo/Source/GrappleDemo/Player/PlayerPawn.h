@@ -118,6 +118,8 @@ public:
 	//==============Instant=Reel===============//
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
+		bool isHookshotStyle;
+	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
 		float instantGrappleSpeed;
 	UPROPERTY(EditAnywhere, Category = "Player Stats | Instant Grapple")
 		float reelCompleteDistance;
