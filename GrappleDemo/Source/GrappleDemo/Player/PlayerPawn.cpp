@@ -1,5 +1,6 @@
 #include "PlayerPawn.h"
 #include "Components/ChildActorComponent.h"
+#include "../GrappleInteractions/GrappleReactor.h"
 
 #pragma region Unreal Event Functions
 
@@ -68,8 +69,14 @@ void APlayerPawn::Tick(float deltaTime)
 
 	collider->HandleStandUp(deltaTime);
 	grappleCanAttach = grappleComponent->GetCanAttach();
-	bPreviousGrounded = bGrounded;
+
 	collider->previousVelocity = collider->GetPhysicsLinearVelocity();
+
+	if (collider->previousVelocity.Z < lastFallingSpeed)
+		lastFallingSpeed = collider->previousVelocity.Z;
+
+
+	bPreviousGrounded = bGrounded;
 }
 
 #pragma endregion
