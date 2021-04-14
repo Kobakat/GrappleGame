@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "CheckpointManager.h"
-#include "Components/ArrowComponent.h"
 #include "Checkpoint.generated.h"
 
 UCLASS()
@@ -27,8 +26,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "UI Tooltip")
 	FText rightUIText;
 	
-	UPROPERTY(BlueprintReadWrite)
-	UArrowComponent* RespawnDirection;
 
 protected:
 	// Called when the game starts or when spawned
