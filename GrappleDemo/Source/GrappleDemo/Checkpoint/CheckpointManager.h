@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CheckLevelStart(ACheckpoint* checkpoint);
 
+	UFUNCTION(BlueprintCallable)
+	void ResetGrapple();
+
 	void CheckLevelEnd();
 	
 protected:
