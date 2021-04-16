@@ -1,6 +1,8 @@
 #include "PlayerPawn.h"
 #include "Components/ChildActorComponent.h"
 #include "../GrappleInteractions/GrappleReactor.h"
+#include "../LevelPreview/LevelPreviewPawn.h"
+#include "Kismet/GameplayStatics.h"
 
 #pragma region Unreal Event Functions
 
@@ -55,6 +57,8 @@ void APlayerPawn::BeginPlay()
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
+
+	LinkPreviewCamera();
 }
 
 void APlayerPawn::Tick(float deltaTime)
@@ -158,6 +162,22 @@ void APlayerPawn::InstantReelPress()
 void APlayerPawn::SetState(UState* newState) 
 {
 	stateMachine->SetState(newState);
+}
+
+void APlayerPawn::LinkPreviewCamera()
+{
+	AActor* uncastedActor = UGameplayStatics::GetActorOfClass(GetWorld(), ALevelPreviewPawn::StaticClass());
+
+	if (uncastedActor != nullptr)
+	{
+		ALevelPreviewPawn* castedActor = Cast<ALevelPreviewPawn>(uncastedActor);
+		castedActor->playerPawn = this;
+		
+		AController* controller = GetController();
+		controller->UnPossess();
+		controller->Possess(castedActor);
+		castedActor->StartPreview();
+	}
 }
 #pragma endregion
 
