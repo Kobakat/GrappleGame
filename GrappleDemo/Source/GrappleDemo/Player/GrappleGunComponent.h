@@ -121,8 +121,11 @@ public:
 	FVector GetGunEnd();
 	// Signals the start of the shoot animation to attach to a point
 	void Attach();
-	// Signals the start of the retract animatio to detach from a point
+	// Signals the start of the retract animation to detach from a point
 	void Detach();
+	// Detaches the grapple, skipping the animation
+	UFUNCTION(BlueprintCallable)
+	void ResetDetach();
 	// Applys a force along the grapple cable
 	// Trys to pull the grappled object such that the distance
 	// between the specified vectors is the desired distance
