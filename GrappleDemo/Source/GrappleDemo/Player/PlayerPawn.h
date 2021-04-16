@@ -200,6 +200,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Initial Player State")
 	bool hasGrapple;
+
+	void LinkPreviewCamera();
 	
 #pragma region Input Functions
 	void MoveInputX(float value);
