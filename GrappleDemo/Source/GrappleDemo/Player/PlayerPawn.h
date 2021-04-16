@@ -25,7 +25,9 @@ public:
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Grapple Gun")
 	UGrappleGunComponent* grappleComponent;
+
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
@@ -198,6 +200,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Initial Player State")
 	bool hasGrapple;
+
+	void LinkPreviewCamera();
 	
 #pragma region Input Functions
 	void MoveInputX(float value);

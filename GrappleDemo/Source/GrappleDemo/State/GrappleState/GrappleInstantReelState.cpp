@@ -66,6 +66,8 @@ void UGrappleInstantReelState::CheckStateChange()
 	if (!grappleComponent->GetIsAnimating())
 		if (grappleComponent->GetLength() <= grappleComponent->MinLength)
 			player->SetState(UGrappleAirborneState::GetInstance());
+	if (player->collider->CheckIfLedgeGrabEligible())
+		player->SetState(ULedgeGrabState::GetInstance());
 }
 void UGrappleInstantReelState::UpdateGrappleRope(float deltaTime)
 {

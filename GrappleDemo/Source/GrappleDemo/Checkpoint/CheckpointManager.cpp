@@ -61,6 +61,13 @@ void ACheckpointManager::CheckLevelStart(ACheckpoint* checkpoint)
 	}
 }
 
+void ACheckpointManager::ResetGrapple()
+{
+	APlayerPawn* playerPawn = Cast<APlayerPawn>(player);
+	playerPawn->grappleComponent->ResetDetach();
+	playerPawn->SetState(UWalkState::GetInstance());
+}
+
 void ACheckpointManager::CheckLevelEnd()
 {
 	// Checks if the player has entered the last checkpoint in the array
