@@ -102,6 +102,23 @@ void UGrappleGunComponent::Detach()
 	OnGrappleStartedTraveling.Broadcast();
 }
 
+void UGrappleGunComponent::ResetDetach()
+{
+	Polyline->SetAllPoints(TArray<FVector>());
+	if (IsAttached)
+	{
+		AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
+		if (IsValid(reactor))
+			CurrentReactor->Unhook();
+	}
+	// Cancel out all animation state
+	if (IsShooting || IsRetracting)
+		OnGrappleStoppedTraveling.Broadcast();
+	IsShooting = false;
+	IsRetracting = false;
+	IsAttached = false;
+}
+
 void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
 {
 	// Relay the force if we are hooked to a reactor

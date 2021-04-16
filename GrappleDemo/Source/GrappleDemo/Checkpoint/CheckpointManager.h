@@ -32,18 +32,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Timer")
 	float timeElasped;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText leftUIText;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText centerUIText;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText rightUIText;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Text")
+	FText UIText;
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);
 
 	UFUNCTION(BlueprintCallable)
 	void CheckLevelStart(ACheckpoint* checkpoint);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetGrapple();
 
 	void CheckLevelEnd();
 	

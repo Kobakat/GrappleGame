@@ -71,6 +71,8 @@ void UGrappleAirborneState::CheckStateChange()
 	// the grapple and return to walk state
 	if ((player->tryingToJump && !player->bGrounded))
 		player->SetState(UWalkState::GetInstance());
+	if (player->collider->CheckIfLedgeGrabEligible())
+		player->SetState(ULedgeGrabState::GetInstance());
 }
 void UGrappleAirborneState::HandleGrappleInput()
 {
