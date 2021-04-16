@@ -19,12 +19,8 @@ public:
 	// Sets default values for this actor's properties
 	ACheckpoint();
 
-	UPROPERTY(EditAnywhere, Category = "UI Tooltip")
-	FText leftUIText;
-	UPROPERTY(EditAnywhere, Category = "UI Tooltip")
-	FText centerUIText;
-	UPROPERTY(EditAnywhere, Category = "UI Tooltip")
-	FText rightUIText;
+	UPROPERTY(EditAnywhere, Category = "UI Text")
+	FText UIText;
 	
 
 protected:
