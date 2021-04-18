@@ -7,6 +7,8 @@
 void UGrappleGameInstance::Save()
 {
 	// Save all data to disk.
+	UGameplayStatics::SaveGameToSlot(crosshairPreferencesSave, "crosshairPreferences", 0);
+	UGameplayStatics::SaveGameToSlot(cameraPreferencesSave, "cameraPreferences", 0);
 	UGameplayStatics::SaveGameToSlot(audioPreferencesSave, "audioPreferences", 0);
 	// Save each stage to disk.
 	for (const TPair<TEnumAsByte<EGameStage>, FLevelProgress>& pair : completionData)
@@ -32,6 +34,22 @@ void UGrappleGameInstance::Save()
 	}
 }
 
+FCrosshairPreferenceData UGrappleGameInstance::GetCrosshairPreferences()
+{
+	// Ensure the save file is checked out.
+	if (crosshairPreferencesSave == nullptr)
+		LoadCrosshairPreferences();
+	// Return the preference data.
+	return crosshairPreferencesSave->CrosshairPreferences;
+}
+FCameraPreferenceData UGrappleGameInstance::GetCameraPreferences()
+{
+	// Ensure the save file is checked out.
+	if (cameraPreferencesSave == nullptr)
+		LoadCameraPreferences();
+	// Return the preference data.
+	return cameraPreferencesSave->CameraPreferences;
+}
 FAudioPreferenceData UGrappleGameInstance::GetAudioPreferences()
 {
 	// Ensure the save file is checked out.
@@ -41,6 +59,26 @@ FAudioPreferenceData UGrappleGameInstance::GetAudioPreferences()
 	return audioPreferencesSave->AudioPreferences;
 }
 
+void UGrappleGameInstance::SetCrosshairPreferences(const FCrosshairPreferenceData preferences)
+{
+	// Ensure the save file is checked out.
+	if (crosshairPreferencesSave == nullptr)
+		LoadCrosshairPreferences();
+	// Update the data.
+	crosshairPreferencesSave->CrosshairPreferences = preferences;
+	// Notify listeners.
+	OnCrosshairPreferencesChanged.Broadcast(preferences);
+}
+void UGrappleGameInstance::SetCameraPreferences(const FCameraPreferenceData preferences)
+{
+	// Ensure the save file is checked out.
+	if (cameraPreferencesSave == nullptr)
+		LoadCameraPreferences();
+	// Update the data.
+	cameraPreferencesSave->CameraPreferences = preferences;
+	// Notify listeners.
+	OnCameraPreferencesChanged.Broadcast(preferences);
+}
 void UGrappleGameInstance::SetAudioPreferences(const FAudioPreferenceData preferences)
 {
 	// Ensure the save file is checked out.
@@ -52,6 +90,26 @@ void UGrappleGameInstance::SetAudioPreferences(const FAudioPreferenceData prefer
 	OnPreferencesChanged.Broadcast(preferences);
 }
 
+void UGrappleGameInstance::ClearCrosshairPreferences()
+{
+	// Ensure the save file is checked out.
+	if (crosshairPreferencesSave == nullptr)
+		LoadCrosshairPreferences();
+	// Set default save values.
+	ResetData(crosshairPreferencesSave->CrosshairPreferences);
+	// Notify listeners.
+	OnCrosshairPreferencesChanged.Broadcast(crosshairPreferencesSave->CrosshairPreferences);
+}
+void UGrappleGameInstance::ClearCameraPreferences()
+{
+	// Ensure the save file is checked out.
+	if (cameraPreferencesSave == nullptr)
+		LoadCameraPreferences();
+	// Set default save values.
+	ResetData(cameraPreferencesSave->CameraPreferences);
+	// Notify listeners.
+	OnCameraPreferencesChanged.Broadcast(cameraPreferencesSave->CameraPreferences);
+}
 void UGrappleGameInstance::ClearAudioPreferences()
 {
 	// Ensure the save file is checked out.
@@ -71,7 +129,6 @@ FLevelProgress UGrappleGameInstance::GetLevelProgress(const EGameStage level)
 	// Return the stage data.
 	return completionData[level];
 }
-
 void UGrappleGameInstance::SetLevelProgress(const FLevelProgress progress, const EGameStage levelName)
 {
 	// Update the saved progress.
@@ -80,7 +137,6 @@ void UGrappleGameInstance::SetLevelProgress(const FLevelProgress progress, const
 	else
 		completionData.Add(levelName, progress);
 }
-
 void UGrappleGameInstance::ClearLevelProgress(const EGameStage level)
 {
 	// Reset level to default progress.
@@ -89,6 +145,44 @@ void UGrappleGameInstance::ClearLevelProgress(const EGameStage level)
 	SetLevelProgress(resetProgress, level);
 }
 
+void UGrappleGameInstance::LoadCrosshairPreferences()
+{
+	// Does the save exist?
+	if (UGameplayStatics::DoesSaveGameExist("crosshairPreferences", 0))
+	{
+		// If it does then load it.
+		crosshairPreferencesSave = Cast<UCrosshairPreferenceSave>(
+			UGameplayStatics::LoadGameFromSlot("crosshairPreferences", 0));
+	}
+	else
+	{
+		// Create the save object.
+		crosshairPreferencesSave = Cast<UCrosshairPreferenceSave>(
+			UGameplayStatics::CreateSaveGameObject(
+				UCrosshairPreferenceSave::StaticClass()));
+		// Set default save values.
+		ResetData(crosshairPreferencesSave->CrosshairPreferences);
+	}
+}
+void UGrappleGameInstance::LoadCameraPreferences()
+{
+	// Does the save exist?
+	if (UGameplayStatics::DoesSaveGameExist("cameraPreferences", 0))
+	{
+		// If it does then load it.
+		cameraPreferencesSave = Cast<UCameraPreferenceSave>(
+			UGameplayStatics::LoadGameFromSlot("cameraPreferences", 0));
+	}
+	else
+	{
+		// Create the save object.
+		cameraPreferencesSave = Cast<UCameraPreferenceSave>(
+			UGameplayStatics::CreateSaveGameObject(
+				UCameraPreferenceSave::StaticClass()));
+		// Set default save values.
+		ResetData(cameraPreferencesSave->CameraPreferences);
+	}
+}
 void UGrappleGameInstance::LoadAudioPreferences()
 {
 	// Does the save exist?
@@ -165,6 +259,16 @@ void UGrappleGameInstance::LoadLevelProgress(const EGameStage level)
 	}
 }
 
+void UGrappleGameInstance::ResetData(FCrosshairPreferenceData& data)
+{
+	data.Index = 0;
+	data.Size = 1.F;
+}
+void UGrappleGameInstance::ResetData(FCameraPreferenceData& data)
+{
+	data.FieldOfView = 90.F;
+	data.Sensitivity = 1.F;
+}
 void UGrappleGameInstance::ResetData(FAudioPreferenceData& data)
 {
 	data.Master = 60.F;
