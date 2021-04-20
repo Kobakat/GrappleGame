@@ -31,6 +31,13 @@ void ALevelPreviewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void ALevelPreviewPawn::StartPreview()
 {	
 	state = Holding;
+	for (ULevelPreviewNode* node : nodes)
+	{
+		if (node != RootComponent)
+		{
+			node->Deactivate();
+		}
+	}
 }
 
 void ALevelPreviewPawn::EndPreview()
