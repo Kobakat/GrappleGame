@@ -168,7 +168,6 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				OnGrappleHit.Broadcast(target);
 				OnGrappleStoppedTraveling.Broadcast();
 				// Set the initial length for the state to work with
-				LastFrameLength = 
 				Length = FVector::Distance(
 					CastingFromComponent->GetComponentLocation(), target);
 			}
@@ -177,6 +176,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				// Move towards the hit target
 				Polyline->SetFirstPoint(
 					current + (target - current).GetUnsafeNormal() * deltaDistance);
+				Length = Polyline->GetTotalLength();
 			}
 		}
 		else if (IsRetracting)
@@ -210,6 +210,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 			}
 			if (IsRetracting)
 				Polyline->SetAllPoints(points);
+			Length = Polyline->GetTotalLength();
 		}
 		else
 		{
