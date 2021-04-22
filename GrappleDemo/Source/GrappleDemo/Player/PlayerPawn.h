@@ -197,6 +197,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	// These variables facilitate the
+	// buffering of grapple input
+	bool SwingBuffered;
+	bool InstantBuffered;
+	float BufferedTime;
 
 	UPROPERTY(EditAnywhere, Category = "Initial Player State")
 	bool hasGrapple;

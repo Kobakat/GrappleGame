@@ -47,6 +47,8 @@ protected:
 	AActor* LastHitActor;
 	// The location in 3D space of the last cast hit
 	FVector LastHitLocation;
+	// The timestamp of the last raycast hit
+	float LastHitTime;
 	// The current actor that is hooked onto
 	AActor* CurrentHookedActor;
 	// The location of the attach point, relative to the attached to actor
@@ -89,6 +91,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	USceneComponent* GunEnd;
 
+	// The number of seconds to register a grapple input
+	// before it becomes stale
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	float InputBufferSeconds;
+	// The number of seconds after a surface is un-hovered
+	// that it can still be grappled
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	float SurfaceBufferSeconds;
 	// The maximum fire range of the grapple
 	UPROPERTY(EditAnywhere, Category = "Grapple Gun")
 	float FireRange;
@@ -110,6 +120,8 @@ public:
 	void SetCastingFromComponent(USceneComponent* CastingFrom);
 	// Gets whether the grapple gun can currently attach
 	bool GetCanAttach();
+	// Checks to see if there is a point that can be attached in the buffer
+	bool RunBufferCheck();
 	// Gets whether the grapple gun is a transition animation state
 	bool GetIsAnimating();
 	// Gets the current length of the cable
