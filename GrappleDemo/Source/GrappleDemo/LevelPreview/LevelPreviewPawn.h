@@ -32,12 +32,10 @@ public:
 	APawn* playerPawn;
 	void StartPreview();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 		void OnPreviewEnd();
 	UFUNCTION(BlueprintImplementableEvent)
 		void OnPreviewStarted();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-		void OnPreviewCompleted();
 
 protected:
 	virtual void BeginPlay() override;

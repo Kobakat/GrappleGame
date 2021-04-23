@@ -57,14 +57,18 @@ void APlayerPawn::BeginPlay()
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
-
-	LinkPreviewCamera();
 }
 
 void APlayerPawn::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	//HACKKKK
+	if (!Linked)
+	{
+		LinkPreviewCamera();
+		Linked = true;
+	}
 
 	if (this->stateMachine != nullptr) 
 	{

@@ -50,7 +50,6 @@ void ALevelPreviewPawn::EndPreview()
 
 void ALevelPreviewPawn::RepossessPlayer()
 {
-	OnPreviewCompleted();
 	AController* controller = GetController();
 	controller->UnPossess();
 	controller->Possess(playerPawn);
