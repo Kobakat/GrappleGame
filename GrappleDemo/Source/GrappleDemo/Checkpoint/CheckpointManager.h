@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Player/PlayerPawn.h"
+#include "../GameStage.h"
 #include "CheckpointManager.generated.h"
 
 class ACheckpoint;
@@ -19,6 +20,9 @@ protected:
 	APawn* player;
 
 
+	// The stage that this checkpoint manager is in
+	UPROPERTY(EditAnywhere, Category = "Checkpoints")
+	TEnumAsByte<EGameStage> Stage;
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
 	TArray<ACheckpoint*> Checkpoints;
@@ -34,6 +38,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Text")
 	FText UIText;
+
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);

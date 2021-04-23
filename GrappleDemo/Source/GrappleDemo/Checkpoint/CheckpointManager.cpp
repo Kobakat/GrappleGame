@@ -4,6 +4,8 @@
 #include "CheckpointManager.h"
 #include "Engine/World.h"
 #include "Checkpoint.h"
+#include "Kismet/GameplayStatics.h"
+#include "../GrappleGameInstance.h"
 
 // Sets default values
 ACheckpointManager::ACheckpointManager()
@@ -74,5 +76,19 @@ void ACheckpointManager::CheckLevelEnd()
 	if (currentCheckpoint == Checkpoints.Last())
 	{
 		bTimer = false;
+		// Grab the game instance containing save data.
+		UGrappleGameInstance* instance = 
+			Cast<UGrappleGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		// Get the level progress.
+		FLevelProgress progress = instance->GetLevelProgress(Stage);
+		// Update the time record if it is better.
+		float time = GetWorld()->GetRealTimeSeconds() - startTime;
+		if (time < progress.CompletionData.BestTime)
+			progress.CompletionData.BestTime = time;
+		// Mark stage as completed.
+		progress.CompletionData.StageCompleted = true;
+		// Commit progress and save to disk.
+		instance->SetLevelProgress(progress, Stage);
+		instance->Save();
 	}
 }
