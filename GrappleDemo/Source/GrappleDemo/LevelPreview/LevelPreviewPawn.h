@@ -7,6 +7,8 @@
 
 class ULevelPreviewNode;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPreviewUpdate);
+
 UENUM()
 enum EPreviewPawnState
 {
@@ -30,6 +32,11 @@ public:
 	APawn* playerPawn;
 	void StartPreview();
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnPreviewEnd();
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnPreviewStarted();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -37,7 +44,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 		TEnumAsByte<EPreviewPawnState> state;
-	
+	UFUNCTION(BlueprintCallable)
+		void RepossessPlayer();
+
 	ULevelPreviewNode* currentNode;
 	float timer;
 
