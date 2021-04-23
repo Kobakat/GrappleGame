@@ -285,7 +285,20 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 		{
 			float deltaReel = Length - LastFrameLength;
 			LastFrameLength = Length;
-			if (isReeling)
+			if ((isReeling || isUnreeling) && FMath::Abs(deltaReel) < 0.005F)
+			{
+				if (isReeling)
+				{
+					isReeling = false;
+					OnStoppedReelingIn.Broadcast();
+				}
+				else
+				{
+					isUnreeling = false;
+					OnStoppedReelingOut.Broadcast();
+				}
+			}
+			else if (isReeling)
 			{
 				// We have switched directions
 				if (deltaReel > 0.F)
@@ -294,12 +307,6 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					isUnreeling = true;
 					OnStoppedReelingIn.Broadcast();
 					OnStartedReelingOut.Broadcast();
-				}
-				// We have stopped reeling
-				else if (deltaReel == 0.F)
-				{
-					isReeling = false;
-					OnStoppedReelingIn.Broadcast();
 				}
 			}
 			else if (isUnreeling)
@@ -311,12 +318,6 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					isUnreeling = false;
 					OnStoppedReelingOut.Broadcast();
 					OnStartedReelingIn.Broadcast();
-				}
-				// We have stopped reeling
-				else if (deltaReel == 0.F)
-				{
-					isUnreeling = false;
-					OnStoppedReelingOut.Broadcast();
 				}
 			}
 			else
