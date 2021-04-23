@@ -6,6 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "../GrappleInteractions/GrappleReactor.h"
+#include "../Player/PlayerPawn.h"
 #include "GrappleGunComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSoundUpdated);
@@ -24,6 +25,8 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
+
+	APlayerPawn* Player;
 
 	// The hook object that lodges into the hooked location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
@@ -124,6 +127,8 @@ public:
 	bool RunBufferCheck();
 	// Gets whether the grapple gun is a transition animation state
 	bool GetIsAnimating();
+	// Gets whether there is a recent surface that has been buffered
+	bool GetIsSurfaceBuffered();
 	// Gets the current length of the cable
 	UFUNCTION(BlueprintCallable)
 	float GetLength();
