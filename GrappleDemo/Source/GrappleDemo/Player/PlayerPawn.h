@@ -25,7 +25,9 @@ public:
 	virtual void Tick(float deltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Grapple Gun")
 	UGrappleGunComponent* grappleComponent;
+
 	UStateMachine* stateMachine;
 	UState* state;
 	void SetState(UState* state);
@@ -195,6 +197,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	// These variables facilitate the
+	// buffering of grapple input
+	bool SwingBuffered;
+	bool InstantBuffered;
+	float BufferedTime;
 
 	UPROPERTY(EditAnywhere, Category = "Initial Player State")
 	bool hasGrapple;

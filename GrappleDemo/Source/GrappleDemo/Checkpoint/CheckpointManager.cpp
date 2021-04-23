@@ -4,6 +4,7 @@
 #include "CheckpointManager.h"
 #include "Engine/World.h"
 #include "Checkpoint.h"
+#include "Kismet/GameplayStatics.h"
 #include "../GrappleGameInstance.h"
 
 // Sets default values
@@ -62,20 +63,32 @@ void ACheckpointManager::CheckLevelStart(ACheckpoint* checkpoint)
 	}
 }
 
+void ACheckpointManager::ResetGrapple()
+{
+	APlayerPawn* playerPawn = Cast<APlayerPawn>(player);
+	playerPawn->grappleComponent->ResetDetach();
+	playerPawn->SetState(UWalkState::GetInstance());
+}
+
 void ACheckpointManager::CheckLevelEnd()
 {
 	// Checks if the player has entered the last checkpoint in the array
 	if (currentCheckpoint == Checkpoints.Last())
 	{
 		bTimer = false;
-
-		UGrappleGameInstance* gameInstance = Cast<UGrappleGameInstance>(GetGameInstance());
-		FLevelProgress progress = gameInstance->GetLevelProgress(Level);
-		timeElasped = GetWorld()->GetRealTimeSeconds() - startTime;
-		if (progress.CompletionData.BestTime > timeElasped)
-			progress.CompletionData.BestTime = timeElasped;
+		// Grab the game instance containing save data.
+		UGrappleGameInstance* instance = 
+			Cast<UGrappleGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		// Get the level progress.
+		FLevelProgress progress = instance->GetLevelProgress(Stage);
+		// Update the time record if it is better.
+		float time = GetWorld()->GetRealTimeSeconds() - startTime;
+		if (time < progress.CompletionData.BestTime)
+			progress.CompletionData.BestTime = time;
+		// Mark stage as completed.
 		progress.CompletionData.StageCompleted = true;
-		gameInstance->SetLevelProgress(progress, Level);
-		gameInstance->Save();
+		// Commit progress and save to disk.
+		instance->SetLevelProgress(progress, Stage);
+		instance->Save();
 	}
 }

@@ -20,6 +20,9 @@ protected:
 	APawn* player;
 
 
+	// The stage that this checkpoint manager is in
+	UPROPERTY(EditAnywhere, Category = "Checkpoints")
+	TEnumAsByte<EGameStage> Stage;
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
 	TArray<ACheckpoint*> Checkpoints;
@@ -33,21 +36,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Timer")
 	float timeElasped;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText leftUIText;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText centerUIText;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Tooltips")
-	FText rightUIText;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Text")
+	FText UIText;
 
-	UPROPERTY(EditAnywhere, Category = "Save Context")
-	TEnumAsByte<EGameStage> Level;
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);
 
 	UFUNCTION(BlueprintCallable)
 	void CheckLevelStart(ACheckpoint* checkpoint);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetGrapple();
 
 	void CheckLevelEnd();
 	

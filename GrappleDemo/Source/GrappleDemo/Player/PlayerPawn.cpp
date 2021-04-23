@@ -81,6 +81,26 @@ void APlayerPawn::Tick(float deltaTime)
 
 
 	bPreviousGrounded = bGrounded;
+
+	// Handle input buffering
+	if (SwingBuffered || InstantBuffered)
+	{
+		if (GetWorld()->GetTimeSeconds() - BufferedTime
+			< grappleComponent->InputBufferSeconds)
+		{
+			if (grappleComponent->RunBufferCheck())
+			{
+				SwingBuffered = InstantBuffered = false;
+				if (SwingBuffered)
+					SetState(UGrappleAirborneState::GetInstance());
+				else
+					SetState(UGrappleInstantReelState::GetInstance());
+				grappleComponent->Attach();
+			}
+		}
+		else
+			SwingBuffered = InstantBuffered = false;
+	}
 }
 
 #pragma endregion
@@ -119,7 +139,7 @@ void APlayerPawn::CrouchSlidePress() { tryingToCrouch = true; }
 void APlayerPawn::CrouchSlideRelease() { tryingToCrouch = false; }
 void APlayerPawn::ShootReleasePress() 
 {
-	if (grappleComponent->GetCanAttach())
+	if (grappleComponent->RunBufferCheck())
 	{
 		SetState(UGrappleAirborneState::GetInstance());
 		grappleComponent->Attach();
@@ -136,12 +156,19 @@ void APlayerPawn::ShootReleasePress()
 		// again and there is nothing within grapple range
 		SetState(UGrappleAirborneState::GetInstance());
 	}
+	else
+	{
+		// Otherwise buffer the input
+		BufferedTime = GetWorld()->GetTimeSeconds();
+		SwingBuffered = true;
+		InstantBuffered = false;
+	}
 }
 void APlayerPawn::ShootReleaseRelease() { tryingToGrapple = false; }
 
 void APlayerPawn::InstantReelPress()
 {
-	if (grappleComponent->GetCanAttach())
+	if (grappleComponent->RunBufferCheck())
 	{
 		SetState(UGrappleInstantReelState::GetInstance());
 		grappleComponent->Attach();
@@ -152,6 +179,13 @@ void APlayerPawn::InstantReelPress()
 		// This detaches the grapple if the player clicks
 		// again and there is nothing within grapple range
 		SetState(UWalkState::GetInstance());
+	}
+	else
+	{
+		// Otherwise buffer the input
+		BufferedTime = GetWorld()->GetTimeSeconds();
+		SwingBuffered = false;
+		InstantBuffered = true;
 	}
 }
 

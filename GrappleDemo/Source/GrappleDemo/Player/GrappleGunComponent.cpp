@@ -5,6 +5,7 @@
 #include "CollisionQueryParams.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
+#include "../Player/PlayerPawn.h"
 
 // Sets default values for this component's properties
 UGrappleGunComponent::UGrappleGunComponent()
@@ -12,11 +13,13 @@ UGrappleGunComponent::UGrappleGunComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	// Set default values
+	// Set default property values
+	InputBufferSeconds = 2.F;
+	SurfaceBufferSeconds = 2.F;
 	FireRange = 3000.F;
 	MinLength = 250.F;
 	MaxLength = 3000.F;
-	ShotSpeed = 3500.F;
+	ShotSpeed = 6000.F;
 }
 
 
@@ -24,6 +27,11 @@ UGrappleGunComponent::UGrappleGunComponent()
 void UGrappleGunComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	// This prevents a potential
+	// crash where the player immediately
+	// attempts to grapple while the in
+	// game time is around 0 seconds
+	LastHitTime = -SurfaceBufferSeconds * 2.F;
 }
 
 
@@ -35,6 +43,61 @@ void UGrappleGunComponent::SetCastingFromComponent(USceneComponent * CastingFrom
 bool UGrappleGunComponent::GetCanAttach()
 {
 	return CanAttach;
+}
+
+bool UGrappleGunComponent::RunBufferCheck()
+{
+	// If the grapple is disabled,
+	// don't report that we can grapple
+	if (!isRendered)
+		return false;
+	bool canAttach = false;
+	// Do we have a buffered grapple
+	// surface hit in the buffer interval?
+	if (GetWorld()->GetRealTimeSeconds() - LastHitTime < SurfaceBufferSeconds)
+	{
+		// Double check to make sure the buffered
+		// surface has not been recently occluded
+		FVector Start = CastingFromComponent->GetComponentLocation();
+		FVector End = LastHitActor->GetActorTransform().TransformPosition(LastHitLocation);
+		// Add an epsilon to the end vector to ensure
+		// it will hit if the geometry is still in an appropriate state
+		End += (End - Start).GetSafeNormal() * 0.05F;
+		// Ignore collision with other player colliders
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActors(IgnoredActors);
+		// Create space for the cast result
+		FHitResult Result;
+
+		// Is there a grapple surface within range
+		if (GetWorld()->LineTraceSingleByChannel(
+			Result, Start, End, ECC_GameTraceChannel3, Params))
+		{
+			if (Result.Actor == LastHitActor)
+			{
+				// Check for a grapple blocker that may be closer
+				FHitResult BlockerResult;
+				if (GetWorld()->LineTraceSingleByChannel(
+					BlockerResult, Start, End, ECC_GameTraceChannel4, Params)
+					&&
+					// Is the blocking object closer
+					(BlockerResult.Location - Start).SizeSquared()
+					< (Result.Location - Start).SizeSquared())
+				{
+					// There is a closer object blocking the grapple
+				}
+				else
+				{
+					// Update the last hit location in case
+					// it has changed slightly since the
+					// initial cast
+					LastHitActor->GetActorTransform().InverseTransformPosition(Result.Location);
+					canAttach = true;
+				}
+			}
+		}
+	}
+	return canAttach;
 }
 
 bool UGrappleGunComponent::GetIsAnimating()
@@ -69,15 +132,11 @@ void UGrappleGunComponent::Attach()
 	CurrentHookedActor = LastHitActor;
 	AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
 	if (IsValid(reactor))
-	{
 		CurrentReactor = reactor;
-		CurrentReactor->Hook(LastHitLocation);
-	}
 	else
 		CurrentReactor = nullptr;
 	// Get the local location of the grapple hit
-	LocalAttachedLocation = CurrentHookedActor->GetActorTransform()
-		.InverseTransformPosition(LastHitLocation);
+	LocalAttachedLocation = LastHitLocation;
 	// Set the initial shooting state
 	TArray<FVector> points;
 	points.Add(CastingFromComponent->GetComponentLocation());
@@ -102,6 +161,23 @@ void UGrappleGunComponent::Detach()
 	IsAttached = false;
 	// Notify audio logic
 	OnGrappleStartedTraveling.Broadcast();
+}
+
+void UGrappleGunComponent::ResetDetach()
+{
+	Polyline->SetAllPoints(TArray<FVector>());
+	if (IsAttached)
+	{
+		AGrappleReactor* reactor = Cast<AGrappleReactor>(LastHitActor);
+		if (IsValid(reactor))
+			CurrentReactor->Unhook();
+	}
+	// Cancel out all animation state
+	if (IsShooting || IsRetracting)
+		OnGrappleStoppedTraveling.Broadcast();
+	IsShooting = false;
+	IsRetracting = false;
+	IsAttached = false;
 }
 
 void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, float desiredDistance)
@@ -146,11 +222,13 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				Polyline->SetFirstPoint(target);
 				IsShooting = false;
 				IsAttached = true;
+				// Notify reactor that it has been hit
+				if (IsValid(CurrentReactor))
+					CurrentReactor->Hook(LastHitLocation, Cast<APlayerPawn>(GetOwner()), this);
 				// Notify audio logic
 				OnGrappleHit.Broadcast(target);
 				OnGrappleStoppedTraveling.Broadcast();
 				// Set the initial length for the state to work with
-				LastFrameLength = 
 				Length = FVector::Distance(
 					CastingFromComponent->GetComponentLocation(), target);
 			}
@@ -159,6 +237,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				// Move towards the hit target
 				Polyline->SetFirstPoint(
 					current + (target - current).GetUnsafeNormal() * deltaDistance);
+				Length = Polyline->GetTotalLength();
 			}
 		}
 		else if (IsRetracting)
@@ -192,6 +271,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 			}
 			if (IsRetracting)
 				Polyline->SetAllPoints(points);
+			Length = Polyline->GetTotalLength();
 		}
 		else
 		{
@@ -283,7 +363,11 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					// We can currently attach
 					CanAttach = true;
 					LastHitActor = Result.GetActor();
-					LastHitLocation = Result.Location;
+					LastHitLocation = LastHitActor->GetActorTransform()
+						.InverseTransformPosition(Result.Location);
+					// We can attach for a some time after,
+					// assuming we are still cleared
+					LastHitTime = GetWorld()->GetTimeSeconds();
 				}
 			}
 			else

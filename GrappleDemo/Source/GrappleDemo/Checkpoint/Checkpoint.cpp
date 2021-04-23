@@ -31,9 +31,7 @@ void ACheckpoint::SetCheckpoint()
 	checkpointManager->SetCurrentCheckpoint(this);
 
 	// Sets tooltips for UI
-	checkpointManager->leftUIText = this->leftUIText;
-	checkpointManager->centerUIText = this->centerUIText;
-	checkpointManager->rightUIText = this->rightUIText;
+	checkpointManager->UIText = this->UIText;
 }
 
 void ACheckpoint::CheckLevelStart()

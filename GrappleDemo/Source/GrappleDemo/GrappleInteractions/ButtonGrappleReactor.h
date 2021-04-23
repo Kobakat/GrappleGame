@@ -16,6 +16,8 @@ protected:
 	float startTime;
 
 	UPROPERTY(EditAnywhere, Category = "Button Parameters")
+	bool AutoDetachGrapple;
+	UPROPERTY(EditAnywhere, Category = "Button Parameters")
 	bool IsTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Parameters")
 	float TimerDuration;
@@ -32,6 +34,7 @@ public:
 
 	bool GetIsPressed();
 
+	virtual void Hook(FVector location, APlayerPawn* player, UGrappleGunComponent* grappleGun);
 	virtual void Tick(float DeltaTime) override;
 	virtual void ApplyPullForce(const FVector pullPoint, const FVector pullTowards, const float desiredDistance) override;
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "OnSwitched"))

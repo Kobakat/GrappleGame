@@ -57,28 +57,24 @@ void UMovementState::PlayerLook(float deltaTime)
 void UMovementState::CheckIfGrounded()
 {
 	player->bGrounded = player->collider->CheckIfGrounded();
-
 	if (player->collider->bOnSlide && !player->collider->bNeedsToStand)
 		player->SetState(USlideState::GetInstance());
-
-	if (player->collider->GetPhysicsLinearVelocity().Z < 0.F 
+	if (player->collider->GetPhysicsLinearVelocity().Z < 0.F
 		&& player->bGrounded
 		&& !player->collider->bOnSlide)
 	{
 		FVector velocity = player->collider->GetPhysicsLinearVelocity();
 		player->collider->SetPhysicsLinearVelocity(FVector(velocity.X, velocity.Y, 0));
 	}
-
 	if (player->bGrounded && !player->bPreviousGrounded)
 	{
 		player->OnLand.Broadcast(player->lastFallingSpeed);
 		player->lastFallingSpeed = 0.F;
 	}
-	
+
 	else
 	{
 		float newZ = 0;
-
 		if (player->collider->CheckIfStepUp(newZ))
 		{
 			FVector velocity = player->collider->GetPhysicsLinearVelocity();
@@ -110,19 +106,17 @@ void UMovementState::ClampPlayerVelocity(float max)
 	player->collider->SetPhysicsLinearVelocity(playerVelocity);
 }
 
-void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab) 
+void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 {
 	if (!player->bGrounded)
 	{
 		FVector relativeMoveVector = ConvertPlayerInputRelativeToCamera();
-
 		if (bCanPlayerLedgeGrab && player->collider->CheckIfLedgeGrabEligible(relativeMovementVector))
 		{
 			player->tryingToJump = false;
 			player->SetState(ULedgeGrabState::GetInstance());
 		}
 	}
-
 	if (player->tryingToJump && player->bGrounded)
 	{
 		player->tryingToJump = false;
@@ -132,7 +126,7 @@ void UMovementState::HandleJump(float jumpForce, bool bCanPlayerLedgeGrab)
 		{
 			player->SetState(ULedgeGrabState::GetInstance());
 		}
-	}	
+	}
 }
 
 FVector UMovementState::ConvertPlayerInputRelativeToCamera()
