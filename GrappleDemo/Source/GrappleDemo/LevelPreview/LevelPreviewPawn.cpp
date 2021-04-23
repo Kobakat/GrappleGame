@@ -8,8 +8,7 @@ ALevelPreviewPawn::ALevelPreviewPawn()
 
 void ALevelPreviewPawn::BeginPlay()
 {
-	Super::BeginPlay();
-	GetNodeInformation();	
+	Super::BeginPlay();	
 }
 
 void ALevelPreviewPawn::Tick(float DeltaTime)
@@ -29,18 +28,32 @@ void ALevelPreviewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 }
 
 void ALevelPreviewPawn::StartPreview()
-{	
+{
+	GetNodeInformation();
+
+	OnPreviewStarted();
 	state = Holding;
+	for (ULevelPreviewNode* node : nodes)
+	{
+		if (node->index != 1)
+		{
+			node->Deactivate();
+		}
+	}
 }
 
 void ALevelPreviewPawn::EndPreview()
 {
+	OnPreviewEnd();
 	state = Stopping;
+}
 
+void ALevelPreviewPawn::RepossessPlayer()
+{
 	AController* controller = GetController();
 	controller->UnPossess();
 	controller->Possess(playerPawn);
-} 
+}
 
 void ALevelPreviewPawn::GetNodeInformation()
 {
@@ -150,7 +163,7 @@ void ALevelPreviewPawn::MoveToNextNode()
 {
 	int newNodeIndex = currentNode->index;
 
-	if (newNodeIndex > nodes.Num() - 1)
+	if (newNodeIndex >= nodes.Num() - 1)
 		EndPreview();
 	else
 	{

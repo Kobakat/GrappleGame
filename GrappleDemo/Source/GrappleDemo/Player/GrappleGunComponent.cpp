@@ -54,7 +54,7 @@ bool UGrappleGunComponent::RunBufferCheck()
 	bool canAttach = false;
 	// Do we have a buffered grapple
 	// surface hit in the buffer interval?
-	if (GetWorld()->GetRealTimeSeconds() - LastHitTime < SurfaceBufferSeconds)
+	if (GetWorld()->GetTimeSeconds() - LastHitTime < SurfaceBufferSeconds)
 	{
 		// Double check to make sure the buffered
 		// surface has not been recently occluded
