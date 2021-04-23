@@ -12,7 +12,8 @@
 #include "GrappleGunComponent.h"
 #include "PlayerPawn.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);//Todo combine this into one delegate
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStateEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLandAudio, float, landSpeed);
 
 UCLASS()
@@ -48,6 +49,8 @@ public:
 		FJumpAudio OnJump;
 	UPROPERTY(BlueprintAssignable)
 		FLandAudio OnLand;
+	UPROPERTY(BlueprintAssignable)
+		FStateEvent OnLedgeClimb;
 
 	float lastFallingSpeed;
 
