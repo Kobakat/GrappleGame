@@ -201,17 +201,21 @@ void ULedgeGrabState::PushPlayerForward(float deltaTime)
 	bNeedsToPush = true;
 
 	FVector playerLoc = player->collider->GetComponentLocation();
-	FVector targetPoint = lookPoint + (FVector::UpVector * player->standHeight);
+	FVector targetXY = lookPoint + player->camera->GetForwardVector() * player->bounds.X;
+	FVector targetPoint;
+	targetPoint.Z = lookPoint.Z + player->standHeight;
+	targetPoint.X = targetXY.X;
+	targetPoint.Y = targetXY.Y;
 
-	if (!playerLoc.Equals(targetPoint, 1.f))
+	if (!playerLoc.Equals(targetPoint, 5.f))
 	{
 		pushTimer += deltaTime;
-		const FVector playerXY = FVector(startLoc.X, startLoc.Y, lookPoint.Z);
+		const FVector playerXY = FVector(startLoc.X, startLoc.Y, targetPoint.Z);
 		const float frac = FMath::Clamp(pushTimer / .1f, 0.f, 1.f);
 
-		const FVector newLoc = FMath::Lerp(playerXY, lookPoint, frac);
+		const FVector newLoc = FMath::Lerp(playerXY, targetPoint, frac);
 
-		player->collider->SetRelativeLocation(newLoc + FVector::UpVector * player->standHeight);
+		player->collider->SetRelativeLocation(newLoc + FVector::UpVector);
 	}
 
 	else 

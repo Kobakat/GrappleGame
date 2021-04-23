@@ -184,7 +184,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 				{
 					FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal * bounds.X;
+					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
 					FVector rayStart = rayEnd + maxLedgeHeight;
 
 					const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
@@ -200,6 +200,22 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 						rayEnd,
 						ECC_GameTraceChannel6,
 						param
+					);
+
+					DrawDebugLine(
+						player->GetWorld(),
+						GetComponentLocation(),
+						rayStart,
+						FColor::Red,
+						true
+					);
+
+					DrawDebugLine(
+						player->GetWorld(),
+						rayStart,
+						rayEnd,
+						FColor::Blue,
+						true
 					);
 
 					//If they can we just need to make sure that the ray doesn't start penetrating and exits the surface anywhere
@@ -279,7 +295,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 					{
 						FVector maxLedgeHeight = FVector::UpVector * player->ledgeMaxGrabHeight;
 
-						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal * bounds.X;
+						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
 						FVector rayStart = rayEnd + maxLedgeHeight;
 
 						const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
