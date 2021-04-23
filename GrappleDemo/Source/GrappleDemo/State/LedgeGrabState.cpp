@@ -33,6 +33,7 @@ void ULedgeGrabState::OnStateEnter()
 	player->collider->SetEnableGravity(false);
 	player->collider->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	InitializeLedgeValues();
+	player->OnLedgeClimb.Broadcast();
 }
 
 void ULedgeGrabState::StateTick(float deltaTime)
