@@ -6,6 +6,7 @@
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
 #include "../Player/PlayerPawn.h"
+#include "CursorType.h"
 
 // Sets default values for this component's properties
 UGrappleGunComponent::UGrappleGunComponent()
@@ -14,12 +15,14 @@ UGrappleGunComponent::UGrappleGunComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	// Set default property values
-	InputBufferSeconds = 2.F;
-	SurfaceBufferSeconds = 2.F;
+	InputBufferSeconds = 0.3F;
+	SurfaceBufferSeconds = 0.3F;
 	FireRange = 3000.F;
 	MinLength = 250.F;
 	MaxLength = 3000.F;
 	ShotSpeed = 6000.F;
+
+	Player = Cast<APlayerPawn>(GetOwner());
 }
 
 
@@ -103,6 +106,11 @@ bool UGrappleGunComponent::RunBufferCheck()
 bool UGrappleGunComponent::GetIsAnimating()
 {
 	return IsRetracting || IsShooting;
+}
+
+bool UGrappleGunComponent::GetIsSurfaceBuffered()
+{
+	return GetWorld()->GetTimeSeconds() - LastHitTime < SurfaceBufferSeconds;
 }
 
 float UGrappleGunComponent::GetLength()
@@ -224,7 +232,7 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				IsAttached = true;
 				// Notify reactor that it has been hit
 				if (IsValid(CurrentReactor))
-					CurrentReactor->Hook(LastHitLocation, Cast<APlayerPawn>(GetOwner()), this);
+					CurrentReactor->Hook(LastHitLocation, Player, this);
 				// Notify audio logic
 				OnGrappleHit.Broadcast(target);
 				OnGrappleStoppedTraveling.Broadcast();
@@ -277,7 +285,20 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 		{
 			float deltaReel = Length - LastFrameLength;
 			LastFrameLength = Length;
-			if (isReeling)
+			if ((isReeling || isUnreeling) && FMath::Abs(deltaReel) < 0.005F)
+			{
+				if (isReeling)
+				{
+					isReeling = false;
+					OnStoppedReelingIn.Broadcast();
+				}
+				else
+				{
+					isUnreeling = false;
+					OnStoppedReelingOut.Broadcast();
+				}
+			}
+			else if (isReeling)
 			{
 				// We have switched directions
 				if (deltaReel > 0.F)
@@ -286,12 +307,6 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					isUnreeling = true;
 					OnStoppedReelingIn.Broadcast();
 					OnStartedReelingOut.Broadcast();
-				}
-				// We have stopped reeling
-				else if (deltaReel == 0.F)
-				{
-					isReeling = false;
-					OnStoppedReelingIn.Broadcast();
 				}
 			}
 			else if (isUnreeling)
@@ -303,12 +318,6 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					isUnreeling = false;
 					OnStoppedReelingOut.Broadcast();
 					OnStartedReelingIn.Broadcast();
-				}
-				// We have stopped reeling
-				else if (deltaReel == 0.F)
-				{
-					isUnreeling = false;
-					OnStoppedReelingOut.Broadcast();
 				}
 			}
 			else
@@ -372,6 +381,15 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 			}
 			else
 				CanAttach = false;
+
+			if (CanAttach)
+			{
+				Player->Cursor = ECursorType::Highlighted;
+			}
+			else if (Player->Cursor != ECursorType::Assist)
+			{
+				Player->Cursor = ECursorType::Normal;
+			}
 		}
 	}
 }

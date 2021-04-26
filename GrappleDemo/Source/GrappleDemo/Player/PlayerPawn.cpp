@@ -86,24 +86,39 @@ void APlayerPawn::Tick(float deltaTime)
 
 	bPreviousGrounded = bGrounded;
 
-	// Handle input buffering
-	if (SwingBuffered || InstantBuffered)
+	if (hasGrapple)
 	{
-		if (GetWorld()->GetTimeSeconds() - BufferedTime
-			< grappleComponent->InputBufferSeconds)
+		// Handle input buffering
+		if (SwingBuffered || InstantBuffered)
 		{
-			if (grappleComponent->RunBufferCheck())
+			if (GetWorld()->GetTimeSeconds() - BufferedTime
+				< grappleComponent->InputBufferSeconds)
 			{
-				SwingBuffered = InstantBuffered = false;
-				if (SwingBuffered)
-					SetState(UGrappleAirborneState::GetInstance());
-				else
-					SetState(UGrappleInstantReelState::GetInstance());
-				grappleComponent->Attach();
+				if (grappleComponent->RunBufferCheck())
+				{
+					SwingBuffered = InstantBuffered = false;
+					if (SwingBuffered)
+						SetState(UGrappleAirborneState::GetInstance());
+					else
+						SetState(UGrappleInstantReelState::GetInstance());
+					grappleComponent->Attach();
+				}
 			}
+			else
+				SwingBuffered = InstantBuffered = false;
 		}
-		else
-			SwingBuffered = InstantBuffered = false;
+		if (SwingBuffered || InstantBuffered || grappleComponent->GetIsSurfaceBuffered())
+		{
+			Cursor = ECursorType::Assist;
+		}
+		else if (Cursor == ECursorType::Assist)
+		{
+			Cursor = ECursorType::Normal;
+		}
+	}
+	else
+	{
+		Cursor = ECursorType::Ghost;
 	}
 }
 

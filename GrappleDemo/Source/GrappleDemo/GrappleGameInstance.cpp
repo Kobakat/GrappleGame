@@ -290,12 +290,24 @@ void UGrappleGameInstance::ResetData(FLevelProgress& data, const EGameStage leve
 		data.CollectionMissions.SetNum(0);
 		break;
 	case EGameStage::PyramidTower:
+		data.CollectionMissions.SetNum(0);
+		break;
+	case EGameStage::SearsTower:
+		data.CollectionMissions.SetNum(0);
+		break;
+	case EGameStage::NewYork:
 		data.CollectionMissions.SetNum(1);
 		data.CollectionMissions[0].AllAreCollected = false;
 		data.CollectionMissions[0].CollectedStates.SetNum(0);
 		data.CollectionMissions[0].CollectedStates.SetNumZeroed(5);
 		break;
-	case EGameStage::SearsTower:
+	case EGameStage::Danville:
+		data.CollectionMissions.SetNum(1);
+		data.CollectionMissions[0].AllAreCollected = false;
+		data.CollectionMissions[0].CollectedStates.SetNum(0);
+		data.CollectionMissions[0].CollectedStates.SetNumZeroed(5);
+		break;
+	case EGameStage::SilentHill:
 		data.CollectionMissions.SetNum(1);
 		data.CollectionMissions[0].AllAreCollected = false;
 		data.CollectionMissions[0].CollectedStates.SetNum(0);
@@ -316,6 +328,12 @@ FString UGrappleGameInstance::GameStageToString(const TEnumAsByte<EGameStage> ga
 		return UEnum::GetValueAsString<EGameStage>(EGameStage::PyramidTower);
 	case EGameStage::SearsTower:
 		return UEnum::GetValueAsString<EGameStage>(EGameStage::SearsTower);
+	case EGameStage::NewYork:
+		return UEnum::GetValueAsString<EGameStage>(EGameStage::NewYork);
+	case EGameStage::SilentHill:
+		return UEnum::GetValueAsString<EGameStage>(EGameStage::SilentHill);
+	case EGameStage::Danville:
+		return UEnum::GetValueAsString<EGameStage>(EGameStage::Danville);
 	}
 	return "";
 }
