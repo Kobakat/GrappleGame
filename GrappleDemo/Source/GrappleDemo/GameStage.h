@@ -11,5 +11,8 @@ enum EGameStage
 	Tutorial,
 	WalkingTutorial,
 	PyramidTower,
-	SearsTower
+	SearsTower,
+	NewYork,
+	SilentHill,
+	Danville
 };

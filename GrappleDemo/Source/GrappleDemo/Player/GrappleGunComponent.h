@@ -25,6 +25,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 
+	APlayerPawn* Player;
+
 	// The hook object that lodges into the hooked location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	USceneComponent* GrappleHookEnd;
@@ -124,6 +126,8 @@ public:
 	bool RunBufferCheck();
 	// Gets whether the grapple gun is a transition animation state
 	bool GetIsAnimating();
+	// Gets whether there is a recent surface that has been buffered
+	bool GetIsSurfaceBuffered();
 	// Gets the current length of the cable
 	UFUNCTION(BlueprintCallable)
 	float GetLength();

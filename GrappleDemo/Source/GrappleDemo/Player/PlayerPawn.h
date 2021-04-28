@@ -10,9 +10,9 @@
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "PlayerCapsule.h"
 #include "GrappleGunComponent.h"
+#include "CursorType.h"
 #include "PlayerPawn.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAudio);//Todo combine this into one delegate
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStateEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLandAudio, float, landSpeed);
 
@@ -44,13 +44,19 @@ public:
 		UPlayerCapsule* collider;
 	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
 		bool grappleCanAttach;
+	UPROPERTY(BlueprintReadOnly, Category = "Grapple")
+		TEnumAsByte<ECursorType> Cursor;
 
-	UPROPERTY(BlueprintAssignable)
-		FJumpAudio OnJump;
 	UPROPERTY(BlueprintAssignable)
 		FLandAudio OnLand;
 	UPROPERTY(BlueprintAssignable)
+		FStateEvent OnJump;	
+	UPROPERTY(BlueprintAssignable)
 		FStateEvent OnLedgeClimb;
+	UPROPERTY(BlueprintAssignable)
+		FStateEvent OnSlideBegin;
+	UPROPERTY(BlueprintAssignable)
+		FStateEvent OnSlideEnd;
 
 	float lastFallingSpeed;
 
