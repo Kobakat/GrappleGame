@@ -64,7 +64,9 @@ void UGrappleInstantReelState::CheckStateChange()
 	if (player->tryingToJump)
 		player->SetState(UWalkState::GetInstance());
 	if (!grappleComponent->GetIsAnimating())
-		if (grappleComponent->GetLength() <= grappleComponent->MinLength)
+		if (grappleComponent->GetLength() <= grappleComponent->MinLength
+			// TODO does there need to be an epsilon here?
+			|| FMath::Abs(player->reelingAxis) > 0.05F)
 			player->SetState(UGrappleAirborneState::GetInstance());
 	if (player->collider->CheckIfLedgeGrabEligible())
 		player->SetState(ULedgeGrabState::GetInstance());

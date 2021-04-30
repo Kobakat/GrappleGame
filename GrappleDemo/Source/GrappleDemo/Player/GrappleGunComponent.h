@@ -38,9 +38,9 @@ protected:
 	// The current length of the grapple cable
 	float Length;
 	// True when the hook is shooting towards the target
-	float IsShooting;
+	bool IsShooting;
 	// True when the hook is retracting to the gun
-	float IsRetracting;
+	bool IsRetracting;
 	// Whether the grapple is currently hovered on a grapple surface
 	bool CanAttach;
 	// True while the grapple hook is attached
@@ -49,6 +49,8 @@ protected:
 	AActor* LastHitActor;
 	// The location in 3D space of the last cast hit
 	FVector LastHitLocation;
+	// The location of the hit directly on the surface (where the hook rests)
+	FVector CurrentHitSurfaceLocation;
 	// The timestamp of the last raycast hit
 	float LastHitTime;
 	// The current actor that is hooked onto
@@ -110,6 +112,9 @@ public:
 	// The maximum cable length
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	float MaxLength;
+	// The length of the hook that is rigid in the hit surface
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
+	float HookLength;
 	// Controls how fast the shot animates
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple Gun")
 	float ShotSpeed;

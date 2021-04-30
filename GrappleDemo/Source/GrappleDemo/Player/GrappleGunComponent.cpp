@@ -21,6 +21,7 @@ UGrappleGunComponent::UGrappleGunComponent()
 	MinLength = 250.F;
 	MaxLength = 3000.F;
 	ShotSpeed = 6000.F;
+	HookLength = 26.5F;
 
 	Player = Cast<APlayerPawn>(GetOwner());
 }
@@ -94,7 +95,11 @@ bool UGrappleGunComponent::RunBufferCheck()
 					// Update the last hit location in case
 					// it has changed slightly since the
 					// initial cast
-					LastHitActor->GetActorTransform().InverseTransformPosition(Result.Location);
+					CurrentHitSurfaceLocation = LastHitActor->GetActorTransform().InverseTransformPosition(
+						Result.Location);
+					LastHitLocation = 
+						LastHitActor->GetActorTransform().InverseTransformPosition(
+							Result.Location - (End - Start).GetSafeNormal() * HookLength);
 					canAttach = true;
 				}
 			}
@@ -264,6 +269,11 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 					deltaDistance -= segmentDistance;
 					if (points.Num() == 1)
 					{
+						FVector Direction = GunEnd->GetForwardVector();
+						GrappleHookEnd->SetWorldLocation(GunEnd->GetComponentLocation() + Direction * HookLength);
+						GrappleHookEnd->SetWorldRotation(
+							Direction.ToOrientationQuat());
+
 						IsRetracting = false;
 						Polyline->SetAllPoints(TArray<FVector>());
 						// Notify audio logic
@@ -334,11 +344,33 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				}
 			}
 		}
-		// Update the grapple end
-		if (Polyline->GetPoints().Num() > 0)
-			GrappleHookEnd->SetWorldLocation(Polyline->GetPoints()[0]);
+
+		// TODO this is very hacky; all the if-else
+		// here should be cleaned up with a sub-state machine.
+		if (IsShooting || IsRetracting)
+		{
+			// Update the grapple end
+			if (Polyline->GetPoints().Num() > 1)
+			{
+				FVector Direction = (Polyline->GetPoints()[0] - Polyline->GetPoints()[1]).GetSafeNormal();
+				GrappleHookEnd->SetWorldLocation(Polyline->GetPoints()[0] + Direction * HookLength);
+				GrappleHookEnd->SetWorldRotation(Direction.ToOrientationQuat());
+			}
+		}
 		else
-			GrappleHookEnd->SetRelativeLocationAndRotation(FVector::ZeroVector, FQuat::Identity);
+		{
+			// Update the grapple end
+			if (Polyline->GetPoints().Num() > 0)
+			{
+				FVector SurfaceLocation = CurrentHookedActor->GetActorTransform()
+					.TransformPosition(CurrentHitSurfaceLocation);
+
+				GrappleHookEnd->SetWorldLocation(SurfaceLocation);
+				GrappleHookEnd->SetWorldRotation(
+					(SurfaceLocation - Polyline->GetPoints()[0]).ToOrientationQuat());
+			}
+		}
+
 		// Only cast if the cast from component has been properly initialized
 		if (CastingFromComponent != nullptr)
 		{
