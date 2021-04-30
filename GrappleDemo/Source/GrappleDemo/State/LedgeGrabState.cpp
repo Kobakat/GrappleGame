@@ -13,10 +13,10 @@ ULedgeGrabState* ULedgeGrabState::GetInstance()
 	return instance;
 }
 
-FHitResult ULedgeGrabState::ledge;
-void ULedgeGrabState::SetLedge(FHitResult newLedge)
+void ULedgeGrabState::SetLedge(FHitResult newLedge, FVector newLedgeTop)
 {
 	ledge = newLedge;
+	ledgeTop = newLedgeTop;
 }
 
 #pragma region State Events
@@ -50,69 +50,19 @@ void ULedgeGrabState::InitializeLedgeValues()
 {
 	this->startLoc = player->collider->GetComponentLocation();
 	this->liftHeight = player->collider->LedgeTop.ImpactPoint.Z + player->standHeight;
-	this->climbDistance = liftHeight - startLoc.Z;
-	this->pushDir = -ledge.ImpactNormal;
-	this->lookPoint = player->collider->LedgeTop.ImpactPoint;
-	this->bobTimer = 0;
+	this->pushDir = player->camera->GetForwardVector();
+	this->pushDir.Z = 0;
+	this->pushDir.Normalize(0.001f);
 	this->pushTimer = 0;
-	this->bNeedsToBob = false;
 	this->bNeedsToPush = false;
-
-	FVector lookDir = lookPoint - player->camera->GetComponentLocation();
-	lookDir.Normalize();
-	goalRot = lookDir;
-
-	if (player->bGrounded)
-	{
-		if (lookPoint.Z > player->camera->GetComponentLocation().Z)
-		{
-			climbType = LCT_AboveHead;
-			bNeedsToTurn = true;
-		}
-				
-		else if (lookPoint.Z < startLoc.Z)
-			climbType = LCT_UnderWaist;
-
-						
-		else
-			climbType = LCT_AboveWaist;			
-	}
-
-	else
-	{
-		climbType = LCT_Airborne;
-		bNeedsToTurn = true;
-	}
 }
 
 void ULedgeGrabState::DeterminePlayerAction(float deltaTime) 
 {	
-	//BobCamera(deltaTime);
-
-
 	if (bNeedsToPush)
 		PushPlayerForward(deltaTime);
 	else
 		LiftPlayerUp(deltaTime);
-
-	/*else
-	{
-		switch (climbType)
-		{
-		case LCT_UnderWaist:
-			UnderWaistAction(deltaTime);
-			break;
-		case LCT_AboveWaist:
-			AboveWaistAction(deltaTime);
-			break;
-		case LCT_AboveHead:
-			AboveHeadAction(deltaTime);
-			break;
-		case LCT_Airborne:
-			AirborneAction(deltaTime);
-			break;
-		}
-	}*/
 }
 
 void ULedgeGrabState::LiftPlayerUp(float deltaTime)
@@ -130,80 +80,14 @@ void ULedgeGrabState::LiftPlayerUp(float deltaTime)
 	}
 }
 
-void ULedgeGrabState::UnderWaistAction(float deltaTime)
-{
-	LiftPlayerUp(deltaTime);
-}
-
-void ULedgeGrabState::AboveWaistAction(float deltaTime)
-{
-	LiftPlayerUp(deltaTime);
-}
-
-//TODO refactor these else ifs into an enum state switch
-void ULedgeGrabState::AboveHeadAction(float deltaTime)
-{
-	if (bNeedsToTurn && !bNeedsToBob)
-	{
-		if (!player->camera->GetForwardVector().Equals(goalRot))
-		{
-			const FVector camForward = player->camera->GetForwardVector();
-			const FRotator stepRotation = FMath::VInterpNormalRotationTo(camForward, goalRot, deltaTime, player->camera->ledgeTurnSpeed).Rotation();
-		
-			player->camera->SetWorldRotation(stepRotation);
-		}
-
-		else 
-		{
-			bNeedsToTurn = false;
-		}
-	}
-
-	else if(!bNeedsToTurn)
-	{
-		LiftPlayerUp(deltaTime);
-
-		if (player->camera->GetComponentLocation().Z >= lookPoint.Z)
-		{
-			const FVector camForward = player->camera->GetForwardVector();
-			const FRotator stepRotation = FMath::VInterpNormalRotationTo(camForward, -ledge.ImpactNormal, deltaTime, player->camera->ledgeTurnSpeed).Rotation();
-
-			player->camera->SetWorldRotation(stepRotation);
-
-			if (player->camera->GetForwardVector().Equals(-ledge.ImpactNormal))
-			{
-				bNeedsToBob = true;
-			}
-		}
-
-		if (player->collider->GetComponentLocation().Z > liftHeight)
-		{
-			FVector playerLoc = player->collider->GetComponentLocation();
-
-			player->collider->SetRelativeLocation(FVector(
-				playerLoc.X,
-				playerLoc.Y,
-				liftHeight
-			));
-
-			PushPlayerForward(deltaTime);
-		}
-	}	
-}
-
-void ULedgeGrabState::AirborneAction(float deltaTime)
-{
-	AboveHeadAction(deltaTime);
-}
-
 void ULedgeGrabState::PushPlayerForward(float deltaTime)
 {
 	bNeedsToPush = true;
 
 	FVector playerLoc = player->collider->GetComponentLocation();
-	FVector targetXY = lookPoint + player->camera->GetForwardVector() * player->bounds.X;
+	FVector targetXY = ledgeTop + (pushDir * player->bounds.X);
 	FVector targetPoint;
-	targetPoint.Z = lookPoint.Z + player->standHeight;
+	targetPoint.Z = ledgeTop.Z + player->standHeight;
 	targetPoint.X = targetXY.X;
 	targetPoint.Y = targetXY.Y;
 
@@ -245,24 +129,6 @@ void ULedgeGrabState::PushPlayerForward(float deltaTime)
 			player->collider->SetPhysicsLinearVelocity(pushDir);
 			player->SetState(URunState::GetInstance());
 			break;
-		}
-	}
-}
-
-void ULedgeGrabState::BobCamera(float deltaTime)
-{
-	if (bNeedsToBob)
-	{
-		bobTimer += (deltaTime * player->camera->ledgeDipSpeed);
-
-		const float period = FMath::Sin(bobTimer * 2.f * PI) * deltaTime * player->camera->ledgeDipAmplitude;
-		const FRotator addRot = FRotator(-period, 0, 0);
-
-		player->camera->AddLocalRotation(addRot);
-
-		if (bobTimer >= 1.f)
-		{
-			bNeedsToBob = false;
 		}
 	}
 }

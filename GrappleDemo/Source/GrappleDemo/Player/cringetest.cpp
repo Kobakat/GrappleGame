@@ -199,13 +199,15 @@ void Ucringetest::UpdateShake(const float deltaTime, const float amplitude, cons
 		{
 			bHitTrough = true;
 
-			if (amplitude == passiveAmplitude)
-				OnWalkStep.Broadcast();
-			else
-				OnRunStep.Broadcast();
+			if (player->state == UWalkState::GetInstance() || player->state == URunState::GetInstance())
+			{
+				if (amplitude == passiveAmplitude)
+					OnWalkStep.Broadcast();
+				else
+					OnRunStep.Broadcast();
+			}
 		}
-
-		
+	
 		prevHeight = height;
 	}
 }
