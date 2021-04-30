@@ -262,7 +262,7 @@ void UGrappleGameInstance::LoadLevelProgress(const EGameStage level)
 void UGrappleGameInstance::ResetData(FCrosshairPreferenceData& data)
 {
 	data.Index = 0;
-	data.Size = 1.F;
+	data.Size = 0.5F;
 }
 void UGrappleGameInstance::ResetData(FCameraPreferenceData& data)
 {
