@@ -6,7 +6,6 @@
 #include "Components/SceneComponent.h"
 #include "../GrappleRendering/PolylineCylinderRenderer.h"
 #include "../GrappleInteractions/GrappleReactor.h"
-#include "../Player/PlayerPawn.h"
 #include "GrappleGunComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSoundUpdated);

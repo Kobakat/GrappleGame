@@ -38,6 +38,7 @@ void USlideState::OnStateEnter()
 	player->collider->SetPhysicsLinearVelocity(player->collider->previousVelocity);
 	bIsTransitioning = true;
 	bIsCrouching = true;	
+	player->OnSlideBegin.Broadcast();
 }
 
 void USlideState::StateTick(float deltaTime)
@@ -54,6 +55,7 @@ void USlideState::StateTick(float deltaTime)
 void USlideState::OnStateExit()
 {
 	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
+	player->OnSlideEnd.Broadcast();
 }
 
 #pragma endregion

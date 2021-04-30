@@ -29,6 +29,7 @@ void URunSlideState::OnStateEnter()
 	
 	bIsCrouching = true;
 	crouchTimer = player->collider->GetCrouchTime(player->crouchHeight);
+	player->OnSlideBegin.Broadcast();
 }
 
 void URunSlideState::StateTick(float deltaTime)
@@ -48,6 +49,7 @@ void URunSlideState::OnStateExit()
 	player->collider->SetPhysMaterialOverride(player->collider->moveMat);
 	bIsCrouching = false;
 	crouchTimer = 0;
+	player->OnSlideEnd.Broadcast();
 }
 
 #pragma endregion

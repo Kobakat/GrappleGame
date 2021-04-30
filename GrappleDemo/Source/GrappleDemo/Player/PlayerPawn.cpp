@@ -3,6 +3,7 @@
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../LevelPreview/LevelPreviewPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "GrappleGunComponent.h"
 
 #pragma region Unreal Event Functions
 
