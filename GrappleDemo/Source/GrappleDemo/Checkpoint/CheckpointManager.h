@@ -21,7 +21,7 @@ protected:
 
 
 	// The stage that this checkpoint manager is in
-	UPROPERTY(EditAnywhere, Category = "Checkpoints")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Checkpoints")
 	TEnumAsByte<EGameStage> Stage;
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
