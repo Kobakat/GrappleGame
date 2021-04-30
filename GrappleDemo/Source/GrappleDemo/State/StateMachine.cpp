@@ -26,6 +26,7 @@ void UStateMachine::SetState(UState* newState)
 {
 	if (newState != nullptr && this->state != nullptr)
 	{
+		nextState = newState; // TODO see header
 		this->state->OnStateExit();
 		this->state = newState;
 		this->player->state = this->state;

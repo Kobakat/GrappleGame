@@ -25,8 +25,14 @@ void UGrappleState::OnStateEnter()
 void UGrappleState::OnStateExit()
 {
 	UMovementState::OnStateExit();
-	// Detach the grapple hook
-	grappleComponent->Detach();
+	// Detach the grapple hook if the next state
+	// is not a grapple state.
+	// TODO maybe this should be a substate machine; with one grapple state in the machine.
+	if (player->stateMachine->nextState != UGrappleAirborneState::GetInstance()
+		&& player->stateMachine->nextState != UGrappleInstantReelState::GetInstance())
+	{
+		grappleComponent->Detach();
+	}
 }
 #pragma endregion
 #pragma region Solve Restraint
@@ -151,8 +157,8 @@ void UGrappleState::SolveWrap()
 			FVector nextPivot = ((i == 0) ? hookLocation : WrapActors[i - 1]->GetTransform().TransformPosition(WrapPivots[i - 1]));
 			// Is there a clear line around this wrap point?
 			// If so unwind the pivot, otherwise stop checking pivots.
-			if (!world->LineTraceSingleByChannel(GrappleHitPoint,
-				nextPivot, camLocation, ECC_GameTraceChannel4, CollisionParams))
+			if (!CastAllWrappableObjects(GrappleHitPoint,
+				nextPivot, camLocation, CollisionParams))
 			{
 				// Project the pivot onto the new prospective unwrapped segment.
 				FVector unwrapCheck = (WrapActors[i]->GetTransform().TransformPosition(WrapPivots[i]) - camLocation).
@@ -180,7 +186,7 @@ void UGrappleState::SolveWrap()
 	int loops = 0;
 	// Keep checking the cable line until there is a free path to the grapple end.
 	// Wrap as many times as is needed.
-	while (world->LineTraceSingleByChannel(GrappleHitPoint, End, Start, ECC_GameTraceChannel4, CollisionParams))
+	while (CastAllWrappableObjects(GrappleHitPoint, End, Start, CollisionParams))
 	{
 		// This is a safety check to avoid a while loop
 		// crash. This might trigger if the grapple gets stuck inside
@@ -200,8 +206,8 @@ void UGrappleState::SolveWrap()
 			// known to be non-obscured.
 			Start = FMath::Lerp(camLocation, LastFramePlayerLocation, interpolant);
 			// If we are still hitting then continue further towards last frame.
-			if (world->LineTraceSingleByChannel(GrappleHitPoint,
-				End, Start, ECC_GameTraceChannel4, CollisionParams))
+			if (CastAllWrappableObjects(GrappleHitPoint,
+				End, Start, CollisionParams))
 			{
 				interpolant += bisection;
 				// Record this result.
@@ -225,5 +231,27 @@ void UGrappleState::SolveWrap()
 	}
 	// Update last stored location.
 	LastFramePlayerLocation = camLocation;
+}
+bool UGrappleState::CastAllWrappableObjects(FHitResult & OutHit, const FVector & Start, const FVector & End, const FCollisionQueryParams & Params)
+{
+	// TODO this is a hotfix for wrapping not working
+	// on grapple objects, certainly a better way to do this.
+	UWorld* world = grappleComponent->GetWorld();
+	FHitResult result;
+	bool wasHit = false;
+	float closestDistance = FLT_MAX;
+	if (world->LineTraceSingleByChannel(result, Start, End, ECC_GameTraceChannel4, Params))
+	{
+		wasHit = true;
+		if (result.Distance < closestDistance)
+			OutHit = result;
+	}
+	if (world->LineTraceSingleByChannel(result, Start, End, ECC_GameTraceChannel3, Params))
+	{
+		wasHit = true;
+		if (result.Distance < closestDistance)
+			OutHit = result;
+	}
+	return wasHit;
 }
 #pragma endregion
