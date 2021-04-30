@@ -186,14 +186,8 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 
 					FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
 					FVector rayStart = rayEnd + maxLedgeHeight;
+					rayEnd.Z = rayEnd.Z + player->ledgeMinGrabHeight;
 
-					const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
-						LedgeTop,
-						GetComponentLocation(),
-						rayStart,
-						ECC_Visibility,
-						param
-					);
 					const bool ledgeHit = player->GetWorld()->LineTraceSingleByChannel(
 						LedgeTop,
 						rayStart,
@@ -201,30 +195,30 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 						ECC_GameTraceChannel6,
 						param
 					);
-
-					DrawDebugLine(
-						player->GetWorld(),
-						GetComponentLocation(),
-						rayStart,
-						FColor::Red,
-						true
-					);
-
-					DrawDebugLine(
-						player->GetWorld(),
-						rayStart,
-						rayEnd,
-						FColor::Blue,
-						true
-					);
-
-					//If they can we just need to make sure that the ray doesn't start penetrating and exits the surface anywhere
-					if (!blockHit
-						&& ledgeHit
-						&& (LedgeTop.ImpactPoint.Z >= (GetComponentLocation().Z - halfHeight) + player->ledgeMinGrabHeight))
+									
+					if(ledgeHit)
 					{
-						ULedgeGrabState::GetInstance()->SetLedge(hit);
-						return true;
+						//If they can we just need to make sure nothing is blocking them from actually climbing
+
+						FHitResult block;
+						FVector ledgeTop = LedgeTop.ImpactPoint;
+						FVector start = FVector(init.X, init.Y, ledgeTop.Z + player->standHeight + 1);
+						FVector end = ledgeTop + (FVector::UpVector * (player->standHeight + 1));
+
+						const bool blockHit = player->GetWorld()->SweepSingleByChannel(
+							block,
+							start,
+							end,
+							FQuat::Identity,
+							ECC_Visibility,
+							capsule,
+							param);
+
+						if (!blockHit)
+						{
+							ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop.ImpactPoint);
+							return true;
+						}
 					}
 				}
 			}
@@ -240,12 +234,13 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FVector boundingBox = FVector(
-		bounds.X * player->ledgeGrabRangeFactor,
-		bounds.Y * player->ledgeGrabRangeFactor,
-		bounds.Z * 0.05f);
+	FVector camForward = player->camera->GetForwardVector();
+	camForward.Z = 0;
+	camForward.Normalize(0.01f);
 
-	FCollisionShape box = FCollisionShape::MakeBox(boundingBox);
+	FCollisionShape sphere = FCollisionShape::MakeSphere(bounds.X);
+	FVector sweepStart = GetComponentLocation() + (FVector::UpVector * halfHeight);
+	FVector sweepEnd = sweepStart + (camForward * bounds.X * player->ledgeGrabRangeFactor);
 
 	bool bHitLedge = player->GetWorld()->SweepMultiByChannel(
 		LedgeHits,
@@ -253,7 +248,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 		GetComponentLocation() + (FVector::UpVector * halfHeight),
 		FQuat::Identity,
 		ECC_GameTraceChannel6,
-		box,
+		sphere,
 		param);
 
 	//If we hit something in this layer
@@ -273,14 +268,9 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 				impactNormal.Normalize(0.01f);
 				impactNormal *= -1;
 
-				FVector camForward = player->camera->GetForwardVector();
-				camForward.Z = 0;
-				camForward.Normalize(0.01f);
-
 				//Calculate the Angle between the two vectors
 				const float camDot = FVector::DotProduct(camForward, impactNormal);
 				const float camAngle = FMath::RadiansToDegrees(FMath::Acos(camDot));
-
 
 				//If the angle is small enough, make sure they can reach the top of the ledge
 				if (camAngle <= player->ledgeLookAngle)
@@ -297,14 +287,8 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 
 						FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z - halfHeight) + impactNormal;
 						FVector rayStart = rayEnd + maxLedgeHeight;
+						rayEnd.Z = rayEnd.Z + player->ledgeMinGrabHeight;
 
-						const bool blockHit = player->GetWorld()->LineTraceSingleByChannel(
-							LedgeTop,
-							GetComponentLocation(),
-							rayStart,
-							ECC_Visibility,
-							param
-						);
 						const bool ledgeHit = player->GetWorld()->LineTraceSingleByChannel(
 							LedgeTop,
 							rayStart,
@@ -313,23 +297,35 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 							param
 						);
 
-						//If they can we just need to make sure that the ray doesn't start penetrating and exits the surface anywhere
-						if (!blockHit
-							&& ledgeHit
-							&& (LedgeTop.ImpactPoint.Z >= (GetComponentLocation().Z - halfHeight) + player->ledgeMinGrabHeight))
+						if (ledgeHit)
 						{
-							ULedgeGrabState::GetInstance()->SetLedge(hit);
-							return true;
+							FHitResult block;
+							FVector ledgeTop = LedgeTop.ImpactPoint;
+							FVector start = FVector(GetComponentLocation().X, GetComponentLocation().Y, ledgeTop.Z + player->standHeight + 1);
+							FVector end = ledgeTop + (FVector::UpVector * (player->standHeight + 1));
+							FCollisionShape capsule = FCollisionShape::MakeCapsule(bounds.X, halfHeight);
+
+							const bool blockHit = player->GetWorld()->SweepSingleByChannel(
+								block,
+								start,
+								end,
+								FQuat::Identity,
+								ECC_Visibility,
+								capsule,
+								param);
+
+							if (!blockHit)
+							{
+								ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop.ImpactPoint);
+								return true;
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-
 	return false;
-
-
 }
 
 bool UPlayerCapsule::CheckIfTryingToStand()
@@ -354,45 +350,9 @@ bool UPlayerCapsule::CheckIfTryingToStand()
 	return bHitCeiling;
 }
 
+//TODO: Remove
 bool UPlayerCapsule::CheckIfStepUp(float& outHeight)
 {
-	/*if (player->bGrounded && !GetPhysicsLinearVelocity().IsNearlyZero(1.f))
-	{
-		for (FHitResult hit : BoxHits)
-		{
-			FHitResult step;
-			FCollisionQueryParams param;
-			param.AddIgnoredActor(player);
-
-			FVector rayStart = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z + player->stepHeight) + (hit.ImpactNormal * -1);
-			FVector rayEnd = FVector(hit.ImpactPoint.X, hit.ImpactPoint.Y, GetComponentLocation().Z) + (hit.ImpactNormal * -1);
-
-			const bool bHitStep = player->GetWorld()->LineTraceSingleByChannel(
-				step,
-				rayStart,
-				rayEnd,
-				ECC_GameTraceChannel1,
-				param
-			);
-
-			if (bHitStep)
-			{
-				const float hitHeight = step.Location.Z;
-				const float top = GetComponentLocation().Z + player->stepHeight;
-				const float bot = GetComponentLocation().Z + .001f;
-
-				if (hitHeight <= top
-					&& hitHeight >= bot)
-				{
-					outHeight = hitHeight;
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;*/
-
 	return false;
 }
 

@@ -31,6 +31,7 @@ void ACheckpointManager::BeginPlay()
 
 	// The first checkpoint in the array is the start by default
 	currentCheckpoint = Checkpoints[0];
+	currentCheckpointIndex = 1;
 }
 
 // Called every frame
@@ -42,13 +43,20 @@ void ACheckpointManager::Tick(float DeltaTime)
 	if (bTimer)
 	{
 		timeElasped = GetWorld()->GetRealTimeSeconds() - startTime;
-		UE_LOG(LogTemp, Warning, TEXT("%f"), timeElasped);
 	}
+
+	// If not at the end of the index, sets the next checkpoint as the next checkpoint in the array	
+	
 }
 
 void ACheckpointManager::SetCurrentCheckpoint(ACheckpoint* checkpoint)
 {
 	// Sets the last checkpoint the player has hit
+	if (currentCheckpointIndex <= Checkpoints.Num())
+	{
+		currentCheckpointIndex = Checkpoints.Find(currentCheckpoint);
+		nextCheckpoint = Checkpoints[currentCheckpointIndex++];
+	}
 	currentCheckpoint = checkpoint;
 	CheckLevelEnd();
 }
