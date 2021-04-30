@@ -13,7 +13,7 @@ ULedgeGrabState* ULedgeGrabState::GetInstance()
 	return instance;
 }
 
-void ULedgeGrabState::SetLedge(FHitResult newLedge, FHitResult newLedgeTop)
+void ULedgeGrabState::SetLedge(FHitResult newLedge, FVector newLedgeTop)
 {
 	ledge = newLedge;
 	ledgeTop = newLedgeTop;
@@ -53,7 +53,6 @@ void ULedgeGrabState::InitializeLedgeValues()
 	this->pushDir = player->camera->GetForwardVector();
 	this->pushDir.Z = 0;
 	this->pushDir.Normalize(0.001f);
-	this->topPoint = ledgeTop.ImpactPoint;
 	this->pushTimer = 0;
 	this->bNeedsToPush = false;
 }
@@ -86,9 +85,9 @@ void ULedgeGrabState::PushPlayerForward(float deltaTime)
 	bNeedsToPush = true;
 
 	FVector playerLoc = player->collider->GetComponentLocation();
-	FVector targetXY = topPoint + (pushDir * player->bounds.X);
+	FVector targetXY = ledgeTop + (pushDir * player->bounds.X);
 	FVector targetPoint;
-	targetPoint.Z = topPoint.Z + player->standHeight;
+	targetPoint.Z = ledgeTop.Z + player->standHeight;
 	targetPoint.X = targetXY.X;
 	targetPoint.Y = targetXY.Y;
 

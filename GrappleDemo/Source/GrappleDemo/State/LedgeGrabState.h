@@ -30,12 +30,12 @@ public:
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 
-	void SetLedge(FHitResult newLedge, FHitResult newLedgeTop);
+	void SetLedge(FHitResult newLedge, FVector newLedgeTop);
 
 private:
 	static ULedgeGrabState* instance;
 	FHitResult ledge;
-	FHitResult ledgeTop;
+	FVector ledgeTop;
 
 	void InitializeLedgeValues();
 	void LiftPlayerUp(float deltaTime);
@@ -48,7 +48,6 @@ private:
 	FVector pushDir;
 	FVector startLoc;
 
-	FVector topPoint;
 	bool bNeedsToPush;
 	float pushTimer;
 	float liftHeight;

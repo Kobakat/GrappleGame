@@ -216,7 +216,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible()
 
 						if (!blockHit)
 						{
-							ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop);
+							ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop.ImpactPoint);
 							return true;
 						}
 					}
@@ -234,12 +234,13 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 	FCollisionQueryParams param;
 	param.AddIgnoredActor(player);
 
-	FVector boundingBox = FVector(
-		bounds.X * player->ledgeGrabRangeFactor,
-		bounds.Y * player->ledgeGrabRangeFactor,
-		bounds.Z * 0.05f);
+	FVector camForward = player->camera->GetForwardVector();
+	camForward.Z = 0;
+	camForward.Normalize(0.01f);
 
-	FCollisionShape box = FCollisionShape::MakeBox(boundingBox);
+	FCollisionShape sphere = FCollisionShape::MakeSphere(bounds.X);
+	FVector sweepStart = GetComponentLocation() + (FVector::UpVector * halfHeight);
+	FVector sweepEnd = sweepStart + (camForward * bounds.X * player->ledgeGrabRangeFactor);
 
 	bool bHitLedge = player->GetWorld()->SweepMultiByChannel(
 		LedgeHits,
@@ -247,7 +248,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 		GetComponentLocation() + (FVector::UpVector * halfHeight),
 		FQuat::Identity,
 		ECC_GameTraceChannel6,
-		box,
+		sphere,
 		param);
 
 	//If we hit something in this layer
@@ -266,10 +267,6 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 				impactNormal.Z = 0;
 				impactNormal.Normalize(0.01f);
 				impactNormal *= -1;
-
-				FVector camForward = player->camera->GetForwardVector();
-				camForward.Z = 0;
-				camForward.Normalize(0.01f);
 
 				//Calculate the Angle between the two vectors
 				const float camDot = FVector::DotProduct(camForward, impactNormal);
@@ -319,7 +316,7 @@ bool UPlayerCapsule::CheckIfLedgeGrabEligible(FVector playerMoveVector)
 
 							if (!blockHit)
 							{
-								ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop);
+								ULedgeGrabState::GetInstance()->SetLedge(hit, LedgeTop.ImpactPoint);
 								return true;
 							}
 						}
