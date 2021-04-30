@@ -13,14 +13,6 @@ enum ELedgePushType
 	LPT_Fast //The player is trying to run forward, give them a burst of running speed
 };
 
-UENUM()
-enum ELedgeClimbType
-{
-	LCT_UnderWaist,
-	LCT_AboveWaist,		
-	LCT_AboveHead,
-	LCT_Airborne,
-};
 
 UCLASS()
 class GRAPPLEDEMO_API ULedgeGrabState : public UMovementState
@@ -38,41 +30,26 @@ public:
 
 	virtual void Initialize(APlayerPawn* pawn) override;
 
-	void SetLedge(FHitResult newLedge);
+	void SetLedge(FHitResult newLedge, FHitResult newLedgeTop);
 
 private:
 	static ULedgeGrabState* instance;
-	static FHitResult ledge;
+	FHitResult ledge;
+	FHitResult ledgeTop;
 
 	void InitializeLedgeValues();
 	void LiftPlayerUp(float deltaTime);
 	void PushPlayerForward(float deltaTime);
 	
 	void DeterminePlayerAction(float deltaTime);
-	void UnderWaistAction(float deltaTime);
-	void AboveWaistAction(float deltaTime);
-	void AboveHeadAction(float deltaTime);
-	void AirborneAction(float deltaTime);
-
-	void BobCamera(float deltaTime);
-
-	//Tick Position
-	TEnumAsByte<ELedgeClimbType> climbType;
 
 	//Exit positioning
 	TEnumAsByte<ELedgePushType> pushType;
 	FVector pushDir;
 	FVector startLoc;
 
-	//Camera Rotation
-	FVector lookPoint;
-	FVector goalRot;
-	bool bNeedsToTurn;
-	bool bNeedsToBob;
+	FVector topPoint;
 	bool bNeedsToPush;
-	float bobTimer;
 	float pushTimer;
-	//Common
 	float liftHeight;
-	float climbDistance;
 };
