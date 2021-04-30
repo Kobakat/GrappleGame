@@ -52,5 +52,4 @@ protected:
 private:
 	APlayerPawn* player;
 	FVector CalculateBounds();
-	
 };

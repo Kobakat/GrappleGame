@@ -21,6 +21,10 @@ protected:
 	bool SolveRestraint();
 	// Solves only the wrap part of the behaviour.
 	void SolveWrap();
+	// Runs a cast against all layers that are grapple wrappable,
+	// returning the nearest result.
+	// TODO this should be abstracted into a utility class.
+	bool CastAllWrappableObjects(struct FHitResult& OutHit, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params);
 
 	TArray<FVector> WrapPivots;
 	TArray<AActor*> WrapActors;

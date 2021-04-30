@@ -42,7 +42,6 @@ void ACheckpointManager::Tick(float DeltaTime)
 	if (bTimer)
 	{
 		timeElasped = GetWorld()->GetRealTimeSeconds() - startTime;
-		UE_LOG(LogTemp, Warning, TEXT("%f"), timeElasped);
 	}
 }
 
