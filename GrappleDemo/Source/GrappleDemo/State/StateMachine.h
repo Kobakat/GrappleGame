@@ -29,6 +29,9 @@ public:
 	
 	UPROPERTY()
 		UState* state;
+	// TODO this is a hacky way of enabling
+	// state transitions.
+	UState* nextState;
 
 private:
 	APlayerPawn* player;

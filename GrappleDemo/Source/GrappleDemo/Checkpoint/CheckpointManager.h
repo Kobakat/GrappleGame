@@ -26,19 +26,22 @@ protected:
 	// Array of all checkpoints in the level
 	UPROPERTY(EditAnywhere, Category="Checkpoints")
 	TArray<ACheckpoint*> Checkpoints;
+	// Index location of the currentCheckpoint in Checkpoints Array
+	int currentCheckpointIndex;
 
 public:
 	// Last checkpoint the player went through
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Checkpoints")
 	ACheckpoint* currentCheckpoint;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Checkpoints")
+	ACheckpoint* nextCheckpoint;
+
+
+
 	// Time since player has left start checkpoint
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Timer")
 	float timeElasped;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Current UI Text")
-	FText UIText;
-
 
 	UFUNCTION()
 	void SetCurrentCheckpoint(ACheckpoint* checkpoint);

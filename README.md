@@ -1,7 +1,19 @@
 # Hardcore Pizza Delivery
 Papa's Speedys Pizza is hiring for their new position: "Delivery Swinger", and it turns out you fit the job's description perfectly. After years and years of searching for work you decide it's probably a good idea to apply. What you weren't ready for is actually getting hired and risking your life to deliver some Pizza!
 
-> TODO thumbnail(s) here
+<div align="center">
+  <div style="display: flex;">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MjkucG5n/347x500/jTO71T.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MzAucG5n/347x500/eZC3cn.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MzQucG5n/347x500/rWlA9B.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MzMucG5n/347x500/F7Krje.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MjYucG5n/347x500/ejR0gF.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MjcucG5n/347x500/2P8OJy.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MzEucG5n/347x500/rhjX93.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MjgucG5n/347x500/RPCRcf.png" width="300px">
+    <img src="https://img.itch.zone/aW1hZ2UvOTQ1NjEyLzU4Mjk3MzIucG5n/347x500/fnV2zx.png" width="300px">
+  </div>
+</div>
 
 In this 3D platformer you will traverse cityscape stages with both action and puzzle elements. The player is equipped
 with multiple ground and air movement options, and can manipulate objects in the world using their grappling gun. Complete

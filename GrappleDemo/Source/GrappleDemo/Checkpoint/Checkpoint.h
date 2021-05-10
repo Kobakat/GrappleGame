@@ -17,11 +17,7 @@ class GRAPPLEDEMO_API ACheckpoint : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	ACheckpoint();
-
-	UPROPERTY(EditAnywhere, Category = "UI Text")
-	FText UIText;
-	
+	ACheckpoint();	
 
 protected:
 	// Called when the game starts or when spawned
