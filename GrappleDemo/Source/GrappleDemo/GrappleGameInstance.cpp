@@ -271,9 +271,13 @@ void UGrappleGameInstance::ResetData(FCameraPreferenceData& data)
 }
 void UGrappleGameInstance::ResetData(FAudioPreferenceData& data)
 {
-	data.Master = 60.F;
-	data.Music = 100.F;
-	data.Sound = 100.F;
+	// Set master in the middle by default.
+	data.Master = 50.F;
+	// Set all other audio categories to full.
+	data.GrappleSounds =
+		data.VoiceSounds =
+		data.AmbientSounds =
+		data.BackgroundMusic = 100.F;
 }
 
 void UGrappleGameInstance::ResetData(FLevelProgress& data, const EGameStage level)

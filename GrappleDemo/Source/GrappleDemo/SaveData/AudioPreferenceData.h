@@ -10,10 +10,15 @@ struct FAudioPreferenceData
 {
 	GENERATED_BODY()
 
+	// Expose fields for the distictions of audio in the game.
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
 	float Master;
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
-	float Sound;
+	float GrappleSounds;
 	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
-	float Music;
+	float VoiceSounds;
+	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
+	float AmbientSounds;
+	UPROPERTY(BlueprintReadWrite, Category = "PreferenceData")
+	float BackgroundMusic;
 };
