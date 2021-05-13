@@ -40,8 +40,12 @@ private:
 	UAudioPreferenceSave* audioPreferencesSave;
 	UPROPERTY()
 	TMap<TEnumAsByte<EGameStage>, FLevelProgress> completionData;
+	UPROPERTY()
+	FAudioPreferenceData runtimeAudioModifier;
 
 public:
+	// Initialize the game instance.
+	void Init() override;
 	// Commits all save data to disk.
 	UFUNCTION(BlueprintCallable)
 	void Save();
@@ -91,6 +95,12 @@ public:
 	// Resets level progress for a specific stage.
 	UFUNCTION(BlueprintCallable)
 	void ClearLevelProgress(const EGameStage level);
+
+	// Sets a runtime audio multiplier for audio.
+	// Can be used to phase audio in and out.
+	void SetAudioRuntimeMultiplier(const FAudioPreferenceData multipleFactor);
+	// Clears a runtime audio multiplier.
+	void ClearAudioRuntimeMultiplier();
 
 private:
 	void LoadCrosshairPreferences();

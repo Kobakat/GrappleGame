@@ -4,6 +4,18 @@
 #include "GrappleGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
+void UGrappleGameInstance::Init()
+{
+	// Set default audio multiplier to 1.
+	FAudioPreferenceData defaultMultiplier;
+	defaultMultiplier.GrappleSounds =
+		defaultMultiplier.VoiceSounds =
+		defaultMultiplier.AmbientSounds =
+		defaultMultiplier.BackgroundMusic =
+		defaultMultiplier.Master = 1.F;
+	runtimeAudioModifier = defaultMultiplier;
+}
+
 void UGrappleGameInstance::Save()
 {
 	// Save all data to disk.
@@ -87,7 +99,14 @@ void UGrappleGameInstance::SetAudioPreferences(const FAudioPreferenceData prefer
 	// Update the data.
 	audioPreferencesSave->AudioPreferences = preferences;
 	// Notify listeners.
-	OnPreferencesChanged.Broadcast(preferences);
+	// TODO make this more DRY with functions further down.
+	FAudioPreferenceData combinedPreferences;
+	combinedPreferences.Master = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.Master;
+	combinedPreferences.GrappleSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.GrappleSounds;
+	combinedPreferences.VoiceSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.VoiceSounds;
+	combinedPreferences.AmbientSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.AmbientSounds;
+	combinedPreferences.BackgroundMusic = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.BackgroundMusic;
+	OnPreferencesChanged.Broadcast(combinedPreferences);
 }
 
 void UGrappleGameInstance::ClearCrosshairPreferences()
@@ -143,6 +162,37 @@ void UGrappleGameInstance::ClearLevelProgress(const EGameStage level)
 	FLevelProgress resetProgress;
 	ResetData(resetProgress, level);
 	SetLevelProgress(resetProgress, level);
+}
+
+// TODO these methods should be extracted out of
+// the game instance.
+
+void UGrappleGameInstance::SetAudioRuntimeMultiplier(const FAudioPreferenceData multipleFactor)
+{
+	runtimeAudioModifier = multipleFactor;
+	FAudioPreferenceData combinedPreferences;
+	combinedPreferences.Master = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.Master;
+	combinedPreferences.GrappleSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.GrappleSounds;
+	combinedPreferences.VoiceSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.VoiceSounds;
+	combinedPreferences.AmbientSounds = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.AmbientSounds;
+	combinedPreferences.BackgroundMusic = audioPreferencesSave->AudioPreferences.Master * runtimeAudioModifier.BackgroundMusic;
+	OnPreferencesChanged.Broadcast(combinedPreferences);
+}
+
+void UGrappleGameInstance::ClearAudioRuntimeMultiplier()
+{
+	// Make sure that audio preferences are loaded;
+	// otherwise this will crash.
+	LoadAudioPreferences();
+	// Set default multiplier.
+	FAudioPreferenceData defaultMultiplier;
+	defaultMultiplier.GrappleSounds =
+		defaultMultiplier.VoiceSounds =
+		defaultMultiplier.AmbientSounds =
+		defaultMultiplier.BackgroundMusic =
+		defaultMultiplier.Master = 1.F;
+	runtimeAudioModifier = defaultMultiplier;
+	OnPreferencesChanged.Broadcast(audioPreferencesSave->AudioPreferences);
 }
 
 void UGrappleGameInstance::LoadCrosshairPreferences()
