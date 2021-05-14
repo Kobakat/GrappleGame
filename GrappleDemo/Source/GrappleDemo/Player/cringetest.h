@@ -48,6 +48,12 @@ public:
 	//How far the camera dips when climbing a ledge above the player's head
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | Ledge Grab")
 		float ledgeDipAmplitude;
+	//This FOV is used while walking, crouching, and idling
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")
+		float FOVPassive;
+	//This FOV is used while running, sliding, and swinging
+	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")
+		float FOVActive;
 
 	float baseHeight;
 
@@ -69,12 +75,7 @@ private:
 		FStepAudio OnRunStep;
 
 #pragma region Designer Props
-	//This FOV is used while walking, crouching, and idling
-	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")
-		float FOVPassive;
-	//This FOV is used while running, sliding, and swinging
-	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")
-		float FOVActive;
+	
 	//How many seconds does it take to adjust the camera FOV when switching to/from active or passive states
 	UPROPERTY(EditAnywhere, Category = "Camera Stats | FOV")
 		float FOVTransitionTime;
