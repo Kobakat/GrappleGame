@@ -82,6 +82,8 @@ void ALevelPreviewPawn::GetNodeInformation()
 	}
 
 	currentNode = nodes[0];
+	SetActorLocation(currentNode->pos);
+	SetActorRotation(currentNode->rot);
 }
 
 void ALevelPreviewPawn::PerformStateAction(float deltaTime)
