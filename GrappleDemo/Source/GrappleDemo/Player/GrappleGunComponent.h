@@ -37,6 +37,10 @@ protected:
 	USceneComponent* CastingFromComponent;
 	// The current length of the grapple cable
 	float Length;
+	// Additional grapple length that is afforded to the player
+	// so that they don't miss grapples that extend out of range.
+	// LeewayLength is exhausted when it is reeled in.
+	float LeewayLength;
 	// True when the hook is shooting towards the target
 	bool IsShooting;
 	// True when the hook is retracting to the gun
