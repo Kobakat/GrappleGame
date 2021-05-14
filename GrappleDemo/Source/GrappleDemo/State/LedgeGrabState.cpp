@@ -100,6 +100,9 @@ void ULedgeGrabState::PushPlayerForward(float deltaTime)
 		const FVector newLoc = FMath::Lerp(playerXY, targetPoint, frac);
 
 		player->collider->SetRelativeLocation(newLoc + FVector::UpVector);
+
+		if (pushTimer > 3.f)
+			player->SetState(UWalkState::GetInstance());
 	}
 
 	else 
