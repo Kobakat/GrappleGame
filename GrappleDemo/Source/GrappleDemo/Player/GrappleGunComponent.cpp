@@ -203,7 +203,10 @@ void UGrappleGunComponent::ApplyForce(FVector pullPoint, FVector pullTowards, fl
 void UGrappleGunComponent::Reel(float value)
 {
 	// Apply the reel, but do not exceed the limits
-	Length = FMath::Clamp(Length + value, MinLength, MaxLength);
+	float newLength = Length + value;
+	if (newLength < LeewayLength)
+		LeewayLength = newLength;
+	Length = FMath::Clamp(Length + value, MinLength, FMath::Max(MaxLength, LeewayLength));
 }
 
 void UGrappleGunComponent::SetIsRendered(bool rendered)
@@ -244,6 +247,11 @@ void UGrappleGunComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 				// Set the initial length for the state to work with
 				Length = FVector::Distance(
 					CastingFromComponent->GetComponentLocation(), target);
+				// Set leeway length to prevent being snapped into range.
+				if (Length > MaxLength)
+					LeewayLength = Length;
+				else
+					LeewayLength = MaxLength;
 			}
 			else
 			{

@@ -317,7 +317,7 @@ void UGrappleGameInstance::ResetData(FCrosshairPreferenceData& data)
 void UGrappleGameInstance::ResetData(FCameraPreferenceData& data)
 {
 	data.FieldOfView = 90.F;
-	data.Sensitivity = 1.F;
+	data.Sensitivity = 5.F;
 }
 void UGrappleGameInstance::ResetData(FAudioPreferenceData& data)
 {
