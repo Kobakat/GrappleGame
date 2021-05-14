@@ -35,17 +35,17 @@ void ALevelPreviewPawn::StartPreview()
 	state = Holding;
 	for (ULevelPreviewNode* node : nodes)
 	{
-		if (node->index != 1)
-		{
-			node->Deactivate();
-		}
+		node->Deactivate(); // turn off every child camera so only the parent camera renders
 	}
 }
 
 void ALevelPreviewPawn::EndPreview()
 {
-	OnPreviewEnd();
-	state = Stopping;
+	if (state != Stopping)
+	{
+		OnPreviewEnd();
+		state = Stopping;
+	}
 }
 
 void ALevelPreviewPawn::RepossessPlayer()
