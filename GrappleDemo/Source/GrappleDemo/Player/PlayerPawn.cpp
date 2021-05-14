@@ -3,7 +3,6 @@
 #include "../GrappleInteractions/GrappleReactor.h"
 #include "../LevelPreview/LevelPreviewPawn.h"
 #include "Kismet/GameplayStatics.h"
-#include "../GrappleGameInstance.h"
 #include "GrappleGunComponent.h"
 
 #pragma region Unreal Event Functions
@@ -59,7 +58,6 @@ void APlayerPawn::BeginPlay()
 
 	this->stateMachine = NewObject<UStateMachine>();
 	this->stateMachine->Initialize(this);
-	this->BindPreferences();
 }
 
 void APlayerPawn::Tick(float deltaTime)
@@ -234,17 +232,6 @@ void APlayerPawn::LinkPreviewCamera()
 		controller->Possess(castedActor);
 		castedActor->StartPreview();
 	}
-}
-
-void APlayerPawn::BindPreferences()
-{
-	UGameInstance* uncastedGame = this->GetGameInstance();
-	UGrappleGameInstance* castedGame = Cast<UGrappleGameInstance>(uncastedGame);
-	FCameraPreferenceData cameraData = castedGame->GetCameraPreferences();
-	camera->FOVPassive = cameraData.FieldOfView;
-	camera->FOVActive = camera->FOVPassive + 10.f;
-	camera->FieldOfView = camera->FOVPassive;
-	camera->lookSpeed = cameraData.Sensitivity * 24.f; 
 }
 #pragma endregion
 

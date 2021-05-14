@@ -202,9 +202,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetHasGrapple(bool HasGrapple);
 
-	UFUNCTION(BlueprintCallable)
-	void BindPreferences();
-
 protected:
 	virtual void BeginPlay() override;
 
